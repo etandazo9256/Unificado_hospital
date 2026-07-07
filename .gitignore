@@ -1,0 +1,9 @@
+node_modules/
+.system_generated/
+scratch/
+*.log
+.DS_Store
+dist/
+build/
+.env
+.gemini/

@@ -4,81 +4,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Turnos - Hospital de Especialidades Portoviejo</title>
+    <title>Sala de Espera - Hospital de Especialidades de Jipijapa</title>
+    <link rel="stylesheet" href="shared.css">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <!-- Encabezado de mi pagina web de turnos, aqu es donde se muestra la información del hospital -->
+
     <header class="topbar">
         <div class="institucion">
             <div class="logo-container">
-                <img src="logo-hospital.png" alt="Hospital de Especialidades Portoviejo" class="logo-img">
+                <img src="logo-hospital.png" alt="Hospital de Especialidades de Jipijapa" class="logo-img">
             </div>
             <div class="info-hospital">
-                <h1>Hospital de Especialidades Portoviejo</h1>
-                <span class="subt">Área de Emergencia - Gestión de Turnos</span>
+                <h1>Hospital de Especialidades de Jipijapa</h1>
+                <span class="subt">Área de Emergencia - Sala de Espera</span>
             </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <a href="dashboard.html" class="btn-dashboard" style="text-decoration: none; background: var(--azul-claro, #2E86C1); color: white; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; transition: var(--transicion, all 0.3s ease); box-shadow: 0 2px 5px rgba(46, 134, 193, 0.2);" onmouseover="this.style.background='var(--azul-medio, #1a4a7a)'" onmouseout="this.style.background='var(--azul-claro, #2E86C1)'">
-                📊 Dashboard KPI
-            </a>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="triage.html" class="btn-dashboard" style="text-decoration: none; background: var(--azul-claro); color: white; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Triage</a>
+            <a href="medico.html" class="btn-dashboard" style="text-decoration: none; background: var(--verde, #10B981); color: white; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Médico</a>
+            <a href="dashboard.html" class="btn-dashboard" style="text-decoration: none; background: var(--azul-medio, #1a4a7a); color: white; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Dashboard</a>
             <div id="reloj">00:00:00</div>
+            <div class="connection-status"><span class="connection-dot" id="connDot"></span><span id="connText">Conectado</span></div>
         </div>
     </header>
 
-    <!-- Panel Principal l sistema de turnos -->
+
     <main class="panel-principal">
-        
-        <!-- Columna Izquierda: Turno Actual -->
+
         <section class="columna-izquierda">
-            <div class="display-turno">
-                <div class="etiqueta">Turnos recibiendo atención</div>
+            <div class="display-turno" id="displayTurno">
+                <div class="etiqueta">Paciente en Atención</div>
                 <div class="numero-turno" id="turnoActual">---</div>
-                <div class="info-consulta">
-                    <span id="consultorioActual">Consultorio x</span>
-                </div>
+
                 <div class="paciente-info">
-                    <span id="pacienteActual">Esperando paciente...</span>
+                    <span id="pacienteActual">Esperando pacientes...</span>
                 </div>
             </div>
         </section>
 
-        <!-- Columna Derecha: Próximos Turnos y Controles -->
+
         <section class="columna-derecha">
             <div class="proximos-turnos">
                 <div class="header-proximos">
                     <h3>PRÓXIMOS TURNOS</h3>
                 </div>
-                
+
                 <div class="tabla-proximos">
                     <div class="tabla-header">
                         <span>TURNO</span>
-                        <span>CONSULTA</span>
+                        <span>PACIENTE</span>
                     </div>
                     <div id="listaProximosTurnos">
                         <div class="fila-vacia">Cargando turnos...</div>
                     </div>
                 </div>
 
-                <!-- Controles -->
-                <div class="controles">
-                    <button id="btnSiguiente" class="btn-primario">
-                        SIGUIENTE TURNO
-                    </button>
-                    <button id="btnLlamar" class="btn-secundario">
-                        LLAMAR
-                    </button>
-                    <button id="btnReiniciar" class="btn-peligro" title="Reiniciar sistema">
-                        <span class="icono-boton">⟳</span>Reiniciar
-                    </button>
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--gris-borde);">
+                    <div style="display: flex; justify-content: space-between; color: var(--texto-suave); font-size: 13px;">
+                        <span>En triage: <strong id="enTriageCount" style="color: var(--azul-oscuro);">0</strong></span>
+                        <span>Pendientes: <strong id="pendientesCount" style="color: var(--azul-oscuro);">0</strong></span>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Estadísticas -->
+
         <section class="estadisticas">
             <div class="stat-item">
                 <span class="stat-numero" id="pendientes">0</span>
@@ -86,23 +79,25 @@
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item">
+                <span class="stat-numero" id="enTriage">0</span>
+                <span class="stat-etiqueta">En Triage</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-numero" id="enAtencion">0</span>
+                <span class="stat-etiqueta">En Consulta</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
                 <span class="stat-numero" id="atendidos">0</span>
                 <span class="stat-etiqueta">Atendidos</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-numero" id="totalTurnos">0</span>
-                <span class="stat-etiqueta">Total</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-numero" id="esperaPromedio">0</span>
-                <span class="stat-etiqueta">Espera Prom.</span>
             </div>
         </section>
 
     </main>
 
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script src="sound.js"></script>
     <script src="app.js"></script>
 
 </body>

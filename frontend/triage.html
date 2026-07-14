@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Triage - Hospital de Especialidades de Jipijapa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+    <link rel="stylesheet" href="triage.css">
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="institucion">
+            <div class="logo-container">
+                <img src="logo-hospital.png" alt="Hospital de Especialidades de Jipijapa" class="logo-img">
+            </div>
+            <div class="info-hospital">
+                <h1>Hospital de Especialidades de Jipijapa</h1>
+                <span class="subt">Área de Emergencia - Control de Triage</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="index.html" class="btn-nav">Sala de Espera</a>
+            <a href="medico.html" class="btn-nav">Atención Médica</a>
+            <a href="dashboard.html" class="btn-nav">Dashboard</a>
+            <div id="reloj">00:00:00</div>
+            <div class="connection-status"><span class="connection-dot" id="connDot"></span><span id="connText">Conectado</span></div>
+        </div>
+    </header>
+
+    <main class="triage-container">
+
+        <!-- Fila superior: Turno actual llamado -->
+        <section class="current-call-card">
+            <div class="call-info">
+                <span class="call-label">Turno Llamado</span>
+                <span class="call-turno" id="turnoActual">---</span>
+                <span class="call-paciente" id="pacienteActual">---</span>
+            </div>
+            <div class="call-actions">
+                <button id="btnLlamarSiguiente" class="btn-primary btn-lg">
+                    Llamar Siguiente
+                </button>
+                <button id="btnRellamar" class="btn-secondary">
+                    Rellamar
+                </button>
+                <button id="btnNoAsiste" class="btn-danger">
+                    No Asistió
+                </button>
+            </div>
+        </section>
+
+        <!-- Filas: Dos columnas -->
+        <div class="triage-grid">
+
+            <!-- Columna izquierda: Iniciar triage -->
+            <section class="triage-section">
+                <div class="section-header">
+                    <h3>Pacientes Llamados</h3>
+                    <span class="badge" id="badgeLlamados">0</span>
+                </div>
+                <div class="section-body" id="listaParaTriage">
+                    <div class="empty-state">No hay pacientes llamados</div>
+                </div>
+            </section>
+
+            <!-- Columna derecha: Finalizar triage -->
+            <section class="triage-section">
+                <div class="section-header">
+                    <h3>En Triage</h3>
+                    <span class="badge warning" id="badgeEnTriage">0</span>
+                </div>
+                <div class="section-body" id="listaEnTriage">
+                    <div class="empty-state">No hay pacientes en triage</div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Fila inferior: Pendientes -->
+        <section class="pending-section">
+            <div class="section-header">
+                <h3>Pendientes de Llamar</h3>
+                <span class="badge" id="badgePendientes">0</span>
+            </div>
+            <div class="table-scroll">
+                <table class="data-table" id="tablaPendientes">
+                    <thead>
+                        <tr>
+                            <th>Turno</th>
+                            <th>Paciente</th>
+                            <th>Hora Llegada</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodyPendientes">
+                        <tr><td colspan="3" class="empty-cell">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script src="sound.js"></script>
+    <script src="triage.js"></script>
+</body>
+</html>

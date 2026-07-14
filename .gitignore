@@ -25,3 +25,5 @@ ENV/
 # VS Code and IDEs
 .vscode/
 .idea/
+
+backend/server.err

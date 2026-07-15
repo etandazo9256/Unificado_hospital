@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sala de Espera - Hospital de Especialidades de Jipijapa</title>
+    <link rel="stylesheet" href="shared.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+
+    <header class="topbar">
+        <div class="institucion">
+            <div class="logo-container">
+                <img src="logo-hospital.png" alt="Hospital de Especialidades de Jipijapa" class="logo-img">
+            </div>
+            <div class="info-hospital">
+                <h1>Hospital de Especialidades de Jipijapa</h1>
+                <span class="subt">Área de Emergencia - Sala de Espera</span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="triage.html" class="btn-dashboard" style="text-decoration: none; background: var(--azul-claro); color: white; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Triage</a>
+            <a href="medico.html" class="btn-dashboard" style="text-decoration: none; background: var(--verde, #10B981); color: white; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Médico</a>
+            <a href="dashboard.html" class="btn-dashboard" style="text-decoration: none; background: var(--azul-medio, #1a4a7a); color: white; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Dashboard</a>
+            <div id="reloj">00:00:00</div>
+            <div class="connection-status"><span class="connection-dot" id="connDot"></span><span id="connText">Conectado</span></div>
+        </div>
+    </header>
+
+
+    <main class="panel-principal">
+
+        <section class="columna-izquierda">
+            <div class="display-turno" id="displayTurno">
+                <div class="etiqueta">Paciente en Atención</div>
+                <div class="numero-turno" id="turnoActual">---</div>
+
+                <div class="paciente-info">
+                    <span id="pacienteActual">Esperando pacientes...</span>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="columna-derecha">
+            <div class="proximos-turnos">
+                <div class="header-proximos">
+                    <h3>PRÓXIMOS TURNOS</h3>
+                </div>
+
+                <div class="tabla-proximos">
+                    <div class="tabla-header">
+                        <span>TURNO</span>
+                        <span>PACIENTE</span>
+                    </div>
+                    <div id="listaProximosTurnos">
+                        <div class="fila-vacia">Cargando turnos...</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--gris-borde);">
+                    <div style="display: flex; justify-content: space-between; color: var(--texto-suave); font-size: 13px;">
+                        <span>En triage: <strong id="enTriageCount" style="color: var(--azul-oscuro);">0</strong></span>
+                        <span>Pendientes: <strong id="pendientesCount" style="color: var(--azul-oscuro);">0</strong></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="estadisticas">
+            <div class="stat-item">
+                <span class="stat-numero" id="pendientes">0</span>
+                <span class="stat-etiqueta">Pendientes</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-numero" id="enTriage">0</span>
+                <span class="stat-etiqueta">En Triage</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-numero" id="enAtencion">0</span>
+                <span class="stat-etiqueta">En Consulta</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-numero" id="atendidos">0</span>
+                <span class="stat-etiqueta">Atendidos</span>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script src="sound.js"></script>
+    <script src="app.js"></script>
+
+</body>
+
+</html>

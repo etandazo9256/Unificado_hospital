@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard KPI - Hospital de Especialidades de Jipijapa</title>
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+    <!-- Encabezado de la página -->
+    <header class="topbar">
+        <div class="institucion">
+            <div class="logo-container">
+                <img src="logo-hospital.png" alt="Hospital de Especialidades de Jipijapa" class="logo-img">
+            </div>
+            <div class="info-hospital">
+                <h1>Hospital de Especialidades de Jipijapa</h1>
+                <span class="subt">Dashboard de Indicadores (KPI) - Área de Emergencia</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="index.html" class="btn-back">Sala de Espera</a>
+            <a href="triage.html" class="btn-back">Triage</a>
+            <a href="medico.html" class="btn-back">Atención Médica</a>
+            <button id="btnRefresh" class="btn-refresh" title="Actualizar Datos">
+                <span>⟳</span> Actualizar
+            </button>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="dashboard-container">
+        
+        <!-- Fila 1: Filtros de Fecha -->
+        <section class="filters-panel">
+            <div class="filter-title">
+                <span>📅</span> Rango de Fecha de Admisión
+            </div>
+            <div class="filter-controls">
+                <div class="input-group">
+                    <label for="fechaInicio">Desde:</label>
+                    <input type="date" id="fechaInicio">
+                </div>
+                <div class="input-group">
+                    <label for="fechaFin">Hasta:</label>
+                    <input type="date" id="fechaFin">
+                </div>
+                <button id="btnFiltrar" class="btn-action">Filtrar</button>
+                <button id="btnLimpiarFiltros" class="btn-action-outline">Restablecer</button>
+            </div>
+        </section>
+
+        <!-- Fila 2: Tarjetas de KPI (Métricas Clave) -->
+        <section class="kpi-grid">
+            
+            <div class="kpi-card total">
+                <div class="kpi-icon">👥</div>
+                <div class="kpi-content">
+                    <h3 class="kpi-value" id="valTotal">0</h3>
+                    <p class="kpi-label">Pacientes Registrados</p>
+                </div>
+                <div class="kpi-indicator positive">
+                    Total histórico
+                </div>
+            </div>
+
+            <div class="kpi-card atendidos">
+                <div class="kpi-icon">✅</div>
+                <div class="kpi-content">
+                    <h3 class="kpi-value" id="valAtendidos">0</h3>
+                    <p class="kpi-label">Atendidos en Triage</p>
+                </div>
+                <div class="kpi-indicator green" id="valPctAtendidos">0%</div>
+            </div>
+
+            <div class="kpi-card pendientes">
+                <div class="kpi-icon">⏳</div>
+                <div class="kpi-content">
+                    <h3 class="kpi-value" id="valPendientes">0</h3>
+                    <p class="kpi-label">Pendientes de Triage</p>
+                </div>
+                <div class="kpi-indicator orange" id="valPctPendientes">0%</div>
+            </div>
+
+            <div class="kpi-card espera">
+                <div class="kpi-icon">⏱️</div>
+                <div class="kpi-content">
+                    <h3 class="kpi-value" id="valEsperaTotal">0 min</h3>
+                    <p class="kpi-label">Tiempo Total Promedio</p>
+                </div>
+                <div class="kpi-indicator text-sub" id="labelEsperaSub">
+                    Ingreso a Triage
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Fila 3: Gráficos de Análisis -->
+        <section class="charts-grid-row-1">
+            
+            <!-- Gráfico 1: Admisiones por Hora del Día (Demanda horaria) -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4>Distribución de Admisiones por Hora del Día</h4>
+                    <span class="tooltip-icon" title="Muestra la demanda y horas pico de llegada de pacientes a Emergencia.">ℹ️</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartDemandaHora"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico 2: Distribución de Prioridades de Triage -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4>Distribución por Prioridad de Triage (Gravedad)</h4>
+                    <span class="tooltip-icon" title="Clasificación de pacientes por gravedad según el sistema de Triage (Rojo/Amarillo/Verde).">ℹ️</span>
+                </div>
+                <div class="chart-container donut-wrapper">
+                    <canvas id="chartPrioridades"></canvas>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="charts-grid-row-2">
+            
+            <!-- Gráfico 3: Tiempos Promedio por Etapa de Atención -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4>Tiempos Promedio por Etapa del Proceso (Minutos)</h4>
+                    <span class="tooltip-icon" title="Análisis del tiempo invertido en cada fase: espera de signos vitales, toma de signos, espera de triage y consulta de triage.">ℹ️</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartTiemposProceso"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfico 4: Evolución Histórica de Atención -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4>Evolución Diaria de Admisiones y Tiempos de Triage</h4>
+                    <span class="tooltip-icon" title="Tendencia diaria del volumen de pacientes y su correlación con los tiempos de respuesta.">ℹ️</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartEvolucionDiaria"></canvas>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Fila 4: Productividad del Personal -->
+        <section class="staff-productivity-section">
+            <h3 class="section-title">📊 Productividad y Rendimiento del Personal de Guardia</h3>
+            
+            <div class="tables-grid">
+                
+                <!-- Tabla 1: Toma de Signos Vitales -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <h4>Top Personal - Toma de Signos Vitales</h4>
+                        <span class="badge blue">Enfermería</span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="tableSignos">
+                            <thead>
+                                <tr>
+                                    <th>Nombre del Profesional</th>
+                                    <th style="text-align: right;">Pacientes Evaluados</th>
+                                    <th style="width: 40%;">% del Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="3" class="loading-cell">Cargando datos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tabla 2: Triage Médico -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <h4>Top Personal - Evaluación de Triage</h4>
+                        <span class="badge green">Médicos</span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="tableTriage">
+                            <thead>
+                                <tr>
+                                    <th>Nombre del Profesional</th>
+                                    <th style="text-align: right;">Pacientes Evaluados</th>
+                                    <th style="width: 40%;">% del Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="3" class="loading-cell">Cargando datos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2026 Hospital de Especialidades de Jipijapa - Departamento de Estadística y Sistemas</p>
+    </footer>
+
+    <!-- Script de lógica -->
+    <script src="dashboard.js"></script>
+</body>
+</html>

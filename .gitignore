@@ -1,0 +1,29 @@
+node_modules/
+.system_generated/
+scratch/
+*.log
+.DS_Store
+dist/
+build/
+.env
+.gemini/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[codz]
+*$py.class
+
+# C extensions
+*.so
+
+# Environments
+.venv
+env/
+venv/
+ENV/
+
+# VS Code and IDEs
+.vscode/
+.idea/
+
+backend/server.err

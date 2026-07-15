@@ -1,0 +1,248 @@
+/* ==========================================================================
+   1. ESTILOS GLOBALES Y TIPOGRAFÍA
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #eef5fb, #dfeaf7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   2. PANTALLA DE INICIO (ESTA PARTE SE QUEDA EXACTAMENTE IGUAL)
+   ========================================================================== */
+.welcome-container {
+    background: white;
+    width: 90%;
+    max-width: 750px;
+    padding: 50px;
+    border-radius: 22px;
+    box-shadow: 0 15px 35px rgba(0,0,0,.12);
+    text-align: center;
+}
+
+h1 {
+    margin: 0;
+    color: #0d47a1;
+    font-size: 42px;
+}
+
+.subtitulo {
+    color: #1976d2;
+    font-size: 22px;
+    font-weight: 600;
+    margin-top: 12px;
+}
+
+.descripcion {
+    color: #666;
+    font-size: 17px;
+    margin-top: 25px;
+    margin-bottom: 40px;
+}
+
+.button-group-main {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.btn-main {
+    width: 240px;
+    text-decoration: none;
+    color: white;
+    padding: 25px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    font-size: 20px;
+    font-weight: 600;
+    transition: .3s;
+}
+
+.btn-main i {
+    font-size: 45px;
+}
+
+.btn-main:hover {
+    transform: translateY(-6px);
+}
+
+.btn-normal {
+    background: #1976d2;
+}
+
+.btn-normal:hover {
+    background: #125aa3;
+}
+
+.btn-emergencia {
+    background: #d32f2f;
+    animation: pulse 2s infinite;
+}
+
+.btn-emergencia:hover {
+    background: #b71c1c;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(211,47,47, 0.5); }
+    70% { box-shadow: 0 0 0 15px rgba(211,47,47, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(211,47,47, 0); }
+}
+
+/* ==========================================================================
+   3. NUEVOS FORMULARIOS MEJORADOS (REGULAR Y EMERGENCIA)
+   ========================================================================== */
+.form-container-exclusivo {
+    background: #ffffff;
+    width: 100%;
+    max-width: 480px;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06), 0 5px 15px rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
+}
+
+h2 { 
+    color: #1a5f7a; 
+    margin-top: 0; 
+    margin-bottom: 8px;
+    text-align: center; 
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.subtitle {
+    color: #64748b;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+label { 
+    display: block; 
+    margin-bottom: 8px; 
+    color: #334155; 
+    font-weight: 600; 
+    font-size: 14px;
+}
+
+/* Inputs y Selects Estilizados */
+input[type="text"],
+input[type="datetime-local"],
+select { 
+    width: 100%; 
+    padding: 14px 16px; 
+    margin-bottom: 24px; 
+    border: 1.5px solid #cbd5e1; 
+    border-radius: 10px; 
+    box-sizing: border-box; 
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    color: #1e293b;
+    background-color: #f8fafc;
+    transition: all 0.3s ease;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #1976d2;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.15);
+}
+
+input::placeholder {
+    color: #94a3b8;
+}
+
+/* Botones de Envío */
+.btn-submit-regular,
+.btn-submit-emergencia {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-submit-regular {
+    background: #1976d2;
+    color: #ffffff;
+}
+
+.btn-submit-regular:hover {
+    background: #125aa3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(25, 118, 210, 0.3);
+}
+
+.btn-submit-emergencia {
+    background: #d32f2f;
+    color: #ffffff;
+}
+
+.btn-submit-emergencia:hover {
+    background: #b71c1c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(211, 47, 47, 0.3);
+}
+
+.btn-submit-regular:active,
+.btn-submit-emergencia:active {
+    transform: translateY(0);
+}
+
+/* Botón Volver al Inicio Neutral */
+.btn-volver {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 14px;
+    background: #f1f5f9;
+    color: #64748b;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    box-sizing: border-box;
+    transition: all 0.25s ease;
+}
+
+.btn-volver:hover {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+/* ==========================================================================
+   4. TABLAS DE ADMINISTRACIÓN / REPORTES (MANTENIDAS)
+   ========================================================================== */
+.table-container { background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); width: 100%; max-width: 850px; }
+table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+th { background-color: #1a5f7a; color: white; }
+.fila-emergencia { background-color: #ffccd5 !important; font-weight: bold; color: #b7094c; }
+tr:nth-child(even) { background-color: #f9f9f9; }

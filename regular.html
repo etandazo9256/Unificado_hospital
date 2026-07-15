@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamiento de Turnos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<body class="body-regular">
+    <div class="form-container-exclusivo card-regular">
+        <h2>Agendar Cita Médica</h2>
+        <form action="/guardar_regular" method="POST">
+            <label for="paciente">Nombre del Paciente:</label>
+            <input type="text" id="paciente" name="paciente" placeholder="Escriba aquí..." required>
+
+            <label for="motivo">Especialidad:</label>
+
+<select id="motivo" name="motivo" required>
+    <option value="">Seleccione una especialidad</option>
+    <option value="Medicina General">Medicina General</option>
+    <option value="Pediatría">Pediatría</option>
+    <option value="Ginecología">Ginecología</option>
+    <option value="Odontología">Odontología</option>
+    <option value="Cardiología">Cardiología</option>
+    <option value="Dermatología">Dermatología</option>
+    <option value="Traumatología">Traumatología</option>
+    <option value="Oftalmología">Oftalmología</option>
+    <option value="Neurología">Neurología</option>
+    <option value="Psicología">Psicología</option>
+</select>
+            <label for="fecha_turno">Seleccione Fecha y Hora:</label>
+            <input type="datetime-local" id="fecha_turno" name="fecha_turno" required>
+
+            <button type="submit" class="btn-submit-regular">Confirmar Cita</button>
+            <a href="/" class="btn-volver">
+            Volver al Inicio
+            </a>
+        </form>
+    </div>
+
+    {% with messages = get_flashed_messages(category_filter=["regular"]) %}
+    {% if messages %}
+    <script>
+        Swal.fire({
+            icon: 'success',
+            title: '¡Cita Agendada!',
+            html: `{{ messages[0] | replace('\n', '<br>') | safe }}`,
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#1976d2',
+            background: '#ffffff',
+            backdrop: 'rgba(25,118,210,0.25)'
+        });
+    </script>
+    {% endif %}
+{% endwith %}
+</body>
+</html>

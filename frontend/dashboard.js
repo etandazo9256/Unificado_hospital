@@ -180,6 +180,16 @@ function filtrarPeriodo(periodo) {
             fechaFin = new Date(hoy);
             break;
         }
+        case 'anio_actual': {
+            fechaInicio = new Date(hoy.getFullYear(), 0, 1);
+            fechaFin = new Date(hoy);
+            break;
+        }
+        case 'anio_anterior': {
+            fechaInicio = new Date(hoy.getFullYear() - 1, 0, 1);
+            fechaFin = new Date(hoy.getFullYear() - 1, 11, 31);
+            break;
+        }
     }
 
     const toLocalDateStr = (d) => {

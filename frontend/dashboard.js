@@ -133,7 +133,65 @@ function filtrarDatos() {
 function limpiarFiltros() {
     document.getElementById('fechaInicio').value = '';
     document.getElementById('fechaFin').value = '';
+    document.querySelectorAll('.btn-quick').forEach(b => b.classList.remove('active'));
     cargarDashboard();
+}
+
+// Filtros rápidos por período
+function filtrarPeriodo(periodo) {
+    const hoy = new Date();
+    let fechaInicio, fechaFin;
+
+    switch (periodo) {
+        case 'semana_actual': {
+            const diaSemana = hoy.getDay();
+            const diffLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+            fechaInicio = new Date(hoy);
+            fechaInicio.setDate(hoy.getDate() - diffLunes);
+            fechaFin = new Date(hoy);
+            break;
+        }
+        case 'semana_anterior': {
+            const diaSemana = hoy.getDay();
+            const diffLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+            fechaInicio = new Date(hoy);
+            fechaInicio.setDate(hoy.getDate() - diffLunes - 7);
+            fechaFin = new Date(fechaInicio);
+            fechaFin.setDate(fechaInicio.getDate() + 6);
+            break;
+        }
+        case 'mes_actual': {
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            fechaFin = new Date(hoy);
+            break;
+        }
+        case 'mes_anterior': {
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+            fechaFin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+            break;
+        }
+        case 'trimestre': {
+            fechaInicio = new Date(hoy);
+            fechaInicio.setMonth(hoy.getMonth() - 3);
+            fechaFin = new Date(hoy);
+            break;
+        }
+    }
+
+    const toLocalDateStr = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dia = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${dia}`;
+    };
+
+    document.getElementById('fechaInicio').value = toLocalDateStr(fechaInicio);
+    document.getElementById('fechaFin').value = toLocalDateStr(fechaFin);
+
+    document.querySelectorAll('.btn-quick').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    cargarDashboard({ fechaInicio: toLocalDateStr(fechaInicio), fechaFin: toLocalDateStr(fechaFin) });
 }
 
 // --- RENDERIZACIÓN DE GRÁFICOS (CHART.JS) ---

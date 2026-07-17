@@ -3,6 +3,9 @@
 
 const API_BASE = '/api';
 
+// Variable global para rastrear el período activo
+let periodoActivo = 'todos';
+
 async function fetchReportData(fechaInicio, fechaFin) {
     const params = new URLSearchParams();
     if (fechaInicio) params.set('fechaInicio', fechaInicio);
@@ -26,13 +29,80 @@ function formatFecha(dateStr) {
     return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function getPeriodoLabel(fechaInicio, fechaFin) {
+function formatFechaLarga(dateStr) {
+    if (!dateStr) return 'N/A';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// Genera el título del reporte según el período
+function getTituloReporte(periodo) {
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const hoy = new Date();
+
+    switch (periodo) {
+        case 'semana_actual': {
+            const diaSemana = hoy.getDay();
+            const diffLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+            const inicio = new Date(hoy);
+            inicio.setDate(hoy.getDate() - diffLunes);
+            const fin = new Date(hoy);
+            return `REPORTE SEMANAL\nSemana del ${formatFechaLarga(inicio.toISOString())} al ${formatFechaLarga(fin.toISOString())}`;
+        }
+        case 'semana_anterior': {
+            const diaSemana = hoy.getDay();
+            const diffLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+            const inicio = new Date(hoy);
+            inicio.setDate(hoy.getDate() - diffLunes - 7);
+            const fin = new Date(inicio);
+            fin.setDate(inicio.getDate() + 6);
+            return `REPORTE SEMANAL\nSemana del ${formatFechaLarga(inicio.toISOString())} al ${formatFechaLarga(fin.toISOString())}`;
+        }
+        case 'mes_actual':
+            return `REPORTE MENSUAL\n${meses[hoy.getMonth()]} ${hoy.getFullYear()}`;
+        case 'mes_anterior': {
+            const mesAnt = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+            return `REPORTE MENSUAL\n${meses[mesAnt.getMonth()]} ${mesAnt.getFullYear()}`;
+        }
+        case 'trimestre':
+            return `REPORTE TRIMESTRAL\nÚltimos 3 meses`;
+        default:
+            return `REPORTE GENERAL\nTodos los registros`;
+    }
+}
+
+// Nombre del archivo según el período
+function getNombreArchivo(periodo, extension) {
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+                   'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const hoy = new Date();
+    const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+
+    switch (periodo) {
+        case 'semana_actual':
+        case 'semana_anterior':
+            return `Reporte_Semanal_Hospital_${fecha}.${extension}`;
+        case 'mes_actual':
+            return `Reporte_Mensual_Hospital_${meses[hoy.getMonth()]}_${hoy.getFullYear()}.${extension}`;
+        case 'mes_anterior': {
+            const mesAnt = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+            return `Reporte_Mensual_Hospital_${meses[mesAnt.getMonth()]}_${mesAnt.getFullYear()}.${extension}`;
+        }
+        case 'trimestre':
+            return `Reporte_Trimestral_Hospital_${fecha}.${extension}`;
+        default:
+            return `Reporte_KPI_Hospital_${fecha}.${extension}`;
+    }
+}
+
+function getPeriodoSubtitulo(fechaInicio, fechaFin) {
     if (fechaInicio && fechaFin) {
-        return `${formatFecha(fechaInicio)} al ${formatFecha(fechaFin)}`;
+        return `Período: ${formatFecha(fechaInicio)} al ${formatFecha(fechaFin)}`;
     } else if (fechaInicio) {
-        return `Desde ${formatFecha(fechaInicio)}`;
+        return `Desde: ${formatFecha(fechaInicio)}`;
     } else if (fechaFin) {
-        return `Hasta ${formatFecha(fechaFin)}`;
+        return `Hasta: ${formatFecha(fechaFin)}`;
     }
     return 'Todos los registros';
 }
@@ -40,17 +110,20 @@ function getPeriodoLabel(fechaInicio, fechaFin) {
 // ==================== EXPORTAR EXCEL ====================
 async function exportarExcel(fechaInicio, fechaFin) {
     try {
+        mostrarLoadingExport(true);
         const data = await fetchReportData(fechaInicio, fechaFin);
-        const periodo = getPeriodoLabel(fechaInicio, fechaFin);
+        const [linea1, linea2] = getTituloReporte(periodoActivo).split('\n');
+        const subtitulo = getPeriodoSubtitulo(fechaInicio, fechaFin);
 
         const wb = XLSX.utils.book_new();
 
         // Hoja 1: Resumen de KPIs
         const resumenData = [
             ['HOSPITAL DE ESPECIALIDADES PORTOVIEJO'],
-            ['Dashboard de Indicadores KPI - Área de Emergencia'],
+            [linea1],
+            [linea2],
             [''],
-            ['Período:', periodo],
+            [subtitulo],
             ['Fecha de exportación:', new Date().toLocaleString('es-ES')],
             [''],
             ['RESUMEN GENERAL'],
@@ -133,7 +206,7 @@ async function exportarExcel(fechaInicio, fechaFin) {
         XLSX.utils.book_append_sheet(wb, wsFecha, 'Evolución Diaria');
 
         // Descargar archivo
-        const fileName = `Reporte_KPI_Hospital_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        const fileName = getNombreArchivo(periodoActivo, 'xlsx');
         XLSX.writeFile(wb, fileName);
 
         return true;
@@ -141,6 +214,8 @@ async function exportarExcel(fechaInicio, fechaFin) {
         console.error('Error al exportar Excel:', error);
         alert('Error al generar el archivo Excel. Verifique la conexión al servidor.');
         return false;
+    } finally {
+        mostrarLoadingExport(false);
     }
 }
 
@@ -156,26 +231,31 @@ async function exportarPDF(fechaInicio, fechaFin) {
         const margin = 15;
         let yPos = margin;
 
+        const [linea1, linea2] = getTituloReporte(periodoActivo).split('\n');
+        const subtitulo = getPeriodoSubtitulo(fechaInicio, fechaFin);
+
         // Función auxiliar para encabezado
         function drawHeader() {
-            // Fondo del encabezado
             doc.setFillColor(11, 47, 92);
-            doc.rect(0, 0, pageWidth, 35, 'F');
+            doc.rect(0, 0, pageWidth, 38, 'F');
 
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(18);
+            doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
-            doc.text('HOSPITAL DE ESPECIALIDADES PORTOVIEJO', pageWidth / 2, 14, { align: 'center' });
+            doc.text('HOSPITAL DE ESPECIALIDADES PORTOVIEJO', pageWidth / 2, 12, { align: 'center' });
 
-            doc.setFontSize(11);
+            doc.setFontSize(13);
+            doc.setFont('helvetica', 'bold');
+            doc.text(linea1, pageWidth / 2, 21, { align: 'center' });
+
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text('Dashboard de Indicadores KPI - Área de Emergencia', pageWidth / 2, 22, { align: 'center' });
+            doc.text(linea2, pageWidth / 2, 28, { align: 'center' });
 
-            doc.setFontSize(9);
-            const periodo = getPeriodoLabel(fechaInicio, fechaFin);
-            doc.text(`Período: ${periodo}`, pageWidth / 2, 30, { align: 'center' });
+            doc.setFontSize(8);
+            doc.text(subtitulo, pageWidth / 2, 34, { align: 'center' });
 
-            yPos = 42;
+            yPos = 44;
         }
 
         // Función para dibujar sección
@@ -197,7 +277,6 @@ async function exportarPDF(fechaInicio, fechaFin) {
             const availWidth = pageWidth - margin * 2;
             headers.forEach(() => colWidths.push(availWidth / numCols));
 
-            // Encabezados
             doc.setFillColor(240, 240, 240);
             doc.rect(margin, y, availWidth, 7, 'F');
             doc.setTextColor(50, 50, 50);
@@ -210,7 +289,6 @@ async function exportarPDF(fechaInicio, fechaFin) {
             });
             y += 7;
 
-            // Filas
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(8);
             rows.forEach(row => {
@@ -232,7 +310,6 @@ async function exportarPDF(fechaInicio, fechaFin) {
 
         // ---- PÁGINA 1: RESUMEN ----
         drawHeader();
-
         const data = await fetchReportData(fechaInicio, fechaFin);
 
         // Tarjetas de KPI
@@ -281,19 +358,16 @@ async function exportarPDF(fechaInicio, fechaFin) {
         doc.addPage();
         drawHeader();
 
-        // Productividad Signos Vitales
         yPos = drawSection('PRODUCTIVIDAD - TOMA DE SIGNOS VITALES', yPos);
         const signosRows = data.productividad.signos_vitales.map(p => [p.personal, p.cantidad.toString()]);
         yPos = drawTable(['Nombre del Profesional', 'Pacientes Atendidos'], signosRows, yPos);
         yPos += 4;
 
-        // Productividad Triage
         yPos = drawSection('PRODUCTIVIDAD - EVALUACIÓN DE TRIAGE', yPos);
         const triageRows = data.productividad.triage.map(p => [p.personal, p.cantidad.toString()]);
         yPos = drawTable(['Nombre del Profesional', 'Pacientes Atendidos'], triageRows, yPos);
         yPos += 4;
 
-        // Tendencia por hora
         if (yPos > pageHeight - 60) {
             doc.addPage();
             drawHeader();
@@ -318,8 +392,7 @@ async function exportarPDF(fechaInicio, fechaFin) {
             );
         }
 
-        // Descargar
-        const fileName = `Reporte_KPI_Hospital_${new Date().toISOString().slice(0, 10)}.pdf`;
+        const fileName = getNombreArchivo(periodoActivo, 'pdf');
         doc.save(fileName);
 
         return true;
@@ -337,10 +410,10 @@ function mostrarLoadingExport(cargando) {
     const btnPDF = document.getElementById('btnExportPDF');
     if (btnExcel) {
         btnExcel.disabled = cargando;
-        btnExcel.textContent = cargando ? 'Generando...' : 'Exportar Excel';
+        btnExcel.textContent = cargando ? 'Generando...' : '📊 Exportar Excel';
     }
     if (btnPDF) {
         btnPDF.disabled = cargando;
-        btnPDF.textContent = cargando ? 'Generando...' : 'Exportar PDF';
+        btnPDF.textContent = cargando ? 'Generando...' : '📄 Exportar PDF';
     }
 }

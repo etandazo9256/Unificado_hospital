@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const pool = require('./db');
@@ -12,6 +13,9 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
+
+// Servir archivos estáticos del frontend
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 function emitirEvento(tipo, datos) {
     io.emit(tipo, datos);
@@ -755,6 +759,12 @@ app.get('/api/kpis/tendencia-fecha', async (req, res) => {
         console.error('Error al obtener tendencia por fecha:', error);
         res.status(500).json({ error: error.message });
     }
+});
+
+// Ruta catch-all: sirve index.html para rutas SPA
+app.get('/{*path}', (req, res) => {
+    if (req.path.startsWith('/api/')) return;
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
 
 server.listen(3000, () => {

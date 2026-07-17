@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = '';
 let currentTurnoId = null;
 let personalList = [];
 let llamadosList = [];

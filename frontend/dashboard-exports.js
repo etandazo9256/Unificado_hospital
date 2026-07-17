@@ -67,6 +67,10 @@ function getTituloReporte(periodo) {
         }
         case 'trimestre':
             return `REPORTE TRIMESTRAL\nÚltimos 3 meses`;
+        case 'anio_actual':
+            return `REPORTE ANUAL\nAño ${hoy.getFullYear()}`;
+        case 'anio_anterior':
+            return `REPORTE ANUAL\nAño ${hoy.getFullYear() - 1}`;
         default:
             return `REPORTE GENERAL\nTodos los registros`;
     }
@@ -91,6 +95,10 @@ function getNombreArchivo(periodo, extension) {
         }
         case 'trimestre':
             return `Reporte_Trimestral_Hospital_${fecha}.${extension}`;
+        case 'anio_actual':
+            return `Reporte_Anual_Hospital_${hoy.getFullYear()}.${extension}`;
+        case 'anio_anterior':
+            return `Reporte_Anual_Hospital_${hoy.getFullYear() - 1}.${extension}`;
         default:
             return `Reporte_KPI_Hospital_${fecha}.${extension}`;
     }

@@ -126,6 +126,9 @@ function filtrarDatos() {
         return;
     }
 
+    document.querySelectorAll('.btn-quick').forEach(b => b.classList.remove('active'));
+    periodoActivo = 'todos';
+
     cargarDashboard(filtros);
 }
 
@@ -134,6 +137,7 @@ function limpiarFiltros() {
     document.getElementById('fechaInicio').value = '';
     document.getElementById('fechaFin').value = '';
     document.querySelectorAll('.btn-quick').forEach(b => b.classList.remove('active'));
+    periodoActivo = 'todos';
     cargarDashboard();
 }
 
@@ -190,6 +194,8 @@ function filtrarPeriodo(periodo) {
 
     document.querySelectorAll('.btn-quick').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
+
+    periodoActivo = periodo;
 
     cargarDashboard({ fechaInicio: toLocalDateStr(fechaInicio), fechaFin: toLocalDateStr(fechaFin) });
 }

@@ -1,5 +1,5 @@
 // URL base de la API del backend
-const API_URL = 'http://localhost:3000/api';
+const API_URL = '/api';
 
 // Instancias de los gráficos para poder destruirlos y recrearlos al filtrar
 let chartDemandaHora = null;
@@ -18,6 +18,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnFiltrar').addEventListener('click', filtrarDatos);
     document.getElementById('btnLimpiarFiltros').addEventListener('click', limpiarFiltros);
     document.getElementById('btnRefresh').addEventListener('click', cargarDashboard);
+    document.getElementById('btnExportExcel').addEventListener('click', () => {
+        const fi = document.getElementById('fechaInicio').value;
+        const ff = document.getElementById('fechaFin').value;
+        exportarExcel(fi, ff);
+    });
+    document.getElementById('btnExportPDF').addEventListener('click', () => {
+        const fi = document.getElementById('fechaInicio').value;
+        const ff = document.getElementById('fechaFin').value;
+        exportarPDF(fi, ff);
+    });
 
     // Cargar dashboard inicialmente sin filtros (todas las fechas)
     cargarDashboard();

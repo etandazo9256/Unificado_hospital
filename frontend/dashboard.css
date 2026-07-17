@@ -570,6 +570,53 @@ tr:hover td {
     margin-top: auto;
 }
 
+/* ---------- BOTONES DE EXPORTACIÓN ---------- */
+.export-divider {
+    width: 1px;
+    height: 30px;
+    background-color: var(--border-color);
+}
+
+.btn-export {
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+    white-space: nowrap;
+    border: none;
+}
+
+.btn-excel {
+    background: linear-gradient(135deg, #065F46, #10B981);
+    color: white;
+}
+
+.btn-excel:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-pdf {
+    background: linear-gradient(135deg, #991B1B, #EF4444);
+    color: white;
+}
+
+.btn-pdf:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-export:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
 /* ---------- RESPONSIVIDAD ---------- */
 @media (max-width: 600px) {
     .topbar {
@@ -594,6 +641,13 @@ tr:hover td {
     .filter-controls {
         flex-direction: column;
         align-items: stretch;
+    }
+    .export-divider {
+        display: none;
+    }
+    .btn-export {
+        width: 100%;
+        justify-content: center;
     }
     .btn-action, .btn-action-outline {
         width: 100%;

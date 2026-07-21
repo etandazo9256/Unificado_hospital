@@ -413,9 +413,12 @@ body {
     position: relative;
     flex-grow: 1;
     min-height: 280px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 100%;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    max-height: 350px;
 }
 
 .donut-wrapper {

@@ -154,6 +154,27 @@ body {
     transform: rotate(180deg);
 }
 
+.btn-auto-refresh {
+    background-color: var(--bg-card);
+    border: 1px solid var(--color-green);
+    color: var(--color-green);
+    padding: 10px 18px;
+    border-radius: var(--border-radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.btn-auto-refresh:hover {
+    background-color: var(--color-green);
+    color: white;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
 /* ---------- CONTENEDOR PRINCIPAL ---------- */
 .dashboard-container {
     max-width: 1400px;

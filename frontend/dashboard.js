@@ -320,6 +320,7 @@ function renderChartPrioridades(prioridades) {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
+            layout: { padding: { right: 60 } },
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -347,28 +348,7 @@ function renderChartPrioridades(prioridades) {
                     ticks: { color: '#94A3B8', font: { family: 'Outfit', size: 12, weight: '600' } }
                 }
             }
-        },
-        plugins: [{
-            id: 'barLabels',
-            afterDatasetsDraw(chart) {
-                const { ctx: c, data, scales: { x: xScale } } = chart;
-                const meta = chart.getDatasetMeta(0);
-                meta.data.forEach((bar, i) => {
-                    const val = data.datasets[0].data[i];
-                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
-                    if (val > 0) {
-                        c.save();
-                        c.fillStyle = '#F1F5F9';
-                        c.font = 'bold 12px Outfit';
-                        c.textAlign = 'left';
-                        c.textBaseline = 'middle';
-                        const xPos = bar.x + 8;
-                        c.fillText(`${val}  (${pct}%)`, xPos, bar.y);
-                        c.restore();
-                    }
-                });
-            }
-        }]
+        }
     });
 }
 

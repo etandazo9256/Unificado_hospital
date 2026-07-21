@@ -1,4 +1,0 @@
-﻿// dashboard-exports.js - Export functions
-// HEP Portoviejo
-
-const API_BASE = "/api";

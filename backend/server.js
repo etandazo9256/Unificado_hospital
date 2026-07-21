@@ -570,7 +570,7 @@ function buildWhereClause(query, baseConditions = []) {
 // 1. Resumen de KPIs Generales (compatible con y sin columna estado)
 app.get('/api/kpis/resumen', async (req, res) => {
     try {
-        const baseCond = ["turno IS NOT NULL AND turno != ''"];
+        const baseCond = ["paciente IS NOT NULL AND paciente != ''"];
         const { whereStr, params } = buildWhereClause(req.query, baseCond);
         let row;
 
@@ -681,7 +681,7 @@ app.get('/api/kpis/prioridad', async (req, res) => {
 // 3. Productividad del personal (Top 5)
 app.get('/api/kpis/productividad', async (req, res) => {
     try {
-        const { whereStr: whereSig, params: paramsSig } = buildWhereClause(req.query, ["resp_sig_vitales IS NOT NULL AND resp_sig_vitales != ''", "turno IS NOT NULL AND turno != ''"]);
+        const { whereStr: whereSig, params: paramsSig } = buildWhereClause(req.query, ["resp_sig_vitales IS NOT NULL AND resp_sig_vitales != ''", "paciente IS NOT NULL AND paciente != ''"]);
         const signosResult = await pool.query(`
             SELECT
                 resp_sig_vitales as personal,
@@ -693,7 +693,7 @@ app.get('/api/kpis/productividad', async (req, res) => {
             LIMIT 5
         `, paramsSig);
 
-        const { whereStr: whereTri, params: paramsTri } = buildWhereClause(req.query, ["resp_triage IS NOT NULL AND resp_triage != ''", "turno IS NOT NULL AND turno != ''"]);
+        const { whereStr: whereTri, params: paramsTri } = buildWhereClause(req.query, ["resp_triage IS NOT NULL AND resp_triage != ''", "paciente IS NOT NULL AND paciente != ''"]);
         const triageResult = await pool.query(`
             SELECT
                 resp_triage as personal,
@@ -718,7 +718,7 @@ app.get('/api/kpis/productividad', async (req, res) => {
 // 4. Tendencia por hora del día
 app.get('/api/kpis/tendencia-hora', async (req, res) => {
     try {
-        const { whereStr, params } = buildWhereClause(req.query, ["fecha_turno IS NOT NULL", "turno IS NOT NULL AND turno != ''"]);
+        const { whereStr, params } = buildWhereClause(req.query, ["fecha_turno IS NOT NULL", "paciente IS NOT NULL AND paciente != ''"]);
         const result = await pool.query(`
             SELECT
                 EXTRACT(HOUR FROM fecha_turno) as hora,
@@ -741,7 +741,7 @@ app.get('/api/kpis/tendencia-hora', async (req, res) => {
 // 5. Tendencia por fecha
 app.get('/api/kpis/tendencia-fecha', async (req, res) => {
     try {
-        const { whereStr, params } = buildWhereClause(req.query, ["fecha_turno IS NOT NULL", "turno IS NOT NULL AND turno != ''"]);
+        const { whereStr, params } = buildWhereClause(req.query, ["fecha_turno IS NOT NULL", "paciente IS NOT NULL AND paciente != ''"]);
         const result = await pool.query(`
             SELECT
                 DATE(fecha_turno) as fecha,

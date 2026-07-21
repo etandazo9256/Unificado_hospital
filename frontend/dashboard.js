@@ -278,17 +278,17 @@ function renderChartDemandaHora(datos) {
 function renderChartPrioridades(prioridades) {
     const ctx = document.getElementById('chartPrioridades').getContext('2d');
     
-    // Mapear prioridades del backend
-    // Los valores de prioridad conocidos son 'ROJO', 'AMARILLO', 'VERDE', 'SIN CLASIFICAR'
+    // Mapear prioridades del sistema Manchester
     const colorMap = {
-        'ROJO': { label: 'Rojo (Gravedad Crítica)', color: '#EF4444' },
-        'AMARILLO': { label: 'Amarillo (Urgente)', color: '#F59E0B' },
-        'VERDE': { label: 'Verde (No Urgente)', color: '#10B981' },
-        'SIN CLASIFICAR': { label: 'Sin Clasificar', color: '#64748B' }
+        'P1-RESUCITACION': { label: 'P1 - Resucitación (Inmediato)', color: '#DC2626' },
+        'P2-EMERGENCIA': { label: 'P2 - Emergencia (Muy Urgente)', color: '#EA580C' },
+        'P3-URGENCIA': { label: 'P3 - Urgencia', color: '#CA8A04' },
+        'P4-MENOS_URGENTE': { label: 'P4 - Menos Urgente', color: '#16A34A' },
+        'P5-NO_URGENTE': { label: 'P5 - No Urgente', color: '#2563EB' }
     };
 
-    // Ordenar prioridades para mantener un orden visual lógico: Rojo, Amarillo, Verde, Gris
-    const orderedKeys = ['ROJO', 'AMARILLO', 'VERDE', 'SIN CLASIFICAR'];
+    // Ordenar prioridades Manchester: P1, P2, P3, P4, P5
+    const orderedKeys = ['P1-RESUCITACION', 'P2-EMERGENCIA', 'P3-URGENCIA', 'P4-MENOS_URGENTE', 'P5-NO_URGENTE'];
     const labels = [];
     const data = [];
     const colors = [];

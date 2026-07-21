@@ -183,11 +183,11 @@ app.post('/api/turnos/:id/finalizar-triage', async (req, res) => {
         const { prioridad, consultorio, resp_sig_vitales } = req.body || {};
 
         if (!prioridad) {
-            return res.json({ success: false, message: 'Debe asignar una prioridad (ROJO, AMARILLO, VERDE)' });
+            return res.json({ success: false, message: 'Debe asignar una prioridad (P1-P5 Manchester)' });
         }
 
-        if (!['ROJO', 'AMARILLO', 'VERDE', 'SIN CLASIFICAR'].includes(prioridad)) {
-            return res.json({ success: false, message: 'Prioridad inválida. Use: ROJO, AMARILLO, VERDE o SIN CLASIFICAR' });
+        if (!['P1-RESUCITACION', 'P2-EMERGENCIA', 'P3-URGENCIA', 'P4-MENOS_URGENTE', 'P5-NO_URGENTE'].includes(prioridad)) {
+            return res.json({ success: false, message: 'Prioridad inválida. Use: P1-RESUCITACION, P2-EMERGENCIA, P3-URGENCIA, P4-MENOS_URGENTE, P5-NO_URGENTE' });
         }
 
         const result = await pool.query(`
@@ -226,10 +226,12 @@ app.get('/api/turnos/pendientes-medico', async (req, res) => {
             WHERE estado = 'pendiente_medico'
             ORDER BY
                 CASE prioridad
-                    WHEN 'ROJO' THEN 1
-                    WHEN 'AMARILLO' THEN 2
-                    WHEN 'VERDE' THEN 3
-                    ELSE 4
+                    WHEN 'P1-RESUCITACION' THEN 1
+                    WHEN 'P2-EMERGENCIA' THEN 2
+                    WHEN 'P3-URGENCIA' THEN 3
+                    WHEN 'P4-MENOS_URGENTE' THEN 4
+                    WHEN 'P5-NO_URGENTE' THEN 5
+                    ELSE 6
                 END ASC,
                 fecha_fin_triage ASC
             LIMIT 20

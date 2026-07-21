@@ -351,24 +351,6 @@ function renderChartPrioridades(prioridades) {
         }
     });
 }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { color: 'rgba(255,255,255,0.03)' },
-                    ticks: { color: '#64748B', font: { family: 'Outfit' }, stepSize: 10 },
-                    title: { display: true, text: 'Cantidad de Pacientes', color: '#64748B', font: { family: 'Outfit', size: 11 } }
-                },
-                y: {
-                    grid: { display: false },
-                    ticks: { color: '#94A3B8', font: { family: 'Outfit', size: 12, weight: '600' } }
-                }
-            }
-        }
-    });
-}
-
 // Gráfico 3: Tiempos de Proceso por Etapa (Barras)
 function renderChartTiemposProceso(resumen) {
     const ctx = document.getElementById('chartTiemposProceso').getContext('2d');

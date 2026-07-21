@@ -278,27 +278,36 @@ function renderChartDemandaHora(datos) {
 function renderChartPrioridades(prioridades) {
     const ctx = document.getElementById('chartPrioridades').getContext('2d');
     
+    // Mapa unificado: admite tanto valores antiguos como Manchester
     const colorMap = {
-        'P1-RESUCITACION': { label: 'P1 Resucitación', color: '#DC2626' },
-        'P2-EMERGENCIA': { label: 'P2 Emergencia', color: '#EA580C' },
-        'P3-URGENCIA': { label: 'P3 Urgencia', color: '#CA8A04' },
-        'P4-MENOS_URGENTE': { label: 'P4 Menos Urgente', color: '#16A34A' },
-        'P5-NO_URGENTE': { label: 'P5 No Urgente', color: '#2563EB' }
+        'P1-RESUCITACION':   { label: 'P1 Resucitación', color: '#DC2626', order: 1 },
+        'ROJO':              { label: 'P1 Resucitación', color: '#DC2626', order: 1 },
+        'P2-EMERGENCIA':     { label: 'P2 Emergencia',   color: '#EA580C', order: 2 },
+        'P3-URGENCIA':       { label: 'P3 Urgencia',     color: '#CA8A04', order: 3 },
+        'AMARILLO':          { label: 'P3 Urgencia',     color: '#CA8A04', order: 3 },
+        'P4-MENOS_URGENTE':  { label: 'P4 Menos Urgente', color: '#16A34A', order: 4 },
+        'VERDE':             { label: 'P4 Menos Urgente', color: '#16A34A', order: 4 },
+        'P5-NO_URGENTE':     { label: 'P5 No Urgente',   color: '#2563EB', order: 5 },
+        'SIN CLASIFICAR':    { label: 'Sin Clasificar',  color: '#64748B', order: 6 }
     };
 
-    const orderedKeys = ['P1-RESUCITACION', 'P2-EMERGENCIA', 'P3-URGENCIA', 'P4-MENOS_URGENTE', 'P5-NO_URGENTE'];
-    const labels = [];
-    const data = [];
-    const colors = [];
-    const total = prioridades.reduce((sum, p) => sum + (p.cantidad || 0), 0);
-
-    orderedKeys.forEach(key => {
-        const item = prioridades.find(p => p.prioridad === key);
-        const count = item ? item.cantidad : 0;
-        labels.push(colorMap[key].label);
-        data.push(count);
-        colors.push(colorMap[key].color);
+    // Agrupar datos por label (fusionar valores antiguos y nuevos)
+    const agrupado = {};
+    prioridades.forEach(p => {
+        const map = colorMap[p.prioridad];
+        if (map) {
+            if (!agrupado[map.label]) {
+                agrupado[map.label] = { label: map.label, color: map.color, order: map.order, cantidad: 0 };
+            }
+            agrupado[map.label].cantidad += p.cantidad;
+        }
     });
+
+    const sorted = Object.values(agrupado).sort((a, b) => a.order - b.order);
+    const labels = sorted.map(s => s.label);
+    const data = sorted.map(s => s.cantidad);
+    const colors = sorted.map(s => s.color);
+    const total = data.reduce((sum, v) => sum + v, 0);
 
     if (chartPrioridades) chartPrioridades.destroy();
 
@@ -334,6 +343,23 @@ function renderChartPrioridades(prioridades) {
                             const pct = total > 0 ? ((ctx.parsed.x / total) * 100).toFixed(1) : 0;
                             return ` ${ctx.parsed.x} pacientes (${pct}%)`;
                         }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.03)' },
+                    ticks: { color: '#64748B', font: { family: 'Outfit' }, stepSize: 10 },
+                    title: { display: true, text: 'Cantidad de Pacientes', color: '#64748B', font: { family: 'Outfit', size: 11 } }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: '#94A3B8', font: { family: 'Outfit', size: 12, weight: '600' } }
+                }
+            }
+        }
+    });
+}
                     }
                 }
             },

@@ -274,30 +274,27 @@ function renderChartDemandaHora(datos) {
     });
 }
 
-// Gráfico 2: Prioridades de Triage (Dona)
+// Gráfico 2: Prioridades de Triage Manchester (Barras Horizontales + %)
 function renderChartPrioridades(prioridades) {
     const ctx = document.getElementById('chartPrioridades').getContext('2d');
     
-    // Mapear prioridades del sistema Manchester
     const colorMap = {
-        'P1-RESUCITACION': { label: 'P1 - Resucitación (Inmediato)', color: '#DC2626' },
-        'P2-EMERGENCIA': { label: 'P2 - Emergencia (Muy Urgente)', color: '#EA580C' },
-        'P3-URGENCIA': { label: 'P3 - Urgencia', color: '#CA8A04' },
-        'P4-MENOS_URGENTE': { label: 'P4 - Menos Urgente', color: '#16A34A' },
-        'P5-NO_URGENTE': { label: 'P5 - No Urgente', color: '#2563EB' }
+        'P1-RESUCITACION': { label: 'P1 Resucitación', color: '#DC2626' },
+        'P2-EMERGENCIA': { label: 'P2 Emergencia', color: '#EA580C' },
+        'P3-URGENCIA': { label: 'P3 Urgencia', color: '#CA8A04' },
+        'P4-MENOS_URGENTE': { label: 'P4 Menos Urgente', color: '#16A34A' },
+        'P5-NO_URGENTE': { label: 'P5 No Urgente', color: '#2563EB' }
     };
 
-    // Ordenar prioridades Manchester: P1, P2, P3, P4, P5
     const orderedKeys = ['P1-RESUCITACION', 'P2-EMERGENCIA', 'P3-URGENCIA', 'P4-MENOS_URGENTE', 'P5-NO_URGENTE'];
     const labels = [];
     const data = [];
     const colors = [];
+    const total = prioridades.reduce((sum, p) => sum + (p.cantidad || 0), 0);
 
     orderedKeys.forEach(key => {
         const item = prioridades.find(p => p.prioridad === key);
         const count = item ? item.cantidad : 0;
-        
-        // Solo agregar al gráfico si tiene atenciones o si es uno de los principales triage
         labels.push(colorMap[key].label);
         data.push(count);
         colors.push(colorMap[key].color);
@@ -306,41 +303,72 @@ function renderChartPrioridades(prioridades) {
     if (chartPrioridades) chartPrioridades.destroy();
 
     chartPrioridades = new Chart(ctx, {
-        type: 'doughnut',
+        type: 'bar',
         data: {
             labels: labels,
             datasets: [{
+                label: 'Pacientes',
                 data: data,
                 backgroundColor: colors,
-                borderWidth: 2,
-                borderColor: '#121829', // igual que el color de la tarjeta
-                hoverOffset: 6
+                borderColor: colors,
+                borderWidth: 1,
+                borderRadius: 6,
+                barThickness: 32
             }]
         },
         options: {
+            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '65%',
             plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#94A3B8',
-                        padding: 15,
-                        font: { size: 11, family: 'Outfit' },
-                        usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
-                },
+                legend: { display: false },
                 tooltip: {
                     backgroundColor: '#1E293B',
                     titleColor: '#F8FAFC',
                     bodyColor: '#94A3B8',
                     borderWidth: 1,
-                    borderColor: '#334155'
+                    borderColor: '#334155',
+                    callbacks: {
+                        label: function(ctx) {
+                            const pct = total > 0 ? ((ctx.parsed.x / total) * 100).toFixed(1) : 0;
+                            return ` ${ctx.parsed.x} pacientes (${pct}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.03)' },
+                    ticks: { color: '#64748B', font: { family: 'Outfit' }, stepSize: 10 },
+                    title: { display: true, text: 'Cantidad de Pacientes', color: '#64748B', font: { family: 'Outfit', size: 11 } }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: '#94A3B8', font: { family: 'Outfit', size: 12, weight: '600' } }
                 }
             }
-        }
+        },
+        plugins: [{
+            id: 'barLabels',
+            afterDatasetsDraw(chart) {
+                const { ctx: c, data, scales: { x: xScale } } = chart;
+                const meta = chart.getDatasetMeta(0);
+                meta.data.forEach((bar, i) => {
+                    const val = data.datasets[0].data[i];
+                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                    if (val > 0) {
+                        c.save();
+                        c.fillStyle = '#F1F5F9';
+                        c.font = 'bold 12px Outfit';
+                        c.textAlign = 'left';
+                        c.textBaseline = 'middle';
+                        const xPos = bar.x + 8;
+                        c.fillText(`${val}  (${pct}%)`, xPos, bar.y);
+                        c.restore();
+                    }
+                });
+            }
+        }]
     });
 }
 

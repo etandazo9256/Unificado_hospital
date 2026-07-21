@@ -7,6 +7,12 @@ let chartPrioridades = null;
 let chartTiemposProceso = null;
 let chartEvolucionDiaria = null;
 
+// Auto-refresh
+let autoRefreshEnabled = true;
+let autoRefreshInterval = null;
+const AUTO_REFRESH_MS = 30000;
+let filtrosActuales = {};
+
 // Ejecutar al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
     // Configurar fechas iniciales (vacías por defecto para mostrar "Ver Todo")
@@ -18,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnFiltrar').addEventListener('click', filtrarDatos);
     document.getElementById('btnLimpiarFiltros').addEventListener('click', limpiarFiltros);
     document.getElementById('btnRefresh').addEventListener('click', cargarDashboard);
+    document.getElementById('btnAutoRefresh').addEventListener('click', toggleAutoRefresh);
     document.getElementById('btnExportExcel').addEventListener('click', () => {
         const fi = document.getElementById('fechaInicio').value;
         const ff = document.getElementById('fechaFin').value;
@@ -31,10 +38,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Cargar dashboard inicialmente sin filtros (todas las fechas)
     cargarDashboard();
+    startAutoRefresh();
 });
+
+function toggleAutoRefresh() {
+    autoRefreshEnabled = !autoRefreshEnabled;
+    const icon = document.getElementById('autoRefreshIcon');
+    if (autoRefreshEnabled) {
+        icon.textContent = '🟢';
+        startAutoRefresh();
+    } else {
+        icon.textContent = '🔴';
+        stopAutoRefresh();
+    }
+}
+
+function startAutoRefresh() {
+    stopAutoRefresh();
+    autoRefreshInterval = setInterval(() => {
+        cargarDashboard(filtrosActuales);
+    }, AUTO_REFRESH_MS);
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+}
 
 // Función principal para cargar y actualizar todos los componentes del dashboard
 async function cargarDashboard(filtros = {}) {
+    filtrosActuales = filtros;
     mostrarLoading(true);
     try {
         // Construir string de query string para filtros

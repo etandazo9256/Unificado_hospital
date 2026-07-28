@@ -3,6 +3,28 @@ let currentTurnoId = null;
 let personalList = [];
 let llamadosList = [];
 let socket = null;
+let intervaloTriage = null;
+
+// Topes Manchester (P1–P5) en minutos
+const MANCHESTER_TR = {
+    'P1-RESUCITACION':  { minutos: 0,   label: 'Inmediato', color: '#DC2626' },
+    'P2-EMERGENCIA':    { minutos: 10,  label: '≤ 10 min',  color: '#EA580C' },
+    'P3-URGENCIA':      { minutos: 60,  label: '≤ 60 min',  color: '#CA8A04' },
+    'P4-MENOS_URGENTE': { minutos: 120, label: '≤ 120 min', color: '#16A34A' },
+    'P5-NO_URGENTE':    { minutos: 240, label: '≤ 240 min', color: '#2563EB' }
+};
+
+function minutosDesde(fechaISO) {
+    if (!fechaISO) return 0;
+    return Math.floor((Date.now() - new Date(fechaISO).getTime()) / 60000);
+}
+
+function fmtEspera(min) {
+    if (min < 1) return '< 1 min';
+    if (min < 60) return `${min} min`;
+    const h = Math.floor(min / 60); const m = min % 60;
+    return m > 0 ? `${h}h ${m}min` : `${h}h`;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnLlamarSiguiente').addEventListener('click', llamarSiguiente);
@@ -10,6 +32,28 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnNoAsiste').addEventListener('click', marcarNoAsiste);
 
     cargarPersonal().then(() => cargarTriage());
+
+    // Refrescar tiempos transcurridos cada 30 segundos
+    intervaloTriage = setInterval(() => {
+        document.querySelectorAll('tr[data-fecha]').forEach(tr => {
+            const fechaISO = tr.dataset.fecha;
+            const prio     = tr.dataset.prioridad;
+            const man      = MANCHESTER_TR[prio];
+            const trans    = minutosDesde(fechaISO);
+            const excedido = man && man.minutos > 0 && trans > man.minutos;
+
+            const spanTrans = tr.querySelector('.td-espera-trans');
+            if (spanTrans) spanTrans.textContent = fmtEspera(trans);
+
+            const spanAlert = tr.querySelector('.td-alerta');
+            if (spanAlert) {
+                spanAlert.style.display = excedido ? 'inline-block' : 'none';
+                spanAlert.textContent   = excedido ? `⚠ Supera ${man.label}` : '';
+            }
+
+            tr.classList.toggle('fila-excedida', excedido);
+        });
+    }, 30000);
 
     socket = io(API_URL);
     socket.on('connect', () => actualizarConexion(true));
@@ -152,16 +196,29 @@ function renderPendientes(pendientes) {
     tbody.innerHTML = '';
 
     if (pendientes.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="empty-cell">No hay turnos pendientes</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-cell">No hay turnos pendientes</td></tr>';
         return;
     }
 
     pendientes.forEach(p => {
+        const man      = MANCHESTER_TR[p.prioridad];
+        const trans    = minutosDesde(p.fecha_turno);
+        const excedido = man && man.minutos > 0 && trans > man.minutos;
+
         const tr = document.createElement('tr');
+        tr.dataset.fecha     = p.fecha_turno || '';
+        tr.dataset.prioridad = p.prioridad   || '';
+        if (excedido) tr.classList.add('fila-excedida');
+
         tr.innerHTML = `
             <td><strong>${p.turno}</strong></td>
             <td>${p.paciente}</td>
             <td>${p.fecha_turno ? new Date(p.fecha_turno).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '---'}</td>
+            <td>
+                <span class="td-espera-trans">${fmtEspera(trans)}</span>
+                ${man ? `<br><span class="td-tope" style="color:${man.color};font-size:11px;font-weight:600;">${man.label}</span>` : ''}
+                <span class="td-alerta" style="display:${excedido ? 'inline-block' : 'none'};">${excedido ? `⚠ Supera ${man?.label}` : ''}</span>
+            </td>
         `;
         tbody.appendChild(tr);
     });

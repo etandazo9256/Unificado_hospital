@@ -269,3 +269,75 @@ html, body { height: 100%; overflow: hidden; }
     .tv-right { flex: 1; }
     .call-turno { font-size: clamp(60px, 12vw, 90px); }
 }
+
+/* ============================================================
+   FILA DE TURNO — Nueva estructura con Manchester dinámico
+   ============================================================ */
+
+/* Contenedor de cada fila en la lista de próximos */
+.fila-turno {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 10px;
+    background: var(--gris-fondo, #F1F5F9);
+    border-left: 5px solid #CBD5E1;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fila-turno:hover {
+    transform: translateX(3px);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+/* Columna izquierda: número grande + badge de prioridad */
+.turno-fila-izq {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 5px; min-width: 72px;
+}
+
+/* Columna derecha: nombre paciente + tiempos */
+.turno-fila-der {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 3px;
+}
+
+/* Badge de prioridad Manchester (color lleno) */
+.turno-prio-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 20px; white-space: nowrap;
+    text-align: center; letter-spacing: 0.3px;
+}
+
+/* Badge de tope máximo (borde del color, fondo transparente) */
+.turno-tope-badge {
+    font-size: 10px; font-weight: 600; padding: 1px 6px;
+    border-radius: 20px; border: 1.5px solid currentColor;
+    background: transparent; white-space: nowrap;
+}
+
+/* Tiempo transcurrido real */
+.turno-espera-trans {
+    font-size: 12px; font-weight: 500;
+    color: var(--texto-suave, #64748B);
+}
+
+/* Fila de los badges de tiempo */
+.turno-tiempos {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+
+/* Alerta cuando el tiempo supera el tope Manchester */
+.turno-alerta {
+    font-size: 11px; font-weight: 700; padding: 2px 8px;
+    border-radius: 20px; background: #FEF2F2;
+    color: #DC2626; border: 1px solid #FECACA;
+}
+
+/* Pulsación visual cuando se excede el tope */
+.fila-turno.tiempo-excedido {
+    animation: pulseFilaExcedida 1.2s ease-in-out infinite;
+    border-left-color: #DC2626 !important;
+}
+
+@keyframes pulseFilaExcedida {
+    0%, 100% { background: var(--gris-fondo, #F1F5F9); }
+    50%       { background: #FEE2E2; }
+}

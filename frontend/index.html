@@ -38,9 +38,11 @@
             <div class="display-turno" id="displayTurno">
                 <div class="etiqueta">Paciente en Atención</div>
                 <div class="numero-turno" id="turnoActual">---</div>
-
                 <div class="paciente-info">
                     <span id="pacienteActual">Esperando pacientes...</span>
+                </div>
+                <div style="margin-top:10px;">
+                    <span id="turnoActualPrioridad" style="display:none;padding:5px 14px;border-radius:20px;font-size:14px;font-weight:700;letter-spacing:0.5px;"></span>
                 </div>
             </div>
         </section>
@@ -54,8 +56,8 @@
 
                 <div class="tabla-proximos">
                     <div class="tabla-header">
-                        <span>TURNO</span>
-                        <span>PACIENTE</span>
+                        <span>TURNO / PRIORIDAD</span>
+                        <span>PACIENTE / TIEMPO</span>
                     </div>
                     <div id="listaProximosTurnos">
                         <div class="fila-vacia">Cargando turnos...</div>

@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard KPI - Hospital de Especialidades de Jipijapa</title>
+    <title>Dashboard KPI - Hospital de Especialidades Portoviejo</title>
     <!-- Google Fonts: Outfit -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Export libraries: XLSX (Excel), jsPDF + html2canvas (PDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
@@ -16,10 +20,10 @@
     <header class="topbar">
         <div class="institucion">
             <div class="logo-container">
-                <img src="logo-hospital.png" alt="Hospital de Especialidades de Jipijapa" class="logo-img">
+                <img src="logo-hospital.png" alt="Hospital de Especialidades Portoviejo" class="logo-img">
             </div>
             <div class="info-hospital">
-                <h1>Hospital de Especialidades de Jipijapa</h1>
+                <h1>Hospital de Especialidades Portoviejo</h1>
                 <span class="subt">Dashboard de Indicadores (KPI) - Área de Emergencia</span>
             </div>
         </div>
@@ -30,8 +34,12 @@
             <button id="btnRefresh" class="btn-refresh" title="Actualizar Datos">
                 <span>⟳</span> Actualizar
             </button>
+            <button id="btnAutoRefresh" class="btn-auto-refresh" title="Activar/Deshabilitar actualización automática">
+                <span id="autoRefreshIcon">🟢</span> Auto-refresh
+            </button>
         </div>
     </header>
+    
 
     <!-- Contenido Principal -->
     <main class="dashboard-container">
@@ -52,6 +60,27 @@
                 </div>
                 <button id="btnFiltrar" class="btn-action">Filtrar</button>
                 <button id="btnLimpiarFiltros" class="btn-action-outline">Restablecer</button>
+                <div class="export-divider"></div>
+                <button id="btnExportExcel" class="btn-export btn-excel" title="Descargar reporte en formato Excel">
+                    📊 Exportar Excel
+                </button>
+                <button id="btnExportPDF" class="btn-export btn-pdf" title="Descargar reporte en formato PDF">
+                    📄 Exportar PDF
+                </button>
+            </div>
+        </section>
+
+        <!-- Fila rápida: Filtros por período -->
+        <section class="quick-filters">
+            <div class="quick-filters-label">Filtros rápidos:</div>
+            <div class="quick-filters-buttons">
+                <button class="btn-quick" onclick="filtrarPeriodo('semana_actual')">Esta Semana</button>
+                <button class="btn-quick" onclick="filtrarPeriodo('semana_anterior')">Semana Anterior</button>
+                <button class="btn-quick" onclick="filtrarPeriodo('mes_actual')">Este Mes</button>
+                <button class="btn-quick" onclick="filtrarPeriodo('mes_anterior')">Mes Anterior</button>
+                <button class="btn-quick" onclick="filtrarPeriodo('trimestre')">Último Trimestre</button>
+                <button class="btn-quick" onclick="filtrarPeriodo('anio_actual')">Este Año</button>
+                <button class="btn-quick" onclick="filtrarPeriodo('anio_anterior')">Año Anterior</button>
             </div>
         </section>
 
@@ -118,9 +147,9 @@
             <div class="chart-card">
                 <div class="chart-header">
                     <h4>Distribución por Prioridad de Triage (Gravedad)</h4>
-                    <span class="tooltip-icon" title="Clasificación de pacientes por gravedad según el sistema de Triage (Rojo/Amarillo/Verde).">ℹ️</span>
+                    <span class="tooltip-icon" title="Clasificación de pacientes por gravedad según el sistema de Triage Manchester (P1-P5).">ℹ️</span>
                 </div>
-                <div class="chart-container donut-wrapper">
+                <div class="chart-container">
                     <canvas id="chartPrioridades"></canvas>
                 </div>
             </div>
@@ -214,10 +243,11 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>© 2026 Hospital de Especialidades de Jipijapa - Departamento de Estadística y Sistemas</p>
+        <p>© 2026 Hospital de Especialidades Portoviejo - Departamento de Estadística y Sistemas</p>
     </footer>
 
-    <!-- Script de lógica -->
+    <!-- Script de lógica y exportación -->
+    <script src="dashboard-exports.js"></script>
     <script src="dashboard.js"></script>
 </body>
 </html>

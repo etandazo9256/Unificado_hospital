@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = '';
 let personalList = [];
 let socket = null;
 
@@ -51,10 +51,11 @@ function renderEnAtencion(pacientes) {
 
     pacientes.forEach(p => {
         const prioridadColor = {
-            'ROJO': '#EF4444',
-            'AMARILLO': '#F59E0B',
-            'VERDE': '#10B981',
-            'SIN CLASIFICAR': '#64748B'
+            'P1-RESUCITACION': '#DC2626',
+            'P2-EMERGENCIA': '#EA580C',
+            'P3-URGENCIA': '#CA8A04',
+            'P4-MENOS_URGENTE': '#16A34A',
+            'P5-NO_URGENTE': '#2563EB'
         }[p.prioridad] || '#64748B';
 
         const card = document.createElement('div');
@@ -91,10 +92,11 @@ function renderPendientesMedico(pendientes) {
 
     pendientes.forEach(p => {
         const prioridadColor = {
-            'ROJO': '#EF4444',
-            'AMARILLO': '#F59E0B',
-            'VERDE': '#10B981',
-            'SIN CLASIFICAR': '#64748B'
+            'P1-RESUCITACION': '#DC2626',
+            'P2-EMERGENCIA': '#EA580C',
+            'P3-URGENCIA': '#CA8A04',
+            'P4-MENOS_URGENTE': '#16A34A',
+            'P5-NO_URGENTE': '#2563EB'
         }[p.prioridad] || '#64748B';
 
         const espera = p.fecha_fin_triage ? calcularTiempoEspera(p.fecha_fin_triage) : '---';

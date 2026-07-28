@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const pool = require('./db');
@@ -12,6 +13,9 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
+
+// Servir archivos estáticos del frontend
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 function emitirEvento(tipo, datos) {
     io.emit(tipo, datos);
@@ -179,11 +183,11 @@ app.post('/api/turnos/:id/finalizar-triage', async (req, res) => {
         const { prioridad, consultorio, resp_sig_vitales } = req.body || {};
 
         if (!prioridad) {
-            return res.json({ success: false, message: 'Debe asignar una prioridad (ROJO, AMARILLO, VERDE)' });
+            return res.json({ success: false, message: 'Debe asignar una prioridad (P1-P5 Manchester)' });
         }
 
-        if (!['ROJO', 'AMARILLO', 'VERDE', 'SIN CLASIFICAR'].includes(prioridad)) {
-            return res.json({ success: false, message: 'Prioridad inválida. Use: ROJO, AMARILLO, VERDE o SIN CLASIFICAR' });
+        if (!['P1-RESUCITACION', 'P2-EMERGENCIA', 'P3-URGENCIA', 'P4-MENOS_URGENTE', 'P5-NO_URGENTE'].includes(prioridad)) {
+            return res.json({ success: false, message: 'Prioridad inválida. Use: P1-RESUCITACION, P2-EMERGENCIA, P3-URGENCIA, P4-MENOS_URGENTE, P5-NO_URGENTE' });
         }
 
         const result = await pool.query(`
@@ -222,10 +226,12 @@ app.get('/api/turnos/pendientes-medico', async (req, res) => {
             WHERE estado = 'pendiente_medico'
             ORDER BY
                 CASE prioridad
-                    WHEN 'ROJO' THEN 1
-                    WHEN 'AMARILLO' THEN 2
-                    WHEN 'VERDE' THEN 3
-                    ELSE 4
+                    WHEN 'P1-RESUCITACION' THEN 1
+                    WHEN 'P2-EMERGENCIA' THEN 2
+                    WHEN 'P3-URGENCIA' THEN 3
+                    WHEN 'P4-MENOS_URGENTE' THEN 4
+                    WHEN 'P5-NO_URGENTE' THEN 5
+                    ELSE 6
                 END ASC,
                 fecha_fin_triage ASC
             LIMIT 20
@@ -564,7 +570,7 @@ function buildWhereClause(query, baseConditions = []) {
 // 1. Resumen de KPIs Generales (compatible con y sin columna estado)
 app.get('/api/kpis/resumen', async (req, res) => {
     try {
-        const baseCond = ["turno IS NOT NULL AND turno != ''"];
+        const baseCond = ["paciente IS NOT NULL AND paciente != ''"];
         const { whereStr, params } = buildWhereClause(req.query, baseCond);
         let row;
 
@@ -675,7 +681,7 @@ app.get('/api/kpis/prioridad', async (req, res) => {
 // 3. Productividad del personal (Top 5)
 app.get('/api/kpis/productividad', async (req, res) => {
     try {
-        const { whereStr: whereSig, params: paramsSig } = buildWhereClause(req.query, ["resp_sig_vitales IS NOT NULL AND resp_sig_vitales != ''", "turno IS NOT NULL AND turno != ''"]);
+        const { whereStr: whereSig, params: paramsSig } = buildWhereClause(req.query, ["resp_sig_vitales IS NOT NULL AND resp_sig_vitales != ''", "paciente IS NOT NULL AND paciente != ''"]);
         const signosResult = await pool.query(`
             SELECT
                 resp_sig_vitales as personal,
@@ -687,7 +693,7 @@ app.get('/api/kpis/productividad', async (req, res) => {
             LIMIT 5
         `, paramsSig);
 
-        const { whereStr: whereTri, params: paramsTri } = buildWhereClause(req.query, ["resp_triage IS NOT NULL AND resp_triage != ''", "turno IS NOT NULL AND turno != ''"]);
+        const { whereStr: whereTri, params: paramsTri } = buildWhereClause(req.query, ["resp_triage IS NOT NULL AND resp_triage != ''", "paciente IS NOT NULL AND paciente != ''"]);
         const triageResult = await pool.query(`
             SELECT
                 resp_triage as personal,
@@ -712,7 +718,7 @@ app.get('/api/kpis/productividad', async (req, res) => {
 // 4. Tendencia por hora del día
 app.get('/api/kpis/tendencia-hora', async (req, res) => {
     try {
-        const { whereStr, params } = buildWhereClause(req.query, ["fecha_turno IS NOT NULL", "turno IS NOT NULL AND turno != ''"]);
+        const { whereStr, params } = buildWhereClause(req.query, ["fecha_turno IS NOT NULL", "paciente IS NOT NULL AND paciente != ''"]);
         const result = await pool.query(`
             SELECT
                 EXTRACT(HOUR FROM fecha_turno) as hora,
@@ -735,7 +741,7 @@ app.get('/api/kpis/tendencia-hora', async (req, res) => {
 // 5. Tendencia por fecha
 app.get('/api/kpis/tendencia-fecha', async (req, res) => {
     try {
-        const { whereStr, params } = buildWhereClause(req.query, ["fecha_turno IS NOT NULL", "turno IS NOT NULL AND turno != ''"]);
+        const { whereStr, params } = buildWhereClause(req.query, ["fecha_turno IS NOT NULL", "paciente IS NOT NULL AND paciente != ''"]);
         const result = await pool.query(`
             SELECT
                 DATE(fecha_turno) as fecha,
@@ -755,6 +761,12 @@ app.get('/api/kpis/tendencia-fecha', async (req, res) => {
         console.error('Error al obtener tendencia por fecha:', error);
         res.status(500).json({ error: error.message });
     }
+});
+
+// Ruta catch-all: sirve index.html para rutas SPA
+app.get('/{*path}', (req, res) => {
+    if (req.path.startsWith('/api/')) return;
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
 
 server.listen(3000, () => {

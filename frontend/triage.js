@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = '';
 let currentTurnoId = null;
 let personalList = [];
 let llamadosList = [];
@@ -119,10 +119,11 @@ function renderEnTriage(enTriage) {
             <div class="patient-form">
                 <select class="form-select priority-select" id="prioridad-${p.id}" onchange="previewPrioridad(${p.id})">
                     <option value="">Seleccionar Prioridad</option>
-                    <option value="ROJO" style="background:#EF4444;color:white;">Rojo (Crítico)</option>
-                    <option value="AMARILLO" style="background:#F59E0B;color:white;">Amarillo (Urgente)</option>
-                    <option value="VERDE" style="background:#10B981;color:white;">Verde (No Urgente)</option>
-                    <option value="SIN CLASIFICAR" style="background:#64748B;color:white;">Sin Clasificar</option>
+                    <option value="P1-RESUCITACION" style="background:#DC2626;color:white;">P1 - Resucitación</option>
+                    <option value="P2-EMERGENCIA" style="background:#EA580C;color:white;">P2 - Emergencia</option>
+                    <option value="P3-URGENCIA" style="background:#CA8A04;color:white;">P3 - Urgencia</option>
+                    <option value="P4-MENOS_URGENTE" style="background:#16A34A;color:white;">P4 - Menos Urgente</option>
+                    <option value="P5-NO_URGENTE" style="background:#2563EB;color:white;">P5 - No Urgente</option>
                 </select>
                 <span class="priority-badge preview-badge" id="preview-${p.id}" style="display:none;"></span>
                 <select class="form-select" id="consultorio-${p.id}" style="min-width:120px;">
@@ -309,7 +310,13 @@ function previewPrioridad(id) {
     const preview = document.getElementById(`preview-${id}`);
     const val = sel.value;
     if (val) {
-        const colores = { 'ROJO': '#EF4444', 'AMARILLO': '#F59E0B', 'VERDE': '#10B981', 'SIN CLASIFICAR': '#64748B' };
+        const colores = {
+            'P1-RESUCITACION': '#DC2626',
+            'P2-EMERGENCIA': '#EA580C',
+            'P3-URGENCIA': '#CA8A04',
+            'P4-MENOS_URGENTE': '#16A34A',
+            'P5-NO_URGENTE': '#2563EB'
+        };
         preview.style.display = 'inline-block';
         preview.style.background = colores[val] || '#64748B';
         preview.textContent = val;

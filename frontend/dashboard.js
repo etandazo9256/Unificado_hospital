@@ -1,11 +1,17 @@
 // URL base de la API del backend
-const API_URL = 'http://localhost:3000/api';
+const API_URL = '/api';
 
 // Instancias de los gráficos para poder destruirlos y recrearlos al filtrar
 let chartDemandaHora = null;
 let chartPrioridades = null;
 let chartTiemposProceso = null;
 let chartEvolucionDiaria = null;
+
+// Auto-refresh
+let autoRefreshEnabled = true;
+let autoRefreshInterval = null;
+const AUTO_REFRESH_MS = 30000;
+let filtrosActuales = {};
 
 // Ejecutar al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
@@ -18,13 +24,52 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnFiltrar').addEventListener('click', filtrarDatos);
     document.getElementById('btnLimpiarFiltros').addEventListener('click', limpiarFiltros);
     document.getElementById('btnRefresh').addEventListener('click', cargarDashboard);
+    document.getElementById('btnAutoRefresh').addEventListener('click', toggleAutoRefresh);
+    document.getElementById('btnExportExcel').addEventListener('click', () => {
+        const fi = document.getElementById('fechaInicio').value;
+        const ff = document.getElementById('fechaFin').value;
+        exportarExcel(fi, ff);
+    });
+    document.getElementById('btnExportPDF').addEventListener('click', () => {
+        const fi = document.getElementById('fechaInicio').value;
+        const ff = document.getElementById('fechaFin').value;
+        exportarPDF(fi, ff);
+    });
 
     // Cargar dashboard inicialmente sin filtros (todas las fechas)
     cargarDashboard();
+    startAutoRefresh();
 });
+
+function toggleAutoRefresh() {
+    autoRefreshEnabled = !autoRefreshEnabled;
+    const icon = document.getElementById('autoRefreshIcon');
+    if (autoRefreshEnabled) {
+        icon.textContent = '🟢';
+        startAutoRefresh();
+    } else {
+        icon.textContent = '🔴';
+        stopAutoRefresh();
+    }
+}
+
+function startAutoRefresh() {
+    stopAutoRefresh();
+    autoRefreshInterval = setInterval(() => {
+        cargarDashboard(filtrosActuales);
+    }, AUTO_REFRESH_MS);
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+}
 
 // Función principal para cargar y actualizar todos los componentes del dashboard
 async function cargarDashboard(filtros = {}) {
+    filtrosActuales = filtros;
     mostrarLoading(true);
     try {
         // Construir string de query string para filtros
@@ -116,6 +161,9 @@ function filtrarDatos() {
         return;
     }
 
+    document.querySelectorAll('.btn-quick').forEach(b => b.classList.remove('active'));
+    periodoActivo = 'todos';
+
     cargarDashboard(filtros);
 }
 
@@ -123,7 +171,78 @@ function filtrarDatos() {
 function limpiarFiltros() {
     document.getElementById('fechaInicio').value = '';
     document.getElementById('fechaFin').value = '';
+    document.querySelectorAll('.btn-quick').forEach(b => b.classList.remove('active'));
+    periodoActivo = 'todos';
     cargarDashboard();
+}
+
+// Filtros rápidos por período
+function filtrarPeriodo(periodo) {
+    const hoy = new Date();
+    let fechaInicio, fechaFin;
+
+    switch (periodo) {
+        case 'semana_actual': {
+            const diaSemana = hoy.getDay();
+            const diffLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+            fechaInicio = new Date(hoy);
+            fechaInicio.setDate(hoy.getDate() - diffLunes);
+            fechaFin = new Date(hoy);
+            break;
+        }
+        case 'semana_anterior': {
+            const diaSemana = hoy.getDay();
+            const diffLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+            fechaInicio = new Date(hoy);
+            fechaInicio.setDate(hoy.getDate() - diffLunes - 7);
+            fechaFin = new Date(fechaInicio);
+            fechaFin.setDate(fechaInicio.getDate() + 6);
+            break;
+        }
+        case 'mes_actual': {
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            fechaFin = new Date(hoy);
+            break;
+        }
+        case 'mes_anterior': {
+            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+            fechaFin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+            break;
+        }
+        case 'trimestre': {
+            fechaInicio = new Date(hoy);
+            fechaInicio.setMonth(hoy.getMonth() - 3);
+            fechaFin = new Date(hoy);
+            break;
+        }
+        case 'anio_actual': {
+            fechaInicio = new Date(hoy.getFullYear(), 0, 1);
+            fechaFin = new Date(hoy);
+            break;
+        }
+        case 'anio_anterior': {
+            fechaInicio = new Date(hoy.getFullYear() - 1, 0, 1);
+            fechaFin = new Date(hoy.getFullYear() - 1, 11, 31);
+            break;
+        }
+    }
+
+    const toLocalDateStr = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dia = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${dia}`;
+    };
+
+    document.getElementById('fechaInicio').value = toLocalDateStr(fechaInicio);
+    document.getElementById('fechaFin').value = toLocalDateStr(fechaFin);
+
+    document.querySelectorAll('.btn-quick').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    periodoActivo = periodo;
+
+    cargarDashboard({ fechaInicio: toLocalDateStr(fechaInicio), fechaFin: toLocalDateStr(fechaFin) });
 }
 
 // --- RENDERIZACIÓN DE GRÁFICOS (CHART.JS) ---
@@ -190,76 +309,90 @@ function renderChartDemandaHora(datos) {
     });
 }
 
-// Gráfico 2: Prioridades de Triage (Dona)
+// Gráfico 2: Prioridades de Triage Manchester (Barras Horizontales + %)
 function renderChartPrioridades(prioridades) {
     const ctx = document.getElementById('chartPrioridades').getContext('2d');
     
-    // Mapear prioridades del backend
-    // Los valores de prioridad conocidos son 'ROJO', 'AMARILLO', 'VERDE', 'SIN CLASIFICAR'
     const colorMap = {
-        'ROJO': { label: 'Rojo (Gravedad Crítica)', color: '#EF4444' },
-        'AMARILLO': { label: 'Amarillo (Urgente)', color: '#F59E0B' },
-        'VERDE': { label: 'Verde (No Urgente)', color: '#10B981' },
-        'SIN CLASIFICAR': { label: 'Sin Clasificar', color: '#64748B' }
+        'P1-RESUCITACION': { label: 'P1 Resucitación', color: '#DC2626', order: 1 },
+        'ROJO': { label: 'P1 Resucitación', color: '#DC2626', order: 1 },
+        'P2-EMERGENCIA': { label: 'P2 Emergencia', color: '#EA580C', order: 2 },
+        'P3-URGENCIA': { label: 'P3 Urgencia', color: '#CA8A04', order: 3 },
+        'AMARILLO': { label: 'P3 Urgencia', color: '#CA8A04', order: 3 },
+        'P4-MENOS_URGENTE': { label: 'P4 Menos Urgente', color: '#16A34A', order: 4 },
+        'VERDE': { label: 'P4 Menos Urgente', color: '#16A34A', order: 4 },
+        'P5-NO_URGENTE': { label: 'P5 No Urgente', color: '#2563EB', order: 5 },
+        'SIN CLASIFICAR': { label: 'Sin Clasificar', color: '#64748B', order: 6 }
     };
 
-    // Ordenar prioridades para mantener un orden visual lógico: Rojo, Amarillo, Verde, Gris
-    const orderedKeys = ['ROJO', 'AMARILLO', 'VERDE', 'SIN CLASIFICAR'];
-    const labels = [];
-    const data = [];
-    const colors = [];
-
-    orderedKeys.forEach(key => {
-        const item = prioridades.find(p => p.prioridad === key);
-        const count = item ? item.cantidad : 0;
-        
-        // Solo agregar al gráfico si tiene atenciones o si es uno de los principales triage
-        labels.push(colorMap[key].label);
-        data.push(count);
-        colors.push(colorMap[key].color);
+    const agrupado = {};
+    prioridades.forEach(p => {
+        const map = colorMap[p.prioridad];
+        if (map) {
+            if (!agrupado[map.label]) {
+                agrupado[map.label] = { label: map.label, color: map.color, order: map.order, cantidad: 0 };
+            }
+            agrupado[map.label].cantidad += p.cantidad;
+        }
     });
+
+    const sorted = Object.values(agrupado).sort((a, b) => a.order - b.order);
+    const labels = sorted.map(s => s.label);
+    const data = sorted.map(s => s.cantidad);
+    const colors = sorted.map(s => s.color);
+    const total = data.reduce((sum, v) => sum + v, 0);
 
     if (chartPrioridades) chartPrioridades.destroy();
 
     chartPrioridades = new Chart(ctx, {
-        type: 'doughnut',
+        type: 'bar',
         data: {
             labels: labels,
             datasets: [{
+                label: 'Pacientes',
                 data: data,
                 backgroundColor: colors,
-                borderWidth: 2,
-                borderColor: '#121829', // igual que el color de la tarjeta
-                hoverOffset: 6
+                borderColor: colors,
+                borderWidth: 1,
+                borderRadius: 6,
+                barThickness: 32
             }]
         },
         options: {
+            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '65%',
+            layout: { padding: { right: 60 } },
             plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#94A3B8',
-                        padding: 15,
-                        font: { size: 11, family: 'Outfit' },
-                        usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
-                },
+                legend: { display: false },
                 tooltip: {
                     backgroundColor: '#1E293B',
                     titleColor: '#F8FAFC',
                     bodyColor: '#94A3B8',
                     borderWidth: 1,
-                    borderColor: '#334155'
+                    borderColor: '#334155',
+                    callbacks: {
+                        label: function(ctx) {
+                            const pct = total > 0 ? ((ctx.parsed.x / total) * 100).toFixed(1) : 0;
+                            return ` ${ctx.parsed.x} pacientes (${pct}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.03)' },
+                    ticks: { color: '#64748B', font: { family: 'Outfit' }, stepSize: 10 },
+                    title: { display: true, text: 'Cantidad de Pacientes', color: '#64748B', font: { family: 'Outfit', size: 11 } }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: '#94A3B8', font: { family: 'Outfit', size: 12, weight: '600' } }
                 }
             }
         }
     });
 }
-
 // Gráfico 3: Tiempos de Proceso por Etapa (Barras)
 function renderChartTiemposProceso(resumen) {
     const ctx = document.getElementById('chartTiemposProceso').getContext('2d');

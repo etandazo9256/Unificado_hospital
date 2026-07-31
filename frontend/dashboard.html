@@ -48,6 +48,7 @@
         <section class="filters-panel">
             <div class="filter-title">
                 <span>📅</span> Rango de Fecha de Admisión
+                <span id="lblUltimaActualizacion" class="last-update-badge">Actualizando...</span>
             </div>
             <div class="filter-controls">
                 <div class="input-group">
@@ -84,6 +85,16 @@
             </div>
         </section>
 
+        <!-- Panel de Alertas de Tiempo de Espera -->
+        <section id="alertasEspera" class="alertas-panel" style="display: none;">
+            <div class="alertas-header">
+                <span class="alertas-icon">🚨</span>
+                <h4>Alertas de Tiempo de Espera</h4>
+                <span id="alertasCount" class="alertas-count"></span>
+            </div>
+            <div id="alertasList" class="alertas-list"></div>
+        </section>
+
         <!-- Fila 2: Tarjetas de KPI (Métricas Clave) -->
         <section class="kpi-grid">
             
@@ -94,7 +105,8 @@
                     <p class="kpi-label">Pacientes Registrados</p>
                 </div>
                 <div class="kpi-indicator positive">
-                    Total histórico
+                    <span>Total histórico</span>
+                    <span id="trendTotal" class="kpi-trend" title="Comparado con el período anterior"></span>
                 </div>
             </div>
 
@@ -104,7 +116,10 @@
                     <h3 class="kpi-value" id="valAtendidos">0</h3>
                     <p class="kpi-label">Atendidos en Triage</p>
                 </div>
-                <div class="kpi-indicator green" id="valPctAtendidos">0%</div>
+                <div class="kpi-indicator green">
+                    <span id="valPctAtendidos">0% del total</span>
+                    <span id="trendAtendidos" class="kpi-trend" title="Comparado con el período anterior"></span>
+                </div>
             </div>
 
             <div class="kpi-card pendientes">
@@ -113,7 +128,10 @@
                     <h3 class="kpi-value" id="valPendientes">0</h3>
                     <p class="kpi-label">Pendientes de Triage</p>
                 </div>
-                <div class="kpi-indicator orange" id="valPctPendientes">0%</div>
+                <div class="kpi-indicator orange">
+                    <span id="valPctPendientes">0% del total</span>
+                    <span id="trendPendientes" class="kpi-trend" title="Comparado con el período anterior"></span>
+                </div>
             </div>
 
             <div class="kpi-card espera">
@@ -122,8 +140,9 @@
                     <h3 class="kpi-value" id="valEsperaTotal">0 min</h3>
                     <p class="kpi-label">Tiempo Total Promedio</p>
                 </div>
-                <div class="kpi-indicator text-sub" id="labelEsperaSub">
-                    Ingreso a Triage
+                <div class="kpi-indicator text-sub">
+                    <span id="labelEsperaSub">Ingreso a Triage</span>
+                    <span id="trendEspera" class="kpi-trend" title="Comparado con el período anterior"></span>
                 </div>
             </div>
 

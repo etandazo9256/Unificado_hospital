@@ -148,6 +148,51 @@
 
         </section>
 
+        <!-- Fila 3: Estado de la Sala en Tiempo Real -->
+        <section class="sala-section">
+            <div class="sala-title">
+                <span>🫀</span> Estado de la Sala (Tiempo Real)
+                <span class="sala-badge">Se actualiza automáticamente</span>
+            </div>
+            <div class="sala-grid">
+                <div class="sala-card">
+                    <div class="sala-icon espera">🪑</div>
+                    <div class="sala-info">
+                        <span class="sala-value" id="salaEspera">0</span>
+                        <span class="sala-label">En Espera</span>
+                    </div>
+                </div>
+                <div class="sala-card">
+                    <div class="sala-icon llamado">📢</div>
+                    <div class="sala-info">
+                        <span class="sala-value" id="salaLlamado">0</span>
+                        <span class="sala-label">Llamado</span>
+                    </div>
+                </div>
+                <div class="sala-card">
+                    <div class="sala-icon triage">🩺</div>
+                    <div class="sala-info">
+                        <span class="sala-value" id="salaTriage">0</span>
+                        <span class="sala-label">En Triage</span>
+                    </div>
+                </div>
+                <div class="sala-card">
+                    <div class="sala-icon medico">🏥</div>
+                    <div class="sala-info">
+                        <span class="sala-value" id="salaMedico">0</span>
+                        <span class="sala-label">Esperando Médico</span>
+                    </div>
+                </div>
+                <div class="sala-card">
+                    <div class="sala-icon atencion">💊</div>
+                    <div class="sala-info">
+                        <span class="sala-value" id="salaAtencion">0</span>
+                        <span class="sala-label">En Atención Médica</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Fila 3: Gráficos de Análisis -->
         <section class="charts-grid-row-1">
             

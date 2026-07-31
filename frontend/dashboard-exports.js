@@ -141,113 +141,175 @@ async function exportarExcel(fechaInicio, fechaFin) {
         const [linea1, linea2] = getTituloReporte(periodoActivo).split('\n');
         const subtitulo = getPeriodoSubtitulo(fechaInicio, fechaFin);
 
-        const wb = XLSX.utils.book_new();
-
-        // Hoja 1: Resumen de KPIs
-        const resumenData = [
-            [''],
-            [''],
-            [''],
-            [''],
-            [''],
-            [''],
-            ['HOSPITAL DE ESPECIALIDADES PORTOVIEJO'],
-            [linea1],
-            [linea2],
-            [''],
-            [subtitulo],
-            ['Fecha de exportación:', new Date().toLocaleString('es-ES')],
-            [''],
-            ['RESUMEN GENERAL'],
-            ['Indicador', 'Valor'],
-            ['Pacientes Registrados', data.resumen.total_pacientes],
-            ['Atendidos en Triage', data.resumen.total_atendidos],
-            ['Pendientes de Triage', data.resumen.total_pendientes],
-            ['Pacientes en Triage', data.resumen.en_triage],
-            ['Pendientes de Médico', data.resumen.pendiente_medico],
-            ['En Atención Médica', data.resumen.en_atencion_medica],
-            [''],
-            ['TIEMPOS PROMEDIO (Minutos)'],
-            ['Tiempo Espera de Signos Vitales', data.resumen.avg_espera_signos],
-            ['Duración Toma de Signos Vitales', data.resumen.avg_duracion_signos],
-            ['Tiempo Espera de Triage', data.resumen.avg_espera_triage],
-            ['Duración de Triage', data.resumen.avg_duracion_triage],
-            ['Tiempo Total de Proceso', data.resumen.avg_total_triage]
-        ];
-        const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
-        wsResumen['!cols'] = [{ wch: 40 }, { wch: 20 }];
-        if (logoDataUrl) {
-            const b64 = logoDataUrl.split(',')[1];
-            wsResumen['!images'] = [{
-                type: 'image',
-                data: b64,
-                position: { type: 'twoCellAnchor', from: { col: 0, row: 0 }, to: { col: 4, row: 6 } }
-            }];
+        if (typeof ExcelJS === 'undefined') {
+            alert('La librería de Excel no está disponible. Verifique su conexión a internet.');
+            return false;
         }
-        XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen KPIs');
 
-        // Hoja 2: Distribución por Prioridad
-        const prioridadData = [
-            ['DISTRIBUCIÓN POR PRIORIDAD DE TRIAGE'],
-            [''],
-            ['Prioridad', 'Cantidad']
-        ];
-        data.prioridades.forEach(p => {
-            prioridadData.push([p.prioridad, p.cantidad]);
-        });
-        const wsPrioridad = XLSX.utils.aoa_to_sheet(prioridadData);
-        wsPrioridad['!cols'] = [{ wch: 25 }, { wch: 15 }];
-        XLSX.utils.book_append_sheet(wb, wsPrioridad, 'Prioridad Triage');
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'Hospital de Especialidades Portoviejo';
+        wb.created = new Date();
 
-        // Hoja 3: Productividad del Personal
-        const prodData = [
-            ['PRODUCTIVIDAD DEL PERSONAL'],
-            [''],
-            ['TOMA DE SIGNOS VITALES'],
-            ['Personal', 'Pacientes Atendidos']
-        ];
-        data.productividad.signos_vitales.forEach(p => {
-            prodData.push([p.personal, p.cantidad]);
-        });
-        prodData.push(['']);
-        prodData.push(['EVALUACIÓN DE TRIAGE']);
-        prodData.push(['Personal', 'Pacientes Atendidos']);
-        data.productividad.triage.forEach(p => {
-            prodData.push([p.personal, p.cantidad]);
-        });
-        const wsProd = XLSX.utils.aoa_to_sheet(prodData);
-        wsProd['!cols'] = [{ wch: 35 }, { wch: 20 }];
-        XLSX.utils.book_append_sheet(wb, wsProd, 'Productividad');
+        const AZUL = 'FF0B2F5C';
+        const GRIS = 'FFE8EDF5';
 
-        // Hoja 4: Tendencia por Hora
-        const horaData = [
-            ['DISTRIBUCIÓN DE ADMISIONES POR HORA'],
-            [''],
-            ['Hora', 'Cantidad de Pacientes']
-        ];
-        data.tendenciaHora.forEach(h => {
-            horaData.push([`${h.hora.toString().padStart(2, '0')}:00`, h.cantidad]);
-        });
-        const wsHora = XLSX.utils.aoa_to_sheet(horaData);
-        wsHora['!cols'] = [{ wch: 15 }, { wch: 25 }];
-        XLSX.utils.book_append_sheet(wb, wsHora, 'Tendencia por Hora');
+        // Renderiza un encabezado de sección con fondo azul
+        function agregarSeccion(ws, fila, titulo) {
+            ws.getCell(`A${fila}`).value = titulo;
+            ws.getCell(`A${fila}`).font = { bold: true, size: 10, color: { argb: 'FFFFFFFF' } };
+            ws.getCell(`A${fila}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: AZUL } };
+            ws.mergeCells(`A${fila}:B${fila}`);
+            ws.getRow(fila).height = 18;
+            return fila + 1;
+        }
 
-        // Hoja 5: Evolución Diaria
-        const fechaData = [
-            ['EVOLUCIÓN DIARIA DE ADMISIONES'],
-            [''],
-            ['Fecha', 'Pacientes', 'Tiempo Prom. Triage (min)']
-        ];
+        // Renderiza una tabla simple (headers + filas)
+        function renderTabla(ws, fila, headers, rows) {
+            headers.forEach((h, i) => {
+                const cell = ws.getCell(fila, i + 1);
+                cell.value = h;
+                cell.font = { bold: true, size: 9, color: { argb: 'FF333333' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GRIS } };
+                cell.alignment = { vertical: 'middle' };
+            });
+            ws.getRow(fila).height = 16;
+            fila++;
+            rows.forEach(r => {
+                r.forEach((v, i) => {
+                    const cell = ws.getCell(fila, i + 1);
+                    cell.value = v;
+                    cell.font = { size: 9 };
+                    cell.border = { bottom: { style: 'thin', color: { argb: 'FFDDE3EC' } } };
+                });
+                fila++;
+            });
+            return fila + 1;
+        }
+
+        // ===== Hoja 1: Resumen KPIs =====
+        const wsResumen = wb.addWorksheet('Resumen KPIs', { views: [{ showGridLines: false }] });
+        wsResumen.columns = [{ width: 42 }, { width: 22 }];
+
+        let fila = 1;
+        if (logoDataUrl) {
+            try {
+                const imgId = wb.addImage({ base64: logoDataUrl.split(',')[1], extension: 'png' });
+                wsResumen.addImage(imgId, { tl: { col: 0, row: 0 }, ext: { width: 275, height: 117 } });
+            } catch (e) {
+                console.warn('No se pudo insertar el logo en Excel:', e);
+            }
+        }
+
+        fila = 7;
+        wsResumen.getCell(`A${fila}`).value = 'HOSPITAL DE ESPECIALIDADES PORTOVIEJO';
+        wsResumen.getCell(`A${fila}`).font = { bold: true, size: 14, color: { argb: AZUL }, name: 'Arial' };
+        wsResumen.getRow(fila).height = 22;
+        fila++;
+        wsResumen.getCell(`A${fila}`).value = linea1;
+        wsResumen.getCell(`A${fila}`).font = { bold: true, size: 11 };
+        fila++;
+        wsResumen.getCell(`A${fila}`).value = linea2;
+        wsResumen.getCell(`A${fila}`).font = { size: 10, italic: true, color: { argb: 'FF555555' } };
+        fila += 2;
+        wsResumen.getCell(`A${fila}`).value = subtitulo;
+        wsResumen.getCell(`A${fila}`).font = { size: 10 };
+        fila++;
+        wsResumen.getCell(`A${fila}`).value = `Fecha de exportación: ${new Date().toLocaleString('es-ES')}`;
+        wsResumen.getCell(`A${fila}`).font = { size: 9, italic: true, color: { argb: 'FF777777' } };
+        fila += 2;
+
+        fila = agregarSeccion(wsResumen, fila, 'RESUMEN GENERAL');
+        fila = renderTabla(wsResumen, fila,
+            ['Indicador', 'Valor'],
+            [
+                ['Pacientes Registrados', data.resumen.total_pacientes],
+                ['Atendidos en Triage', data.resumen.total_atendidos],
+                ['Pendientes de Triage', data.resumen.total_pendientes],
+                ['Pacientes en Triage', data.resumen.en_triage],
+                ['Pendientes de Médico', data.resumen.pendiente_medico],
+                ['En Atención Médica', data.resumen.en_atencion_medica]
+            ]);
+
+        fila = agregarSeccion(wsResumen, fila, 'TIEMPOS PROMEDIO (Minutos)');
+        fila = renderTabla(wsResumen, fila,
+            ['Etapa', 'Minutos'],
+            [
+                ['Espera de Signos Vitales', data.resumen.avg_espera_signos],
+                ['Toma de Signos Vitales', data.resumen.avg_duracion_signos],
+                ['Espera de Triage', data.resumen.avg_espera_triage],
+                ['Duración de Triage', data.resumen.avg_duracion_triage],
+                ['Tiempo Total de Proceso', data.resumen.avg_total_triage]
+            ]);
+
+        // ===== Hoja 2: Distribución por Prioridad =====
+        const wsPrioridad = wb.addWorksheet('Prioridad Triage', { views: [{ showGridLines: false }] });
+        wsPrioridad.columns = [{ width: 30 }, { width: 16 }];
+        fila = 1;
+        fila = agregarSeccion(wsPrioridad, fila, 'DISTRIBUCIÓN POR PRIORIDAD DE TRIAGE');
+        fila = renderTabla(wsPrioridad, fila,
+            ['Prioridad', 'Cantidad'],
+            data.prioridades.map(p => [p.prioridad, p.cantidad]));
+
+        // ===== Hoja 3: Productividad del Personal =====
+        const wsProd = wb.addWorksheet('Productividad', { views: [{ showGridLines: false }] });
+        wsProd.columns = [{ width: 38 }, { width: 20 }];
+        fila = 1;
+        fila = agregarSeccion(wsProd, fila, 'PRODUCTIVIDAD DEL PERSONAL');
+        fila = agregarSeccion(wsProd, fila, 'TOMA DE SIGNOS VITALES');
+        fila = renderTabla(wsProd, fila,
+            ['Personal', 'Pacientes Atendidos'],
+            data.productividad.signos_vitales.map(p => [p.personal, p.cantidad]));
+        fila++;
+        fila = agregarSeccion(wsProd, fila, 'EVALUACIÓN DE TRIAGE');
+        fila = renderTabla(wsProd, fila,
+            ['Personal', 'Pacientes Atendidos'],
+            data.productividad.triage.map(p => [p.personal, p.cantidad]));
+
+        // ===== Hoja 4: Tendencia por Hora =====
+        const wsHora = wb.addWorksheet('Tendencia por Hora', { views: [{ showGridLines: false }] });
+        wsHora.columns = [{ width: 14 }, { width: 26 }];
+        fila = 1;
+        fila = agregarSeccion(wsHora, fila, 'DISTRIBUCIÓN DE ADMISIONES POR HORA');
+        fila = renderTabla(wsHora, fila,
+            ['Hora', 'Cantidad de Pacientes'],
+            data.tendenciaHora.map(h => [`${h.hora.toString().padStart(2, '0')}:00`, h.cantidad]));
+
+        // ===== Hoja 5: Evolución Diaria =====
+        const wsFecha = wb.addWorksheet('Evolución Diaria', { views: [{ showGridLines: false }] });
+        wsFecha.columns = [{ width: 14 }, { width: 14 }, { width: 30 }];
+        fila = 1;
+        fila = agregarSeccion(wsFecha, fila, 'EVOLUCIÓN DIARIA DE ADMISIONES');
+        const headers = ['Fecha', 'Pacientes', 'Tiempo Prom. Triage (min)'];
+        headers.forEach((h, i) => {
+            const cell = wsFecha.getCell(fila, i + 1);
+            cell.value = h;
+            cell.font = { bold: true, size: 9, color: { argb: 'FF333333' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GRIS } };
+        });
+        wsFecha.getRow(fila).height = 16;
+        fila++;
         data.tendenciaFecha.forEach(f => {
-            fechaData.push([formatFecha(f.fecha), f.cantidad, f.avg_total_triage]);
+            wsFecha.getCell(fila, 1).value = formatFecha(f.fecha);
+            wsFecha.getCell(fila, 2).value = f.cantidad;
+            wsFecha.getCell(fila, 3).value = f.avg_total_triage;
+            [1, 2, 3].forEach(c => {
+                wsFecha.getCell(fila, c).font = { size: 9 };
+                wsFecha.getCell(fila, c).border = { bottom: { style: 'thin', color: { argb: 'FFDDE3EC' } } };
+            });
+            fila++;
         });
-        const wsFecha = XLSX.utils.aoa_to_sheet(fechaData);
-        wsFecha['!cols'] = [{ wch: 15 }, { wch: 15 }, { wch: 30 }];
-        XLSX.utils.book_append_sheet(wb, wsFecha, 'Evolución Diaria');
 
         // Descargar archivo
-        const fileName = getNombreArchivo(periodoActivo, 'xlsx');
-        XLSX.writeFile(wb, fileName);
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = getNombreArchivo(periodoActivo, 'xlsx');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
         return true;
     } catch (error) {
@@ -280,9 +342,10 @@ async function exportarPDF(fechaInicio, fechaFin) {
             doc.setFillColor(11, 47, 92);
             doc.rect(0, 0, pageWidth, 38, 'F');
 
+            const textX = 60;
             if (logoDataUrl) {
                 try {
-                    doc.addImage(logoDataUrl, 'PNG', margin - 3, 7, 46, 20);
+                    doc.addImage(logoDataUrl, 'PNG', margin - 3, 8, 40, 17);
                 } catch (e) {
                     console.warn('No se pudo insertar el logo en el PDF:', e);
                 }
@@ -291,18 +354,18 @@ async function exportarPDF(fechaInicio, fechaFin) {
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
-            doc.text('HOSPITAL DE ESPECIALIDADES PORTOVIEJO', pageWidth / 2, 12, { align: 'center' });
+            doc.text('HOSPITAL DE ESPECIALIDADES PORTOVIEJO', textX, 13);
 
             doc.setFontSize(13);
             doc.setFont('helvetica', 'bold');
-            doc.text(linea1, pageWidth / 2, 21, { align: 'center' });
+            doc.text(linea1, textX, 21);
 
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text(linea2, pageWidth / 2, 28, { align: 'center' });
+            doc.text(linea2, textX, 28);
 
             doc.setFontSize(8);
-            doc.text(subtitulo, pageWidth / 2, 34, { align: 'center' });
+            doc.text(subtitulo, textX, 34);
 
             yPos = 44;
         }

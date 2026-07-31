@@ -77,30 +77,41 @@ async function cargarDashboard(filtros = {}) {
         const suffix = queryParams ? `?${queryParams}` : '';
 
         // Realizar peticiones en paralelo para optimizar rendimiento
-        const [resumen, prioridades, productividad, tendenciaHora, tendenciaFecha] = await Promise.all([
+        const [resumen, prioridades, productividad, tendenciaHora, tendenciaFecha, comparar, alertas] = await Promise.all([
             fetch(`${API_URL}/kpis/resumen${suffix}`).then(r => r.json()),
             fetch(`${API_URL}/kpis/prioridad${suffix}`).then(r => r.json()),
             fetch(`${API_URL}/kpis/productividad${suffix}`).then(r => r.json()),
             fetch(`${API_URL}/kpis/tendencia-hora${suffix}`).then(r => r.json()),
-            fetch(`${API_URL}/kpis/tendencia-fecha${suffix}`).then(r => r.json())
+            fetch(`${API_URL}/kpis/tendencia-fecha${suffix}`).then(r => r.json()),
+            fetch(`${API_URL}/kpis/comparar${suffix}`).then(r => r.json()),
+            fetch(`${API_URL}/kpis/alertas`).then(r => r.json())
         ]);
 
         // 1. Actualizar Tarjetas KPI
         actualizarTarjetasKPI(resumen);
 
-        // 2. Renderizar Gráfico 1: Demanda por Hora (Línea/Área)
+        // 2. Renderizar tendencias vs período anterior
+        renderTendencias(comparar);
+
+        // 3. Renderizar alertas de espera prolongada
+        renderAlertas(alertas);
+
+        // 4. Actualizar hora de última actualización
+        actualizarUltimaActualizacion();
+
+        // 5. Renderizar Gráfico 1: Demanda por Hora (Línea/Área)
         renderChartDemandaHora(tendenciaHora);
 
-        // 3. Renderizar Gráfico 2: Prioridades de Triage (Dona)
+        // 6. Renderizar Gráfico 2: Prioridades de Triage (Dona)
         renderChartPrioridades(prioridades);
 
-        // 4. Renderizar Gráfico 3: Tiempos de Proceso (Barras)
+        // 7. Renderizar Gráfico 3: Tiempos de Proceso (Barras)
         renderChartTiemposProceso(resumen);
 
-        // 5. Renderizar Gráfico 4: Evolución Diaria (Barras + Línea)
+        // 8. Renderizar Gráfico 4: Evolución Diaria (Barras + Línea)
         renderChartEvolucionDiaria(tendenciaFecha);
 
-        // 6. Actualizar Tablas de Productividad del Personal
+        // 9. Actualizar Tablas de Productividad del Personal
         actualizarTablasProductividad(productividad, resumen.total_pacientes);
 
     } catch (error) {
@@ -144,7 +155,82 @@ function actualizarTarjetasKPI(data) {
     valPctPendientes.textContent = `${pctPendientes}% del total`;
 
     // Detallar etiqueta de tiempo
-    document.getElementById('labelEsperaSub').innerHTML = `Promedio de Turno a Triage`;
+    document.getElementById('labelEsperaSub').textContent = `Promedio de Turno a Triage`;
+}
+
+// Actualizar la hora de la última actualización de datos
+function actualizarUltimaActualizacion() {
+    const el = document.getElementById('lblUltimaActualizacion');
+    if (!el) return;
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+    const hora = ahora.toLocaleTimeString('es-ES');
+    el.textContent = `🕒 Actualizado: ${fecha} ${hora}`;
+}
+
+// Mini-tendencias de las tarjetas KPI vs período anterior
+function renderTendencias(comparar) {
+    const { actual, anterior } = comparar;
+    const calc = (a, b) => {
+        if (!b || b === 0) return null;
+        return Math.round(((a - b) / b) * 100);
+    };
+
+    const setTrend = (id, actualVal, anteriorVal, invertir) => {
+        const el = document.getElementById(id);
+        const p = calc(actualVal, anteriorVal);
+        if (p === null || isNaN(p)) {
+            el.innerHTML = `<span class="trend-neutral">—</span>`;
+            return;
+        }
+        const esPositivo = invertir ? p <= 0 : p >= 0;
+        const arrow = p >= 0 ? '▲' : '▼';
+        const cls = id === 'trendTotal' ? 'trend-info' : (esPositivo ? 'trend-up' : 'trend-down');
+        el.innerHTML = `<span class="${cls}">${arrow} ${Math.abs(p)}%</span>`;
+    };
+
+    setTrend('trendTotal', actual.total_pacientes, anterior.total_pacientes, false);
+    setTrend('trendAtendidos', actual.total_atendidos, anterior.total_atendidos, false);
+    setTrend('trendPendientes', actual.total_pendientes, anterior.total_pendientes, true);
+    setTrend('trendEspera', actual.avg_total_triage, anterior.avg_total_triage, true);
+}
+
+// Panel de alertas: pacientes en espera que exceden el tiempo objetivo
+const PRIORIDAD_NOMBRE = {
+    'P1-RESUCITACION': 'P1 Resucitación',
+    'P2-EMERGENCIA': 'P2 Emergencia',
+    'P3-URGENCIA': 'P3 Urgencia',
+    'P4-MENOS_URGENTE': 'P4 Menos Urgente',
+    'P5-NO_URGENTE': 'P5 No Urgente',
+    'ROJO': 'Rojo',
+    'AMARILLO': 'Amarillo',
+    'VERDE': 'Verde',
+    'SIN CLASIFICAR': 'Sin clasificar'
+};
+
+function renderAlertas(data) {
+    const panel = document.getElementById('alertasEspera');
+    const lista = document.getElementById('alertasList');
+    const count = document.getElementById('alertasCount');
+
+    if (!data.alertas || data.alertas.length === 0) {
+        panel.style.display = 'none';
+        return;
+    }
+
+    const critico = a => a.prioridad === 'P1-RESUCITACION' || a.prioridad === 'ROJO' || a.prioridad === 'P2-EMERGENCIA';
+
+    panel.style.display = 'block';
+    count.textContent = `${data.alertas.length} paciente(s) exceden el tiempo objetivo`;
+    lista.innerHTML = data.alertas.slice(0, 6).map(a => `
+        <div class="alerta-item ${critico(a) ? 'critico' : ''}">
+            <div class="alerta-info">
+                <span class="alerta-paciente">${a.paciente || 'Paciente'}</span>
+                <span class="alerta-meta">${a.turno ? `Turno ${a.turno} · ` : ''}${(a.estado || '').replace(/_/g, ' ')} · ${PRIORIDAD_NOMBRE[a.prioridad] || a.prioridad || 'N/A'}</span>
+            </div>
+            <span class="alerta-minutos">${a.minutos_espera} min</span>
+        </div>
+    `).join('');
 }
 
 // Aplicar filtros seleccionados por el usuario

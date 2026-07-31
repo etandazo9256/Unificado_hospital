@@ -763,6 +763,110 @@ app.get('/api/kpis/tendencia-fecha', async (req, res) => {
     }
 });
 
+// 6. Alertas de pacientes en espera prolongada (estándar Manchester)
+app.get('/api/kpis/alertas', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT id, turno, paciente, prioridad, estado, consultorio,
+                   COALESCE(fecha_turno, fecha_llamado, fecha_inicio_triage, fecha_triage) as fecha_referencia
+            FROM esq_emergencia.reporte_emergencia
+            WHERE estado IN ('pendiente','llamado','en_triage','pendiente_medico','en_atencion_medica')
+              AND paciente IS NOT NULL AND paciente != ''
+            ORDER BY fecha_referencia ASC
+        `);
+
+        const tiemposObjetivo = {
+            'P1-RESUCITACION': 0,
+            'ROJO': 10,
+            'P2-EMERGENCIA': 10,
+            'P3-URGENCIA': 60,
+            'AMARILLO': 60,
+            'P4-MENOS_URGENTE': 120,
+            'VERDE': 120,
+            'P5-NO_URGENTE': 240,
+            'SIN CLASIFICAR': 60
+        };
+
+        const ahora = new Date();
+        const alertas = result.rows.filter(p => {
+            if (!p.fecha_referencia) return false;
+            const esperaMin = (ahora - new Date(p.fecha_referencia)) / 60000;
+            const objetivo = tiemposObjetivo[p.prioridad] !== undefined ? tiemposObjetivo[p.prioridad] : 60;
+            return esperaMin > objetivo;
+        }).map(p => ({
+            id: p.id,
+            turno: p.turno || '',
+            paciente: p.paciente,
+            prioridad: p.prioridad,
+            estado: p.estado,
+            consultorio: p.consultorio,
+            minutos_espera: Math.round((ahora - new Date(p.fecha_referencia)) / 60000)
+        }));
+
+        res.json({ total: alertas.length, alertas });
+    } catch (error) {
+        console.error('Error al obtener alertas de espera:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+async function calcularResumenPeriodo(inicio, fin) {
+    const result = await pool.query(`
+        SELECT
+            COUNT(*) as total_pacientes,
+            COUNT(*) FILTER (WHERE estado = 'finalizado') as total_atendidos,
+            COUNT(*) FILTER (WHERE estado IN ('pendiente','llamado','en_triage','pendiente_medico','en_atencion_medica')) as total_pendientes,
+            COALESCE(AVG(EXTRACT(EPOCH FROM (CASE WHEN tiempo_total_turno_triage IS NOT NULL AND tiempo_total_turno_triage != '' AND tiempo_total_turno_triage LIKE '%:%:%' THEN tiempo_total_turno_triage::interval ELSE NULL END))), 0) / 60 as avg_total_triage
+        FROM esq_emergencia.reporte_emergencia
+        WHERE paciente IS NOT NULL AND paciente != ''
+          AND fecha_turno IS NOT NULL
+          AND fecha_turno >= $1 AND fecha_turno <= $2
+    `, [inicio, fin]);
+    const row = result.rows[0];
+    return {
+        total_pacientes: parseInt(row.total_pacientes) || 0,
+        total_atendidos: parseInt(row.total_atendidos) || 0,
+        total_pendientes: parseInt(row.total_pendientes) || 0,
+        avg_total_triage: Math.round(parseFloat(row.avg_total_triage) * 10) / 10
+    };
+}
+
+// 7. Comparación de KPIs con período anterior (mini-tendencias)
+app.get('/api/kpis/comparar', async (req, res) => {
+    try {
+        const { query } = req;
+        let inicio, fin;
+
+        if (query.fechaInicio && query.fechaFin) {
+            inicio = new Date(`${query.fechaInicio}T00:00:00`);
+            fin = new Date(`${query.fechaFin}T23:59:59`);
+        } else {
+            const { rows: [rango] } = await pool.query(`
+                SELECT COALESCE(MAX(fecha_turno), CURRENT_TIMESTAMP) as max_fecha
+                FROM esq_emergencia.reporte_emergencia
+                WHERE paciente IS NOT NULL AND paciente != ''
+            `);
+            fin = new Date(rango.max_fecha);
+            inicio = new Date(fin);
+            inicio.setDate(inicio.getDate() - 30);
+        }
+
+        const duracion = fin.getTime() - inicio.getTime();
+        const prevFin = new Date(inicio.getTime() - 1000);
+        const prevIni = new Date(prevFin.getTime() - duracion);
+
+        const [actual, anterior] = await Promise.all([
+            calcularResumenPeriodo(inicio.toISOString(), fin.toISOString()),
+            calcularResumenPeriodo(prevIni.toISOString(), prevFin.toISOString())
+        ]);
+
+        res.json({ actual, anterior });
+    } catch (error) {
+        console.error('Error al obtener comparación de KPIs:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Ruta catch-all: sirve index.html para rutas SPA
 app.get('/{*path}', (req, res) => {
     if (req.path.startsWith('/api/')) return;

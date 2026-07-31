@@ -77,41 +77,45 @@ async function cargarDashboard(filtros = {}) {
         const suffix = queryParams ? `?${queryParams}` : '';
 
         // Realizar peticiones en paralelo para optimizar rendimiento
-        const [resumen, prioridades, productividad, tendenciaHora, tendenciaFecha, comparar, alertas] = await Promise.all([
+        const [resumen, prioridades, productividad, tendenciaHora, tendenciaFecha, comparar, alertas, estadoSala] = await Promise.all([
             fetch(`${API_URL}/kpis/resumen${suffix}`).then(r => r.json()),
             fetch(`${API_URL}/kpis/prioridad${suffix}`).then(r => r.json()),
             fetch(`${API_URL}/kpis/productividad${suffix}`).then(r => r.json()),
             fetch(`${API_URL}/kpis/tendencia-hora${suffix}`).then(r => r.json()),
             fetch(`${API_URL}/kpis/tendencia-fecha${suffix}`).then(r => r.json()),
             fetch(`${API_URL}/kpis/comparar${suffix}`).then(r => r.json()),
-            fetch(`${API_URL}/kpis/alertas`).then(r => r.json())
+            fetch(`${API_URL}/kpis/alertas`).then(r => r.json()),
+            fetch(`${API_URL}/kpis/estado-sala`).then(r => r.json())
         ]);
 
         // 1. Actualizar Tarjetas KPI
         actualizarTarjetasKPI(resumen);
 
-        // 2. Renderizar tendencias vs período anterior
+        // 2. Renderizar estado de la sala en tiempo real
+        renderEstadoSala(estadoSala);
+
+        // 3. Renderizar tendencias vs período anterior
         renderTendencias(comparar);
 
-        // 3. Renderizar alertas de espera prolongada
+        // 4. Renderizar alertas de espera prolongada
         renderAlertas(alertas);
 
-        // 4. Actualizar hora de última actualización
+        // 5. Actualizar hora de última actualización
         actualizarUltimaActualizacion();
 
-        // 5. Renderizar Gráfico 1: Demanda por Hora (Línea/Área)
+        // 6. Renderizar Gráfico 1: Demanda por Hora (Línea/Área)
         renderChartDemandaHora(tendenciaHora);
 
-        // 6. Renderizar Gráfico 2: Prioridades de Triage (Dona)
+        // 7. Renderizar Gráfico 2: Prioridades de Triage (Dona)
         renderChartPrioridades(prioridades);
 
-        // 7. Renderizar Gráfico 3: Tiempos de Proceso (Barras)
+        // 8. Renderizar Gráfico 3: Tiempos de Proceso (Barras)
         renderChartTiemposProceso(resumen);
 
-        // 8. Renderizar Gráfico 4: Evolución Diaria (Barras + Línea)
+        // 9. Renderizar Gráfico 4: Evolución Diaria (Barras + Línea)
         renderChartEvolucionDiaria(tendenciaFecha);
 
-        // 9. Actualizar Tablas de Productividad del Personal
+        // 10. Actualizar Tablas de Productividad del Personal
         actualizarTablasProductividad(productividad, resumen.total_pacientes);
 
     } catch (error) {
@@ -156,6 +160,22 @@ function actualizarTarjetasKPI(data) {
 
     // Detallar etiqueta de tiempo
     document.getElementById('labelEsperaSub').textContent = `Promedio de Turno a Triage`;
+}
+
+// Actualizar el estado de la sala en tiempo real
+function renderEstadoSala(data) {
+    const set = (id, valor) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = valor;
+    };
+
+    const total = data.en_espera + data.llamado + data.en_triage + data.pendiente_medico + data.en_atencion_medica;
+
+    set('salaEspera', data.en_espera);
+    set('salaLlamado', data.llamado);
+    set('salaTriage', data.en_triage);
+    set('salaMedico', data.pendiente_medico);
+    set('salaAtencion', data.en_atencion_medica);
 }
 
 // Actualizar la hora de la última actualización de datos

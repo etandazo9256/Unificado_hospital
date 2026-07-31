@@ -763,6 +763,36 @@ app.get('/api/kpis/tendencia-fecha', async (req, res) => {
     }
 });
 
+// 5.1 Estado actual de la sala (conteo en tiempo real por etapa del flujo)
+app.get('/api/kpis/estado-sala', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT estado, COUNT(*) as cantidad
+            FROM esq_emergencia.reporte_emergencia
+            WHERE paciente IS NOT NULL AND paciente != ''
+            GROUP BY estado
+        `);
+
+        const counts = {
+            en_espera: 0,
+            llamado: 0,
+            en_triage: 0,
+            pendiente_medico: 0,
+            en_atencion_medica: 0
+        };
+
+        result.rows.forEach(r => {
+            if (r.estado === 'pendiente') counts.en_espera = parseInt(r.cantidad) || 0;
+            else if (counts[r.estado] !== undefined) counts[r.estado] = parseInt(r.cantidad) || 0;
+        });
+
+        res.json(counts);
+    } catch (error) {
+        console.error('Error al obtener estado de sala:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // 6. Alertas de pacientes en espera prolongada (estándar Manchester)
 app.get('/api/kpis/alertas', async (req, res) => {
     try {

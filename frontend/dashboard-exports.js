@@ -115,11 +115,29 @@ function getPeriodoSubtitulo(fechaInicio, fechaFin) {
     return 'Todos los registros';
 }
 
+// Carga el logo del hospital como Data URL (base64) para incrustarlo en reportes
+async function obtenerLogoBase64() {
+    try {
+        const resp = await fetch('logo-hospital.png');
+        const blob = await resp.blob();
+        return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        console.warn('No se pudo cargar el logo:', e);
+        return null;
+    }
+}
+
 // ==================== EXPORTAR EXCEL ====================
 async function exportarExcel(fechaInicio, fechaFin) {
     try {
         mostrarLoadingExport(true);
         const data = await fetchReportData(fechaInicio, fechaFin);
+        const logoDataUrl = await obtenerLogoBase64();
         const [linea1, linea2] = getTituloReporte(periodoActivo).split('\n');
         const subtitulo = getPeriodoSubtitulo(fechaInicio, fechaFin);
 
@@ -127,6 +145,12 @@ async function exportarExcel(fechaInicio, fechaFin) {
 
         // Hoja 1: Resumen de KPIs
         const resumenData = [
+            [''],
+            [''],
+            [''],
+            [''],
+            [''],
+            [''],
             ['HOSPITAL DE ESPECIALIDADES PORTOVIEJO'],
             [linea1],
             [linea2],
@@ -152,6 +176,14 @@ async function exportarExcel(fechaInicio, fechaFin) {
         ];
         const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
         wsResumen['!cols'] = [{ wch: 40 }, { wch: 20 }];
+        if (logoDataUrl) {
+            const b64 = logoDataUrl.split(',')[1];
+            wsResumen['!images'] = [{
+                type: 'image',
+                data: b64,
+                position: { type: 'twoCellAnchor', from: { col: 0, row: 0 }, to: { col: 4, row: 6 } }
+            }];
+        }
         XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen KPIs');
 
         // Hoja 2: Distribución por Prioridad
@@ -239,6 +271,7 @@ async function exportarPDF(fechaInicio, fechaFin) {
         const margin = 15;
         let yPos = margin;
 
+        const logoDataUrl = await obtenerLogoBase64();
         const [linea1, linea2] = getTituloReporte(periodoActivo).split('\n');
         const subtitulo = getPeriodoSubtitulo(fechaInicio, fechaFin);
 
@@ -246,6 +279,14 @@ async function exportarPDF(fechaInicio, fechaFin) {
         function drawHeader() {
             doc.setFillColor(11, 47, 92);
             doc.rect(0, 0, pageWidth, 38, 'F');
+
+            if (logoDataUrl) {
+                try {
+                    doc.addImage(logoDataUrl, 'PNG', margin - 3, 7, 46, 20);
+                } catch (e) {
+                    console.warn('No se pudo insertar el logo en el PDF:', e);
+                }
+            }
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);

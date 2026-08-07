@@ -5,12 +5,16 @@ console.log("DB_PORT:", process.env.DB_PORT);
 console.log("DB_USER:", process.env.DB_USER);
 console.log("DB_PASSWORD:", process.env.DB_PASSWORD);
 console.log("DB_NAME:", process.env.DB_NAME);
+// Conexión a Supabase PostgreSQL
 const pool = new Pool({
-    host: process.env.DB_HOST,
+    host: process.env.DB_HOST, // Ejemplo: YOUR-PROJECT.supabase.co
     port: Number(process.env.DB_PORT || 5432),
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+    database: process.env.DB_NAME,
+    ssl: {
+        rejectUnauthorized: false // Habilitar SSL para Supabase
+    }
 });
 
 module.exports = pool;

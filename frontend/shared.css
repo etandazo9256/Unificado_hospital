@@ -79,6 +79,16 @@ body {
     font-family: 'Courier New', monospace;
 }
 
+.reloj-fecha {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    opacity: 0.7;
+    letter-spacing: 0.3px;
+    text-transform: capitalize;
+    font-family: 'Outfit', sans-serif;
+}
+
 /* Connection indicator */
 .connection-status {
     display: flex;

@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 // Servir archivos estáticos del frontend
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+app.use('/frontend', express.static(path.join(__dirname, '..', 'frontend')));
 
 function emitirEvento(tipo, datos) {
     io.emit(tipo, datos);
@@ -26,33 +26,62 @@ function emitirEvento(tipo, datos) {
 // Sala de espera: turno actual llamado + próximos pendientes
 app.get('/api/turnos/sala', async (req, res) => {
     try {
-        const [turnoActual, proximos, enTriageCount] = await Promise.all([
+        const [turnoActual, proximos, stats, llegadas, consultorios] = await Promise.all([
             pool.query(`
-                SELECT id, turno, paciente, fecha_llamado, consultorio
+                SELECT id, turno, paciente, fecha_llamado, consultorio, prioridad
                 FROM esq_emergencia.reporte_emergencia
                 WHERE estado IN ('llamado', 'en_triage')
                 ORDER BY fecha_llamado DESC
                 LIMIT 1
             `),
             pool.query(`
-                SELECT id, turno, paciente
+                SELECT id, turno, paciente, prioridad, fecha_turno, consultorio
                 FROM esq_emergencia.reporte_emergencia
                 WHERE estado = 'pendiente'
-                ORDER BY fecha_turno ASC
-                LIMIT 10
+                ORDER BY id ASC
+            LIMIT 20
             `),
             pool.query(`
-                SELECT COUNT(*) as count
+                SELECT
+                    COUNT(*) FILTER (WHERE estado IN ('pendiente','llamado')) as pendientes,
+                    COUNT(*) FILTER (WHERE estado = 'en_triage') as en_triage,
+                    COUNT(*) FILTER (WHERE estado IN ('pendiente_medico','en_atencion_medica')) as en_consulta,
+                    COUNT(*) FILTER (WHERE estado = 'finalizado') as atendidos,
+                    COALESCE(AVG(EXTRACT(EPOCH FROM (CASE WHEN fecha_fin_atencion_medica IS NOT NULL AND fecha_inicio_atencion_medica IS NOT NULL THEN fecha_fin_atencion_medica - fecha_inicio_atencion_medica ELSE NULL END)) / 60), 0) as tiempo_promedio
                 FROM esq_emergencia.reporte_emergencia
-                WHERE estado = 'en_triage'
+            `),
+            // λ real: pacientes que llegaron en la última hora
+            pool.query(`
+                SELECT COUNT(*) as llegadas_ultima_hora
+                FROM esq_emergencia.reporte_emergencia
+                WHERE fecha_turno >= NOW() - INTERVAL '1 hour'
+            `),
+            // c real: consultorios actualmente activos (con pacientes en atención o pendientes)
+            pool.query(`
+                SELECT COUNT(DISTINCT consultorio) as consultorios_activos
+                FROM esq_emergencia.reporte_emergencia
+                WHERE consultorio IS NOT NULL AND consultorio != ''
+                AND estado IN ('pendiente_medico', 'en_atencion_medica')
             `)
         ]);
+
+        const s = stats.rows[0];
+        const llegadasHora = parseInt(llegadas.rows[0].llegadas_ultima_hora) || 0;
+        const consultoriosActivos = parseInt(consultorios.rows[0].consultorios_activos) || 1;
 
         res.json({
             success: true,
             turnoActual: turnoActual.rows[0] || null,
             proximos: proximos.rows,
-            enTriageCount: parseInt(enTriageCount.rows[0].count)
+            stats: {
+                pendientes: parseInt(s.pendientes) || 0,
+                enTriage: parseInt(s.en_triage) || 0,
+                enConsulta: parseInt(s.en_consulta) || 0,
+                atendidos: parseInt(s.atendidos) || 0,
+                tiempoPromedio: Math.round(parseFloat(s.tiempo_promedio) * 10) / 10,
+                lambda: llegadasHora,
+                consultorios: consultoriosActivos
+            }
         });
     } catch (error) {
         console.error('Error al obtener datos de sala:', error);
@@ -122,6 +151,31 @@ app.post('/api/turnos/llamar-siguiente', async (req, res) => {
         });
     } catch (error) {
         console.error('Error al llamar siguiente turno:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Llamar a un paciente específico por ID
+app.post('/api/turnos/:id/llamar', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query(`
+            UPDATE esq_emergencia.reporte_emergencia
+            SET estado = 'llamado',
+                fecha_llamado = CURRENT_TIMESTAMP
+            WHERE id = $1
+            RETURNING id, turno, paciente, prioridad
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Turno no encontrado' });
+        }
+
+        console.log(`Turno ${result.rows[0].turno} llamado`);
+        emitirEvento('turno:llamado', { id: result.rows[0].id, turno: result.rows[0].turno, paciente: result.rows[0].paciente });
+        res.json({ success: true, turno: result.rows[0] });
+    } catch (error) {
+        console.error('Error al llamar turno:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -899,7 +953,7 @@ app.get('/api/kpis/comparar', async (req, res) => {
 
 // Ruta catch-all: sirve index.html para rutas SPA
 app.get('/{*path}', (req, res) => {
-    if (req.path.startsWith('/api/')) return;
+    if (req.path.startsWith('/api/') || req.path.startsWith('/frontend/')) return;
     res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
 });
 

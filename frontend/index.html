@@ -1,107 +1,76 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sala de Espera - Hospital de Especialidades Portoviejo</title>
+    <title>Sala de Espera - Hospital de Especialidades Jipijapa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="shared.css">
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-
-    <header class="topbar">
-        <div class="institucion">
-            <div class="logo-container">
-                <img src="logo-hospital.png" alt="Hospital de Especialidades de Jipijapa" class="logo-img">
-            </div>
-            <div class="info-hospital">
-                <h1>Hospital de Especialidades Portoviejo</h1>
-                <span class="subt">Área de Emergencia - Sala de Espera</span>
-            </div>
+<div class="tv-container">
+    <header class="tv-topbar">
+        <div class="logo-corner">
+            <img src="logo-hospital.png" alt="Hospital" class="logo-img">
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <a href="triage.html" class="btn-dashboard" style="text-decoration: none; background: var(--azul-claro); color: white; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Triage</a>
-            <a href="medico.html" class="btn-dashboard" style="text-decoration: none; background: var(--verde, #10B981); color: white; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Médico</a>
-            <a href="dashboard.html" class="btn-dashboard" style="text-decoration: none; background: var(--azul-medio, #1a4a7a); color: white; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;">Dashboard</a>
+        <div class="info-hospital">
+            <h1>Hospital de Especialidades Jipijapa</h1>
+            <span class="subt">Sala de Espera - Emergencia</span>
+        </div>
+        <div class="header-actions">
             <div id="reloj">00:00:00</div>
             <div class="connection-status"><span class="connection-dot" id="connDot"></span><span id="connText">Conectado</span></div>
         </div>
     </header>
 
-
-    <main class="panel-principal">
-
-        <section class="columna-izquierda">
-            <div class="display-turno" id="displayTurno">
-                <div class="etiqueta">Paciente en Atención</div>
-                <div class="numero-turno" id="turnoActual">---</div>
-                <div class="paciente-info">
-                    <span id="pacienteActual">Esperando pacientes...</span>
-                </div>
-                <div style="margin-top:10px;">
-                    <span id="turnoActualPrioridad" style="display:none;padding:5px 14px;border-radius:20px;font-size:14px;font-weight:700;letter-spacing:0.5px;"></span>
-                </div>
-            </div>
-        </section>
-
-
-        <section class="columna-derecha">
-            <div class="proximos-turnos">
-                <div class="header-proximos">
-                    <h3>PRÓXIMOS TURNOS</h3>
-                </div>
-
-                <div class="tabla-proximos">
-                    <div class="tabla-header">
-                        <span>TURNO / PRIORIDAD</span>
-                        <span>PACIENTE / TIEMPO</span>
+    <div class="tv-main">
+        <div class="tv-left">
+            <div class="call-panel" id="callPanel">
+                <div class="call-content" id="callContent">
+                    <div class="call-label">TURNO ACTUAL</div>
+                    <div class="call-turno" id="callTurno">---</div>
+                    <div class="call-paciente" id="callPaciente">Esperando pacientes</div>
+                    <div class="call-detalles" id="callDetalles">
+                        <span id="callConsultorio"></span>
+                        <span id="callPrioridad"></span>
                     </div>
-                    <div id="listaProximosTurnos">
-                        <div class="fila-vacia">Cargando turnos...</div>
-                    </div>
+                    <div class="call-hora" id="callHora"></div>
                 </div>
-
-                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--gris-borde);">
-                    <div style="display: flex; justify-content: space-between; color: var(--texto-suave); font-size: 13px;">
-                        <span>En triage: <strong id="enTriageCount" style="color: var(--azul-oscuro);">0</strong></span>
-                        <span>Pendientes: <strong id="pendientesCount" style="color: var(--azul-oscuro);">0</strong></span>
-                    </div>
+                <div class="video-container" id="videoContainer" style="display:none;">
+                    <video id="tvVideo" muted playsinline></video>
                 </div>
             </div>
-        </section>
 
+            <button class="btn-rellamar" id="btnRellamar" onclick="rellamar()">
+            Volver a Llamar
+            </button>
+        </div>
 
-        <section class="estadisticas">
-            <div class="stat-item">
-                <span class="stat-numero" id="pendientes">0</span>
-                <span class="stat-etiqueta">Pendientes</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-numero" id="enTriage">0</span>
-                <span class="stat-etiqueta">En Triage</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-numero" id="enAtencion">0</span>
-                <span class="stat-etiqueta">En Consulta</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <span class="stat-numero" id="atendidos">0</span>
-                <span class="stat-etiqueta">Atendidos</span>
-            </div>
-        </section>
+        <div class="tv-right">
+            <div class="right-header">PRÓXIMOS TURNOS</div>
+            <div class="proximos-lista" id="proximosLista"></div>
+        </div>
+    </div>
 
-    </main>
+    <div class="tv-stats" id="tvStats">
+        <div class="stat-item"><span class="stat-numero" id="statPendientes">0</span><span class="stat-etiqueta">Pendientes</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat-item"><span class="stat-numero" id="statTriage">0</span><span class="stat-etiqueta">En Triage</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat-item"><span class="stat-numero" id="statConsulta">0</span><span class="stat-etiqueta">En Consulta</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat-item"><span class="stat-numero" id="statAtendidos">0</span><span class="stat-etiqueta">Atendidos</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat-item"><span class="stat-numero" id="statPromedio">0</span><span class="stat-etiqueta">Promedio (min)</span></div>
+    </div>
+</div>
 
-    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-    <script src="sound.js"></script>
-    <script src="app.js"></script>
-
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<script src="sound.js"></script>
+<script src="app.js"></script>
 </body>
 
 </html>

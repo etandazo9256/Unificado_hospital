@@ -115,54 +115,41 @@ function normalizarPrioridad(p) {
     return map[p] || p || 'SIN CLASIFICAR';
 }
 
+// Tiempo de consulta estimado (minutos) según el área de atención
+const AREA_CONSULTA_MIN = {
+    'Cardiología': 20,
+    'Pediatría': 15,
+    'Ginecología': 20,
+    'Medicina Interna': 15,
+    'Emergencia': 10,
+    'Nutricionista': 20,
+    'Cirugía General': 25,
+    'Neurología': 20,
+    'Traumatología': 20,
+    'Dermatología': 15
+};
+
 // Tiempo restante estimado para un paciente
 function calcularEspera(p, index, totalPendientes, tiempoPromedio, lista) {
     const prioNorm = normalizarPrioridad(p.prioridad);
     if (prioNorm === 'ROJO') return 0;
 
     lista = lista || proximos;
-    const ordenPrio = ['ROJO', 'NARANJA', 'AMARILLO', 'VERDE', 'AZUL'];
     const topes = { 'ROJO': 0, 'NARANJA': 10, 'AMARILLO': 60, 'VERDE': 120, 'AZUL': 240 };
 
-    // Parámetros desde la API
-    const C = ultimosConsultorios || 1;
-    const lamReal = ultimoLambda || 1;
-    const mu = 60 / (tiempoPromedio || 8);
-    const Fp = factorPico();
-    const lamActual = Math.max(lamReal * Fp, 0.5);
+    // Base: tope máximo Manchester de su prioridad
+    let espera = topes[prioNorm] || 60;
 
-    // Detectar colapso
-    const rho = lamActual / (C * mu);
-    if (rho >= 1) return topes[prioNorm] || 120;
-
-    // Contar pacientes por prioridad (normalizados)
-    const conteo = {};
-    ordenPrio.forEach(o => conteo[o] = 0);
-    lista.forEach(p2 => {
-        const pn = normalizarPrioridad(p2.prioridad);
-        if (conteo[pn] !== undefined) conteo[pn]++;
-    });
-    const totalP = lista.length || 1;
-
-    // Distribuir λ entre las prioridades que tienen pacientes
-    const lambdasClase = ordenPrio.map(o => conteo[o] > 0 ? lamActual * (conteo[o] / totalP) : 0);
-
-    // Erlang C + Cobham
-    const wqsHoras = wqPorPrioridad(C, mu, lambdasClase);
-    const idxPrio = ordenPrio.indexOf(prioNorm);
-    if (idxPrio < 0 || wqsHoras[idxPrio] === undefined) return topes[prioNorm] || 60;
-    const wqMin = Math.round(wqsHoras[idxPrio] * 60);
-
-    // Ajuste por posición dentro de su prioridad
+    // Cada paciente de la MISMA prioridad que está delante suma el
+    // tiempo de consulta del área a la que va a atender
     const mismoPrio = lista.filter(p2 => normalizarPrioridad(p2.prioridad) === prioNorm);
     const pos = mismoPrio.indexOf(p);
-    const fraccion = mismoPrio.length > 1 ? Math.max(1 - pos / (mismoPrio.length - 1), 0.3) : 1;
-    let esperaFinal = Math.round(wqMin * fraccion);
+    for (let i = 0; i < pos; i++) {
+        const area = (mismoPrio[i].consultorio || '').trim();
+        espera += AREA_CONSULTA_MIN[area] || 15;
+    }
 
-    // Piso realista: una consulta nunca dura menos de 5 min
-    if (esperaFinal < 5) esperaFinal = 5;
-
-    return Math.min(esperaFinal, topes[prioNorm] || 120);
+    return espera;
 }
 
 // ---- Actualizar tiempos de espera ----

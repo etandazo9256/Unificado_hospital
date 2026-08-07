@@ -348,7 +348,15 @@ function actualizarStats(stats) {
     document.getElementById('statTriage').textContent = stats.enTriage || 0;
     document.getElementById('statConsulta').textContent = stats.enConsulta || 0;
     document.getElementById('statAtendidos').textContent = stats.atendidos || 0;
-    document.getElementById('statPromedio').textContent = stats.tiempoPromedio || 0;
+
+    // Tiempo promedio basado en el tiempo estimado de los próximos turnos
+    if (proximos && proximos.length > 0) {
+        const total = proximos.reduce((sum, p, i) => sum + calcularEspera(p, i, proximos.length, ultimoTiempoPromedio, proximos), 0);
+        const promedio = Math.round(total / proximos.length);
+        document.getElementById('statPromedio').textContent = promedio;
+    } else {
+        document.getElementById('statPromedio').textContent = 0;
+    }
 }
 
 // ---- Llamar turno (click en tarjeta) ----

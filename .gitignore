@@ -27,3 +27,6 @@ ENV/
 .idea/
 
 backend/server.err
+
+# Videos de prueba (muy grandes para GitHub)
+frontend/video*.mp4

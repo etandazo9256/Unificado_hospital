@@ -37,7 +37,7 @@ function reproducirVozLlamada(turno, paciente) {
     try {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
-        const texto = `Turno ${turno}, ${paciente}`;
+        const texto = `Turno ${turno}`;
         const utterance = new SpeechSynthesisUtterance(texto);
         utterance.lang = 'es-ES';
         utterance.rate = 0.85;

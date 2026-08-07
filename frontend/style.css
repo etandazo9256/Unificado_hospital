@@ -6,6 +6,7 @@ html, body { height: 100%; overflow: hidden; }
     background: var(--gris-fondo); overflow: hidden;
 }
 
+/* ---- Top Bar ---- */
 .tv-topbar {
     padding: 10px 30px; flex-shrink: 0;
     display: grid; grid-template-columns: auto 1fr auto;
@@ -20,6 +21,7 @@ html, body { height: 100%; overflow: hidden; }
 .tv-topbar .info-hospital .subt { font-size: 13px; }
 .tv-topbar .header-actions { display: flex; align-items: center; gap: 12px; }
 
+/* ---- Main layout ---- */
 .tv-main {
     display: flex; flex: 1; gap: 20px; padding: 15px 25px;
     min-height: 0; overflow: hidden;
@@ -114,7 +116,7 @@ html, body { height: 100%; overflow: hidden; }
     display: flex; flex-direction: column; gap: 8px;
 }
 
-/* Priority card */
+/* ---- Priority card ---- */
 .turno-card {
     display: flex; align-items: center; gap: 14px;
     padding: 14px 18px; border-radius: 14px; cursor: pointer;
@@ -122,39 +124,10 @@ html, body { height: 100%; overflow: hidden; }
     background: var(--gris-fondo); user-select: none;
 }
 .turno-card:hover { transform: translateX(4px) scale(1.01); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-.turno-card.pri-rojo:hover { background: #FECACA; }
-.turno-card.pri-naranja:hover { background: #FED7AA; }
-.turno-card.pri-amarillo:hover { background: #FDE68A; }
-.turno-card.pri-verde:hover { background: #A7F3D0; }
-.turno-card.pri-azul:hover { background: #BFDBFE; }
 .turno-card:active { transform: scale(0.98); }
 
 .turno-card .card-turno {
     font-size: 28px; font-weight: 900; min-width: 75px;
-}
-
-/* Columna izquierda: número + badge Manchester */
-.turno-card .card-turno-col {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 4px; min-width: 80px;
-}
-
-/* Badge con el tope de tiempo según prioridad Manchester */
-.badge-manchester {
-    font-size: 10px; font-weight: 700; padding: 2px 6px;
-    border-radius: 20px; background: rgba(0,0,0,0.2);
-    color: inherit; white-space: nowrap; letter-spacing: 0.3px;
-    text-align: center; opacity: 0.85;
-}
-
-/* Badge de alerta cuando se excede el tope Manchester */
-.badge-alerta {
-    display: inline-block;
-    font-size: 11px; font-weight: 700; padding: 3px 8px;
-    border-radius: 20px; background: rgba(0,0,0,0.3);
-    color: #fff; margin-top: 3px;
-    border: 1px solid rgba(255,255,255,0.4);
-    letter-spacing: 0.2px;
 }
 
 .turno-card .card-info { flex: 1; min-width: 0; }
@@ -162,87 +135,68 @@ html, body { height: 100%; overflow: hidden; }
     font-size: 16px; font-weight: 600;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-
 .turno-card .card-espera {
-    font-size: 14px; font-weight: 600;
-}
-/* Tiempo real transcurrido desde emisión del turno */
-.turno-card .card-transcurrido {
-    font-size: 12px; font-weight: 400; opacity: 0.75; margin-top: 1px;
+    font-size: 14px; font-weight: 500;
 }
 .turno-card .card-especialidad {
     font-size: 13px; font-weight: 500; opacity: 0.85;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-/* Manchester colors */
-.turno-card.pri-rojo { background: #ff1e1e; border-left-color: #990101; }
-.turno-card.pri-rojo .card-turno { color: #110808; }
-.turno-card.pri-rojo .card-paciente { color: #090505; }
-.turno-card.pri-rojo .card-espera { color: #130a0a; }
-.turno-card.pri-rojo .card-especialidad { color: #130a0a; }
-
+/* ---- Manchester / Prioridad colors ---- */
+.turno-card.pri-rojo    { background: #ff1e1e; border-left-color: #990101; }
 .turno-card.pri-naranja { background: #ff8717; border-left-color: #6c2600; }
-.turno-card.pri-naranja .card-turno { color: #080504; }
-.turno-card.pri-naranja .card-paciente { color: #000000; }
-.turno-card.pri-naranja .card-espera { color: #000000; }
-.turno-card.pri-naranja .card-especialidad { color: #000000; }
+.turno-card.pri-amarillo{ background: #eff621; border-left-color: #959500; }
+.turno-card.pri-verde   { background: #00ff55; border-left-color: #00724e; }
+.turno-card.pri-azul    { background: #0e76ff; border-left-color: #002575; }
 
-.turno-card.pri-amarillo { background: #eff621; border-left-color: #959500; }
-.turno-card.pri-amarillo .card-turno { color: #070706; }
-.turno-card.pri-amarillo .card-paciente { color: #000000; }
-.turno-card.pri-amarillo .card-espera { color: #000000; }
-.turno-card.pri-amarillo .card-especialidad { color: #000000; }
+.turno-card.pri-rojo .card-turno,
+.turno-card.pri-rojo .card-paciente,
+.turno-card.pri-rojo .card-espera,
+.turno-card.pri-rojo .card-especialidad { color: #110808; }
 
-.turno-card.pri-verde { background: #00ff55; border-left-color: #00724e; }
-.turno-card.pri-verde .card-turno { color: #010302; }
-.turno-card.pri-verde .card-paciente { color: #000000; }
-.turno-card.pri-verde .card-espera { color: #000000; }
-.turno-card.pri-verde .card-especialidad { color: #000000; }
+.turno-card.pri-naranja .card-turno,
+.turno-card.pri-naranja .card-paciente,
+.turno-card.pri-naranja .card-espera,
+.turno-card.pri-naranja .card-especialidad { color: #000; }
 
-.turno-card.pri-azul { background: #0e76ff; border-left-color: #002575; }
-.turno-card.pri-azul .card-turno { color: #000000; }
-.turno-card.pri-azul .card-paciente { color: #000000; }
-.turno-card.pri-azul .card-espera { color: #000000; }
-.turno-card.pri-azul .card-especialidad { color: #000000; }
+.turno-card.pri-amarillo .card-turno,
+.turno-card.pri-amarillo .card-paciente,
+.turno-card.pri-amarillo .card-espera,
+.turno-card.pri-amarillo .card-especialidad { color: #070706; }
+
+.turno-card.pri-verde .card-turno,
+.turno-card.pri-verde .card-paciente,
+.turno-card.pri-verde .card-espera,
+.turno-card.pri-verde .card-especialidad { color: #010302; }
+
+.turno-card.pri-azul .card-turno,
+.turno-card.pri-azul .card-paciente,
+.turno-card.pri-azul .card-espera,
+.turno-card.pri-azul .card-especialidad { color: #000; }
 
 .turno-card.pri-sin-clasificar { background: var(--gris-fondo); border-left-color: #64748B; }
 
-/* Stats bar */
+/* Hover states */
+.turno-card.pri-rojo:hover    { background: #e01010; }
+.turno-card.pri-naranja:hover { background: #e87000; }
+.turno-card.pri-amarillo:hover{ background: #d8dd00; }
+.turno-card.pri-verde:hover   { background: #00df49; }
+.turno-card.pri-azul:hover    { background: #0060dd; }
+
+/* ---- Stats bar ---- */
 .tv-stats {
     display: flex; align-items: center; justify-content: space-around;
     background: var(--blanco); padding: 12px 30px;
     border-top: 2px solid var(--gris-borde); flex-shrink: 0;
     gap: 5px;
 }
-
 .tv-stats .stat-item { text-align: center; flex: 1; padding: 4px 0; }
 .tv-stats .stat-numero { display: block; font-size: 26px; font-weight: 800; color: var(--azul-oscuro); line-height: 1.1; }
 .tv-stats .stat-etiqueta { font-size: 11px; color: var(--texto-suave); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 .tv-stats .stat-divider { width: 1px; height: 35px; background: var(--gris-borde); }
 
-@keyframes pulseWarning {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-}
-
-/* Tarjeta con tiempo excedido: pulso visual de urgencia */
-.turno-card.tiempo-excedido {
-    animation: pulseExcedido 1.2s ease-in-out infinite;
-    box-shadow: 0 0 0 2px rgba(255,255,255,0.6), 0 4px 18px rgba(0,0,0,0.25);
-}
-
-@keyframes pulseExcedido {
-    0%, 100% { filter: brightness(1); }
-    50% { filter: brightness(1.25); }
-}
-
-/* Scrollbar */
-.proximos-lista::-webkit-scrollbar { width: 5px; }
-.proximos-lista::-webkit-scrollbar-track { background: transparent; }
-.proximos-lista::-webkit-scrollbar-thumb { background: var(--gris-borde); border-radius: 10px; }
-
-/* Animations */
+/* ---- Animations ---- */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
@@ -263,81 +217,14 @@ html, body { height: 100%; overflow: hidden; }
     font-size: 16px; font-weight: 500;
 }
 
+/* Scrollbar */
+.proximos-lista::-webkit-scrollbar { width: 5px; }
+.proximos-lista::-webkit-scrollbar-track { background: transparent; }
+.proximos-lista::-webkit-scrollbar-thumb { background: var(--gris-borde); border-radius: 10px; }
+
 @media (max-width: 968px) {
     .tv-main { flex-direction: column; padding: 10px 15px; gap: 10px; }
     .tv-left { flex: none; height: 50vh; }
     .tv-right { flex: 1; }
     .call-turno { font-size: clamp(60px, 12vw, 90px); }
-}
-
-/* ============================================================
-   FILA DE TURNO — Nueva estructura con Manchester dinámico
-   ============================================================ */
-
-/* Contenedor de cada fila en la lista de próximos */
-.fila-turno {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 14px; border-radius: 10px;
-    background: var(--gris-fondo, #F1F5F9);
-    border-left: 5px solid #CBD5E1;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.fila-turno:hover {
-    transform: translateX(3px);
-    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
-}
-
-/* Columna izquierda: número grande + badge de prioridad */
-.turno-fila-izq {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 5px; min-width: 72px;
-}
-
-/* Columna derecha: nombre paciente + tiempos */
-.turno-fila-der {
-    flex: 1; min-width: 0;
-    display: flex; flex-direction: column; gap: 3px;
-}
-
-/* Badge de prioridad Manchester (color lleno) */
-.turno-prio-badge {
-    font-size: 10px; font-weight: 700; padding: 2px 7px;
-    border-radius: 20px; white-space: nowrap;
-    text-align: center; letter-spacing: 0.3px;
-}
-
-/* Badge de tope máximo (borde del color, fondo transparente) */
-.turno-tope-badge {
-    font-size: 10px; font-weight: 600; padding: 1px 6px;
-    border-radius: 20px; border: 1.5px solid currentColor;
-    background: transparent; white-space: nowrap;
-}
-
-/* Tiempo transcurrido real */
-.turno-espera-trans {
-    font-size: 12px; font-weight: 500;
-    color: var(--texto-suave, #64748B);
-}
-
-/* Fila de los badges de tiempo */
-.turno-tiempos {
-    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-}
-
-/* Alerta cuando el tiempo supera el tope Manchester */
-.turno-alerta {
-    font-size: 11px; font-weight: 700; padding: 2px 8px;
-    border-radius: 20px; background: #FEF2F2;
-    color: #DC2626; border: 1px solid #FECACA;
-}
-
-/* Pulsación visual cuando se excede el tope */
-.fila-turno.tiempo-excedido {
-    animation: pulseFilaExcedida 1.2s ease-in-out infinite;
-    border-left-color: #DC2626 !important;
-}
-
-@keyframes pulseFilaExcedida {
-    0%, 100% { background: var(--gris-fondo, #F1F5F9); }
-    50%       { background: #FEE2E2; }
 }

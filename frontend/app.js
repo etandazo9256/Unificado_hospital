@@ -46,12 +46,14 @@ function actualizarConexion(conectado) {
 
 // ---- Formatear tiempo ----
 function formatearTiempo(minutos) {
-    if (minutos < 1) return 'Espera estimada: < 1 min';
+    if (minutos < 1) return 'Espera estimada: 5 min';
     if (minutos < 60) return `Espera estimada: ${Math.round(minutos)} min`;
     const h = Math.floor(minutos / 60);
     const m = Math.round(minutos % 60);
     return m > 0 ? `Espera estimada: ${h} h ${m} min` : `Espera estimada: ${h} h`;
 }
+
+function horasAMin(h) { return Math.round(h * 60); }
 
 // ---- Modelo de colas M/M/c (Erlang C) con prioridad Manchester ----
 function factorial(n) { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
@@ -114,7 +116,7 @@ function normalizarPrioridad(p) {
 }
 
 // Tiempo restante estimado para un paciente
-function calcularEspera(p, tiempoPromedio, lista) {
+function calcularEspera(p, index, totalPendientes, tiempoPromedio, lista) {
     const prioNorm = normalizarPrioridad(p.prioridad);
     if (prioNorm === 'ROJO') return 0;
 
@@ -125,10 +127,7 @@ function calcularEspera(p, tiempoPromedio, lista) {
     // Parámetros desde la API
     const C = ultimosConsultorios || 1;
     const lamReal = ultimoLambda || 1;
-    // REVISAR: si tiempoPromedio real supera 60 min, se descarta y se usa
-    // el valor por defecto de 8 min. Si hay especialidades con consultas
-    // largas, esto podría subestimar la espera. Confirmar si es intencional.
-    const mu = 60 / ((tiempoPromedio && tiempoPromedio <= 60) ? tiempoPromedio : 8);
+    const mu = 60 / (tiempoPromedio || 8);
     const Fp = factorPico();
     const lamActual = Math.max(lamReal * Fp, 0.5);
 
@@ -151,24 +150,19 @@ function calcularEspera(p, tiempoPromedio, lista) {
     // Erlang C + Cobham
     const wqsHoras = wqPorPrioridad(C, mu, lambdasClase);
     const idxPrio = ordenPrio.indexOf(prioNorm);
-    if (idxPrio < 0 || wqsHoras[idxPrio] === undefined) return topes[prioNorm] || 120;
+    if (idxPrio < 0 || wqsHoras[idxPrio] === undefined) return topes[prioNorm] || 60;
     const wqMin = Math.round(wqsHoras[idxPrio] * 60);
 
     // Ajuste por posición dentro de su prioridad
     const mismoPrio = lista.filter(p2 => normalizarPrioridad(p2.prioridad) === prioNorm);
     const pos = mismoPrio.indexOf(p);
     const fraccion = mismoPrio.length > 1 ? Math.max(1 - pos / (mismoPrio.length - 1), 0.3) : 1;
-    let esperaBase = Math.round(wqMin * fraccion);
+    let esperaFinal = Math.round(wqMin * fraccion);
 
-    // Solo countdown para pacientes llamados o en atención
-    let restante = esperaBase;
-    if (['llamado', 'en_atencion_medica'].includes(p.estado)) {
-        const transcurrido = minTranscurridos(p.fecha_turno);
-        restante = Math.round(esperaBase - transcurrido);
-        if (restante < 0) restante = 0;
-    }
+    // Piso realista: una consulta nunca dura menos de 5 min
+    if (esperaFinal < 5) esperaFinal = 5;
 
-    return Math.min(restante, topes[prioNorm] || 120);
+    return Math.min(esperaFinal, topes[prioNorm] || 120);
 }
 
 // ---- Actualizar tiempos de espera ----
@@ -178,7 +172,7 @@ function actualizarEspera() {
         const p = proximos[i];
         const prioNorm = normalizarPrioridad(p?.prioridad);
         if (!p || prioNorm === 'ROJO') return;
-        const espera = calcularEspera(p, ultimoTiempoPromedio, proximos);
+        const espera = calcularEspera(p, i, proximos.length, ultimoTiempoPromedio, proximos);
         const span = card.querySelector('.card-espera');
         if (span) span.textContent = formatearTiempo(espera);
     });
@@ -335,8 +329,8 @@ function renderProximos(lista, tiempoPromedio) {
     }
 
     container.innerHTML = '';
-    lista.forEach((p) => {
-        const espera = calcularEspera(p, ultimoTiempoPromedio, lista);
+    lista.forEach((p, i) => {
+        const espera = calcularEspera(p, i, lista.length, ultimoTiempoPromedio, lista);
         const prioNorm = normalizarPrioridad(p.prioridad);
         const colorClass = PRIORIDAD_COLORS[p.prioridad] || PRIORIDAD_COLORS[prioNorm] || '';
 
@@ -357,7 +351,7 @@ function renderProximos(lista, tiempoPromedio) {
         container.appendChild(card);
     });
 
-    intervaloEspera = setInterval(actualizarEspera, 30000);
+    intervaloEspera = setInterval(actualizarEspera, 60000);
 }
 
 // ---- Actualizar estadísticas ----
@@ -367,14 +361,7 @@ function actualizarStats(stats) {
     document.getElementById('statTriage').textContent = stats.enTriage || 0;
     document.getElementById('statConsulta').textContent = stats.enConsulta || 0;
     document.getElementById('statAtendidos').textContent = stats.atendidos || 0;
-
-    if (proximos && proximos.length > 0) {
-        const esperaTotal = proximos.reduce((sum, p) => sum + calcularEspera(p, ultimoTiempoPromedio, proximos), 0);
-        const avgEspera = Math.round(esperaTotal / proximos.length);
-        document.getElementById('statPromedio').textContent = avgEspera;
-    } else {
-        document.getElementById('statPromedio').textContent = 0;
-    }
+    document.getElementById('statPromedio').textContent = stats.tiempoPromedio || 0;
 }
 
 // ---- Llamar turno (click en tarjeta) ----

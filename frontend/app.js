@@ -202,7 +202,7 @@ function maskCedula(val) {
     if (!val || typeof val !== 'string') return 'Sin identificar';
     const nums = val.replace(/\D/g, '');
     if (nums.length >= 10) {
-        return nums.slice(0, 2) + 'xxxxxx' + nums.slice(-2);
+        return nums.slice(0, 3) + 'xxxxx' + nums.slice(-2);
     }
     if (nums.length >= 4) {
         return nums.slice(0, 1) + 'xxxx' + nums.slice(-2);

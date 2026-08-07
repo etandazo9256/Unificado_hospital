@@ -38,7 +38,21 @@ app.get('/api/turnos/sala', async (req, res) => {
                 SELECT id, turno, paciente, prioridad, fecha_turno, consultorio
                 FROM esq_emergencia.reporte_emergencia
                 WHERE estado = 'pendiente'
-                ORDER BY id ASC
+                ORDER BY
+                    CASE COALESCE(prioridad, '')
+                        WHEN 'P1-RESUCITACION' THEN 1
+                        WHEN 'ROJO' THEN 1
+                        WHEN 'P2-EMERGENCIA' THEN 2
+                        WHEN 'NARANJA' THEN 2
+                        WHEN 'P3-URGENCIA' THEN 3
+                        WHEN 'AMARILLO' THEN 3
+                        WHEN 'P4-MENOS_URGENTE' THEN 4
+                        WHEN 'VERDE' THEN 4
+                        WHEN 'P5-NO_URGENTE' THEN 5
+                        WHEN 'AZUL' THEN 5
+                        ELSE 6
+                    END ASC,
+                    id ASC
             LIMIT 20
             `),
             pool.query(`

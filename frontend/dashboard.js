@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Asignar eventos
     document.getElementById('btnFiltrar').addEventListener('click', filtrarDatos);
     document.getElementById('btnLimpiarFiltros').addEventListener('click', limpiarFiltros);
-    document.getElementById('btnRefresh').addEventListener('click', cargarDashboard);
+    document.getElementById('btnRefresh').addEventListener('click', () => cargarDashboard());
     document.getElementById('btnAutoRefresh').addEventListener('click', toggleAutoRefresh);
     document.getElementById('btnExportExcel').addEventListener('click', () => {
         const fi = document.getElementById('fechaInicio').value;

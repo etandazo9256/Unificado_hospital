@@ -29,6 +29,38 @@ function formatFecha(dateStr) {
     return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+// Unifica las prioridades antiguas (ROJO/AMARILLO/VERDE/AZUL/NARANJA)
+// con las de Manchester (P1-P5) en etiquetas únicas con su total
+const PRIORIDAD_MAP = {
+    'P1-RESUCITACION': { label: 'P1 Resucitación', order: 1 },
+    'ROJO': { label: 'P1 Resucitación', order: 1 },
+    'P2-EMERGENCIA': { label: 'P2 Emergencia', order: 2 },
+    'NARANJA': { label: 'P2 Emergencia', order: 2 },
+    'P3-URGENCIA': { label: 'P3 Urgencia', order: 3 },
+    'AMARILLO': { label: 'P3 Urgencia', order: 3 },
+    'P4-MENOS_URGENTE': { label: 'P4 Menos Urgente', order: 4 },
+    'VERDE': { label: 'P4 Menos Urgente', order: 4 },
+    'P5-NO_URGENTE': { label: 'P5 No Urgente', order: 5 },
+    'AZUL': { label: 'P5 No Urgente', order: 5 },
+    'SIN CLASIFICAR': { label: 'Sin Clasificar', order: 6 }
+};
+
+function unificarPrioridades(prioridades) {
+    const agrupado = {};
+    (prioridades || []).forEach(p => {
+        const map = PRIORIDAD_MAP[p.prioridad];
+        const label = map ? map.label : p.prioridad || 'Sin Clasificar';
+        const order = map ? map.order : 99;
+        if (!agrupado[label]) {
+            agrupado[label] = { label, order, cantidad: 0 };
+        }
+        agrupado[label].cantidad += parseInt(p.cantidad) || 0;
+    });
+    return Object.values(agrupado)
+        .sort((a, b) => a.order - b.order)
+        .map(g => [g.label, g.cantidad]);
+}
+
 function formatFechaLarga(dateStr) {
     if (!dateStr) return 'N/A';
     const d = new Date(dateStr);
@@ -222,7 +254,6 @@ async function exportarExcel(fechaInicio, fechaFin) {
         fila = renderTabla(wsResumen, fila,
             ['Indicador', 'Valor'],
             [
-                ['Pacientes Registrados', data.resumen.total_pacientes],
                 ['Atendidos en Triage', data.resumen.total_atendidos],
                 ['Pendientes de Triage', data.resumen.total_pendientes],
                 ['Pacientes en Triage', data.resumen.en_triage],
@@ -247,8 +278,8 @@ async function exportarExcel(fechaInicio, fechaFin) {
         fila = 1;
         fila = agregarSeccion(wsPrioridad, fila, 'DISTRIBUCIÓN POR PRIORIDAD DE TRIAGE');
         fila = renderTabla(wsPrioridad, fila,
-            ['Prioridad', 'Cantidad'],
-            data.prioridades.map(p => [p.prioridad, p.cantidad]));
+            ['Prioridad', 'Total de Pacientes'],
+            unificarPrioridades(data.prioridades));
 
         // ===== Hoja 3: Productividad del Personal =====
         const wsProd = wb.addWorksheet('Productividad', { views: [{ showGridLines: false }] });
@@ -427,13 +458,12 @@ async function exportarPDF(fechaInicio, fechaFin) {
         // Tarjetas de KPI
         yPos = drawSection('RESUMEN GENERAL DE INDICADORES', yPos);
         const kpiCards = [
-            ['Pacientes Registrados', data.resumen.total_pacientes.toString()],
             ['Atendidos en Triage', data.resumen.total_atendidos.toString()],
             ['Pendientes de Triage', data.resumen.total_pendientes.toString()],
             ['Tiempo Total Promedio', `${data.resumen.avg_total_triage} min`]
         ];
 
-        const cardWidth = (pageWidth - margin * 2 - 10) / 4;
+        const cardWidth = (pageWidth - margin * 2 - 10) / 3;
         kpiCards.forEach((card, i) => {
             const x = margin + i * (cardWidth + 3.3);
             doc.setFillColor(245, 247, 250);
@@ -463,8 +493,8 @@ async function exportarPDF(fechaInicio, fechaFin) {
 
         // Prioridad de triage
         yPos = drawSection('DISTRIBUCIÓN POR PRIORIDAD DE TRIAGE', yPos);
-        const prioridadRows = data.prioridades.map(p => [p.prioridad, p.cantidad.toString()]);
-        yPos = drawTable(['Prioridad', 'Cantidad de Pacientes'], prioridadRows, yPos);
+        const prioridadRows = unificarPrioridades(data.prioridades).map(p => [p[0], p[1].toString()]);
+        yPos = drawTable(['Prioridad', 'Total de Pacientes'], prioridadRows, yPos);
 
         // ---- PÁGINA 2: PRODUCTIVIDAD Y TENDENCIAS ----
         doc.addPage();

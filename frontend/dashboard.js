@@ -136,7 +136,6 @@ function mostrarLoading(cargando) {
 
 // Actualizar valores en las tarjetas superiores
 function actualizarTarjetasKPI(data) {
-    document.getElementById('valTotal').textContent = data.total_pacientes.toLocaleString();
     document.getElementById('valAtendidos').textContent = data.total_atendidos.toLocaleString();
     document.getElementById('valPendientes').textContent = data.total_pendientes.toLocaleString();
     
@@ -201,11 +200,10 @@ function renderTendencias(comparar) {
         }
         const esPositivo = invertir ? p <= 0 : p >= 0;
         const arrow = p >= 0 ? '▲' : '▼';
-        const cls = id === 'trendTotal' ? 'trend-info' : (esPositivo ? 'trend-up' : 'trend-down');
+        const cls = esPositivo ? 'trend-up' : 'trend-down';
         el.innerHTML = `<span class="${cls}">${arrow} ${Math.abs(p)}%</span>`;
     };
 
-    setTrend('trendTotal', actual.total_pacientes, anterior.total_pacientes, false);
     setTrend('trendAtendidos', actual.total_atendidos, anterior.total_atendidos, false);
     setTrend('trendPendientes', actual.total_pendientes, anterior.total_pendientes, true);
     setTrend('trendEspera', actual.avg_total_triage, anterior.avg_total_triage, true);

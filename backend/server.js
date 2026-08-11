@@ -665,7 +665,7 @@ app.get('/api/kpis/prioridad', async (req, res) => {
                 COUNT(*) as cantidad
             FROM esq_emergencia.reporte_emergencia
             ${whereStr}
-            GROUP BY prioridad
+            GROUP BY COALESCE(prioridad, 'SIN CLASIFICAR')
             ORDER BY cantidad DESC
         `, params);
         res.json(result.rows.map(r => ({

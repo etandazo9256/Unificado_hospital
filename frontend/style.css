@@ -196,6 +196,36 @@ html, body { height: 100%; overflow: hidden; }
 .tv-stats .stat-etiqueta { font-size: 11px; color: var(--texto-suave); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 .tv-stats .stat-divider { width: 1px; height: 35px; background: var(--gris-borde); }
 
+/* ---- Stats por prioridad Manchester ---- */
+.tv-stats-prioridades {
+    justify-content: space-between;
+    padding: 10px 30px;
+    background: #f8fafc;
+    border-top: 1px solid var(--gris-borde);
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.tv-stats-prioridades .prio-stat {
+    flex: 1; min-width: 150px; text-align: center;
+    padding: 12px 10px; border-radius: 10px;
+    color: #fff;
+}
+.tv-stats-prioridades .prio-etiqueta {
+    display: block; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.9); margin-bottom: 4px;
+}
+.tv-stats-prioridades .prio-objetivo { display: block; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); }
+.tv-stats-prioridades .prio-real { display: block; font-size: 14px; font-weight: 800; color: #fff; }
+.tv-stats-prioridades .prio-rojo     { background: #DC2626; }
+.tv-stats-prioridades .prio-naranja  { background: #EA580C; }
+.tv-stats-prioridades .prio-amarillo { background: #f8fb3c; color: #111; }
+.tv-stats-prioridades .prio-amarillo .prio-etiqueta { color: rgba(0,0,0,0.8); }
+.tv-stats-prioridades .prio-amarillo .prio-objetivo { color: rgba(0,0,0,0.65); }
+.tv-stats-prioridades .prio-amarillo .prio-real { color: #000; }
+.tv-stats-prioridades .prio-verde    { background: #16A34A; }
+.tv-stats-prioridades .prio-azul     { background: #2563EB; }
+
 /* ---- Animations ---- */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }

@@ -180,9 +180,52 @@ async function cargarSala() {
         mostrarLlamado(data.turnoActual);
         renderProximos(data.proximos, data.stats?.tiempoPromedio);
         actualizarStats(data.stats);
+        actualizarEsperaPrioridad(data.esperaPrioridad);
     } catch (e) {
         console.error('Error al cargar sala:', e);
     }
+}
+
+// Objetivo de tiempo máximo (Manchester) por prioridad en minutos
+const OBJETIVO_PRIORIDAD_MIN = {
+    'ROJO': 0, 'NARANJA': 10, 'AMARILLO': 60, 'VERDE': 120, 'AZUL': 240
+};
+
+function normalizarPrioParaStats(p) {
+    const map = {
+        'P1-RESUCITACION': 'ROJO',
+        'P2-EMERGENCIA': 'NARANJA',
+        'P3-URGENCIA': 'AMARILLO',
+        'P4-MENOS_URGENTE': 'VERDE',
+        'P5-NO_URGENTE': 'AZUL'
+    };
+    return map[p] || p;
+}
+
+function formatearMin(num) {
+    if (num === 0 || num === undefined || num === null) return '0';
+    if (num < 60) return Math.round(num);
+    const h = Math.floor(num / 60);
+    const m = Math.round(num % 60);
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
+function actualizarEsperaPrioridad(lista) {
+    const valores = {};
+    (lista || []).forEach(r => {
+        const p = normalizarPrioParaStats(r.prioridad);
+        valores[p] = r.esperaPromedioMin;
+    });
+
+    const orden = ['ROJO', 'NARANJA', 'AMARILLO', 'VERDE', 'AZUL'];
+    const sufijos = { 'ROJO': 'Rojo', 'NARANJA': 'Naranja', 'AMARILLO': 'Amarillo', 'VERDE': 'Verde', 'AZUL': 'Azul' };
+
+    orden.forEach(p => {
+        const objEl = document.getElementById(`prioObj${sufijos[p]}`);
+        const realEl = document.getElementById(`prioReal${sufijos[p]}`);
+        if (objEl) objEl.textContent = OBJETIVO_PRIORIDAD_MIN[p];
+        if (realEl) realEl.textContent = formatearMin(valores[p]);
+    });
 }
 
 function maskCedula(val) {
@@ -406,6 +449,11 @@ document.addEventListener('DOMContentLoaded', function () {
     socket.on('turno:no_asiste',        () => cargarSala());
     socket.on('turno:cancelado',        () => cargarSala());
     socket.on('turno:reiniciado',       () => cargarSala());
+
+    // Refresco automático periódico: cualquier cambio en la BD
+    // (incluido un UPDATE hecho directamente con SQL) se refleja
+    // en la sala de espera sin necesidad de recargar la página.
+    setInterval(cargarSala, 15000);
 
     document.addEventListener('click', () => {
         if (typeof getAudioCtx === 'function') getAudioCtx();

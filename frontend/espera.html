@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiempo de Espera - Hospital de Especialidades</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="espera.css">
+</head>
+<body>
+<div class="tv-container">
+
+    <header class="tv-topbar">
+        <div class="logo-corner">
+            <img src="logo-hospital.png" alt="Hospital" class="logo-img">
+        </div>
+        <div class="info-hospital">
+            <h1>Hospital de Especialidades de Portoviejo</h1>
+        </div>
+        <div class="header-actions">
+            <div id="reloj">00:00:00</div>
+            <div class="connection-status"><span class="connection-dot" id="connDot"></span></div>
+        </div>
+    </header>
+
+    <div class="tv-main">
+
+        <!-- Izquierda: panel con un solo video -->
+        <div class="tv-left">
+            <div class="video-panel">
+                <video src="video2.mp4" muted autoplay loop playsinline></video>
+            </div>
+        </div>
+
+        <!-- Derecha: tiempos de espera -->
+        <div class="tv-right">
+
+            <!-- Tiempo estimado por prioridad -->
+            <section class="espera-seccion">
+                <h2 class="espera-titulo">
+                    <span class="titulo-principal">Tiempo estimado de espera</span>
+                    <span class="titulo-sub">Clasificación Manchester</span>
+                </h2>
+                <div class="espera-degradado">
+                    <div class="seg-seg seg-rojo"></div>
+                    <div class="seg-seg seg-naranja"></div>
+                    <div class="seg-seg seg-amarillo"></div>
+                    <div class="seg-seg seg-verde"></div>
+                    <div class="seg-seg seg-azul"></div>
+                </div>
+                <div class="espera-lista">
+
+                    <div class="espera-card pri-rojo">
+                        <div class="ec-head">
+                            <span class="ec-prioridad">Urgente</span>
+                        </div>
+                        <div class="ec-tiempo" id="tiempoRojo">--</div>
+                    </div>
+
+                    <div class="espera-card pri-naranja">
+                        <div class="ec-head">
+                            <span class="ec-prioridad">Emergencia</span>
+                        </div>
+                        <div class="ec-tiempo" id="tiempoNaranja">--</div>
+                    </div>
+
+                    <div class="espera-card pri-amarillo">
+                        <div class="ec-head">
+                            <span class="ec-prioridad">Urgencia Media</span>
+                        </div>
+                        <div class="ec-tiempo" id="tiempoAmarillo">--</div>
+                    </div>
+
+                    <div class="espera-card pri-verde">
+                        <div class="ec-head">
+                            <span class="ec-prioridad">Menos Urgente</span>
+                        </div>
+                        <div class="ec-tiempo" id="tiempoVerde">--</div>
+                    </div>
+
+                    <div class="espera-card pri-azul">
+                        <div class="ec-head">
+                            <span class="ec-prioridad">No Urgente</span>
+                        </div>
+                        <div class="ec-tiempo" id="tiempoAzul">--</div>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <footer class="tv-footer">
+        <span>Los tiempos son estimados y pueden variar según la demanda y la prioridad de los pacientes.</span>
+    </footer>
+</div>
+
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<script src="espera.js"></script>
+</body>
+</html>

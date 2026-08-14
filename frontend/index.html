@@ -50,7 +50,7 @@
         </div>
 
         <div class="tv-right">
-            <div class="right-header">PRÓXIMOS TURNOS</div>
+            <div class="right-header">PRÓXIMOS TURNOS / Atención por prioridad Manchester</div>
             <div class="proximos-lista" id="proximosLista"></div>
         </div>
     </div>
@@ -65,6 +65,34 @@
         <div class="stat-item"><span class="stat-numero" id="statAtendidos">0</span><span class="stat-etiqueta">Atendidos</span></div>
         <div class="stat-divider"></div>
         <div class="stat-item"><span class="stat-numero" id="statPromedio">0</span><span class="stat-etiqueta">Promedio (min)</span></div>
+    </div>
+
+    <div class="tv-stats tv-stats-prioridades" id="tvStatsPrioridades">
+        <div class="prio-stat prio-rojo">
+            <span class="prio-etiqueta">Urgente (Rojo)</span>
+            <span class="prio-objetivo">Objetivo: <strong id="prioObjRojo">0</strong> min</span>
+            <span class="prio-real">Promedio: <strong id="prioRealRojo">0</strong> min</span>
+        </div>
+        <div class="prio-stat prio-naranja">
+            <span class="prio-etiqueta">Emergencia (Naranja)</span>
+            <span class="prio-objetivo">Objetivo: <strong id="prioObjNaranja">10</strong> min</span>
+            <span class="prio-real">Promedio: <strong id="prioRealNaranja">0</strong> min</span>
+        </div>
+        <div class="prio-stat prio-amarillo">
+            <span class="prio-etiqueta">Urgencia (Amarillo)</span>
+            <span class="prio-objetivo">Objetivo: <strong id="prioObjAmarillo">60</strong> min</span>
+            <span class="prio-real">Promedio: <strong id="prioRealAmarillo">0</strong> min</span>
+        </div>
+        <div class="prio-stat prio-verde">
+            <span class="prio-etiqueta">Menos Urgente (Verde)</span>
+            <span class="prio-objetivo">Objetivo: <strong id="prioObjVerde">120</strong> min</span>
+            <span class="prio-real">Promedio: <strong id="prioRealVerde">0</strong> min</span>
+        </div>
+        <div class="prio-stat prio-azul">
+            <span class="prio-etiqueta">No Urgente (Azul)</span>
+            <span class="prio-objetivo">Objetivo: <strong id="prioObjAzul">240</strong> min</span>
+            <span class="prio-real">Promedio: <strong id="prioRealAzul">0</strong> min</span>
+        </div>
     </div>
 </div>
 

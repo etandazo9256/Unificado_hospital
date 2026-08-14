@@ -26,7 +26,7 @@ function emitirEvento(tipo, datos) {
 // Sala de espera: turno actual llamado + próximos pendientes
 app.get('/api/turnos/sala', async (req, res) => {
     try {
-        const [turnoActual, proximos, stats, llegadas, consultorios] = await Promise.all([
+        const [turnoActual, proximos, stats, llegadas, consultorios, esperaPrioridad] = await Promise.all([
             pool.query(`
                 SELECT id, turno, paciente, fecha_llamado, consultorio, prioridad
                 FROM esq_emergencia.reporte_emergencia
@@ -76,6 +76,17 @@ app.get('/api/turnos/sala', async (req, res) => {
                 FROM esq_emergencia.reporte_emergencia
                 WHERE consultorio IS NOT NULL AND consultorio != ''
                 AND estado IN ('pendiente_medico', 'en_atencion_medica')
+            `),
+            // Tiempo de espera real promedio por prioridad Manchester (pacientes en cola)
+            pool.query(`
+                SELECT
+                    COALESCE(NULLIF(prioridad, ''), 'SIN CLASIFICAR') as prioridad,
+                    COUNT(*) as cantidad,
+                    COALESCE(AVG(EXTRACT(EPOCH FROM (NOW() - COALESCE(fecha_turno, fecha_llamado))) / 60), 0) as espera_promedio_min
+                FROM esq_emergencia.reporte_emergencia
+                WHERE estado = 'pendiente'
+                  AND paciente IS NOT NULL AND paciente != ''
+                GROUP BY COALESCE(NULLIF(prioridad, ''), 'SIN CLASIFICAR')
             `)
         ]);
 
@@ -95,7 +106,12 @@ app.get('/api/turnos/sala', async (req, res) => {
                 tiempoPromedio: Math.round(parseFloat(s.tiempo_promedio) * 10) / 10,
                 lambda: llegadasHora,
                 consultorios: consultoriosActivos
-            }
+            },
+            esperaPrioridad: esperaPrioridad.rows.map(r => ({
+                prioridad: r.prioridad,
+                cantidad: parseInt(r.cantidad) || 0,
+                esperaPromedioMin: Math.round(parseFloat(r.espera_promedio_min) * 10) / 10
+            }))
         });
     } catch (error) {
         console.error('Error al obtener datos de sala:', error);
@@ -244,37 +260,47 @@ app.post('/api/turnos/:id/iniciar-triage', async (req, res) => {
     }
 });
 
-// Finalizar triage (en_triage -> pendiente_medico)
+// Finalizar triage (en_triage -> en_atencion_medica, pasa directo a consulta)
 app.post('/api/turnos/:id/finalizar-triage', async (req, res) => {
     try {
         const { id } = req.params;
-        const { prioridad, consultorio, resp_sig_vitales } = req.body || {};
+        const { prioridad, consultorio, medico_responsable } = req.body || {};
 
         if (!prioridad) {
-            return res.json({ success: false, message: 'Debe asignar una prioridad (P1-P5 Manchester)' });
+            return res.json({ success: false, message: 'Debe asignar una prioridad (Manchester o P1-P5)' });
         }
 
-        if (!['P1-RESUCITACION', 'P2-EMERGENCIA', 'P3-URGENCIA', 'P4-MENOS_URGENTE', 'P5-NO_URGENTE'].includes(prioridad)) {
-            return res.json({ success: false, message: 'Prioridad inválida. Use: P1-RESUCITACION, P2-EMERGENCIA, P3-URGENCIA, P4-MENOS_URGENTE, P5-NO_URGENTE' });
+        const PRIORIDADES_VALIDAS = [
+            'ROJO', 'NARANJA', 'AMARILLO', 'VERDE', 'AZUL',
+            'P1-RESUCITACION', 'P2-EMERGENCIA', 'P3-URGENCIA', 'P4-MENOS_URGENTE', 'P5-NO_URGENTE'
+        ];
+
+        if (!PRIORIDADES_VALIDAS.includes(prioridad)) {
+            return res.json({ success: false, message: 'Prioridad inválida. Use ROJO, NARANJA, AMARILLO, VERDE, AZUL o P1-P5' });
+        }
+
+        if (!medico_responsable) {
+            return res.json({ success: false, message: 'Debe asignar el médico responsable para enviar a consulta' });
         }
 
         const result = await pool.query(`
             UPDATE esq_emergencia.reporte_emergencia
-            SET estado = 'pendiente_medico',
+            SET estado = 'en_atencion_medica',
                 fecha_fin_triage = CURRENT_TIMESTAMP,
+                fecha_inicio_atencion_medica = CURRENT_TIMESTAMP,
                 prioridad = $2,
                 consultorio = COALESCE($3, consultorio),
-                resp_sig_vitales = COALESCE($4, resp_sig_vitales)
+                medico_responsable = $4
             WHERE id = $1 AND estado = 'en_triage'
-            RETURNING id, turno, paciente, prioridad, consultorio, estado
-        `, [id, prioridad, consultorio || null, resp_sig_vitales || null]);
+            RETURNING id, turno, paciente, prioridad, consultorio, medico_responsable, estado
+        `, [id, prioridad, consultorio || null, medico_responsable]);
 
         if (result.rows.length === 0) {
             return res.json({ success: false, message: 'Turno no encontrado o no está en triage' });
         }
 
-        emitirEvento('turno:pendiente_medico', { id: result.rows[0].id, turno: result.rows[0].turno, prioridad: result.rows[0].prioridad });
-        res.json({ success: true, turno: result.rows[0], message: `Triage finalizado para turno ${result.rows[0].turno}` });
+        emitirEvento('turno:en_atencion', { id: result.rows[0].id, turno: result.rows[0].turno, prioridad: result.rows[0].prioridad, medico: result.rows[0].medico_responsable });
+        res.json({ success: true, turno: result.rows[0], message: `Turno ${result.rows[0].turno} enviado a consulta médica con ${result.rows[0].medico_responsable}` });
     } catch (error) {
         console.error('Error al finalizar triage:', error);
         res.status(500).json({ success: false, error: error.message });

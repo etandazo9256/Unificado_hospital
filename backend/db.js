@@ -1,18 +1,21 @@
 const { Pool } = require('pg');
 require('dotenv').config();
+
+const isLocal = ['localhost', '127.0.0.1'].includes(process.env.DB_HOST);
 const pool = new Pool({
     host: process.env.DB_HOST, // Ejemplo: YOUR-PROJECT.supabase.co
     port: Number(process.env.DB_PORT || 5432),
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    ssl: {
-        rejectUnauthorized: false // Habilitar SSL para Supabase
-    },
-    // Reintentar la conexión automáticamente cuando falla por red
+    max: 5,
+    idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 10000,
-    idleTimeoutMillis: 30000,
-    max: 10
+    ssl: isLocal ? undefined : { rejectUnauthorized: false }
+});
+
+pool.on('error', err => {
+    console.error('Error inesperado en el pool de conexiones:', err.message);
 });
 
 // Reintentos automáticos ante fallos de red (ETIMEDOUT, ECONNREFUSED, etc.)

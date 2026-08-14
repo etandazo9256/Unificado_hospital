@@ -1,0 +1,19 @@
+Supabase
+Nombre de la database:hospital_prueba
+contraseña:UTM-PROYECTO2026
+region: Americas
+
+-------------------------------------supabase-----------------------------------------
+
+DB_HOST=aws-1-us-west-2.pooler.supabase.com
+DB_PORT=5432
+DB_USER=postgres.rdfetigspcqvtrrueixr
+DB_PASSWORD=UTM-PROYECTO2026
+DB_NAME=postgres
+
+------------------------------------postgres-----------------------------------------
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=2637278910
+DB_NAME=hospital_prueba

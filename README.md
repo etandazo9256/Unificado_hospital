@@ -23,7 +23,7 @@ Pantalla operativa para la administración en tiempo real de la cola de atenció
 ### 2. Dashboard de KPIs de Emergencia — `frontend/dashboard/dashboard.html`
 Panel analítico y administrativo para directores, jefes de servicio y analistas de calidad hospitalaria.
 
-- **Tarjetas de KPI**: Total de pacientes registrados, atendidos, pendientes y tiempo promedio total de atención (en minutos).
+- **Tarjetas de KPI**: Total de pacientes atendidos, pendientes y tiempo promedio total de atención (en minutos).
 - **Gráfico de Demanda por Hora**: Distribución de admisiones por hora del día para identificar horas pico.
 - **Gráfico de Prioridades de Triage**: Distribución por gravedad (Rojo, Naranja, Amarillo, Verde, Azul).
 - **Gráfico de Tiempos por Etapa**: Comparación de tiempos promedio en cada fase del proceso (espera de signos, toma de signos, espera de triage, evaluación de triage y tiempo total).

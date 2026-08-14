@@ -84,6 +84,10 @@ sistema_turno/
 │       ├── dashboard.css      # Estilos del dashboard
 │       └── logo-hospital.png  # Logo del hospital (dashboard)
 │
+├── database/
+│   ├── schema.sql             # Esquema de la base de datos (tabla, secuencia, índices)
+│   └── seed.sql               # Datos de ejemplo para probar el sistema
+│
 ├── .gitignore
 └── README.md
 ```
@@ -173,29 +177,52 @@ Abrir en el navegador:
 
 ## 🗄️ Esquema de Base de Datos
 
+El proyecto incluye los scripts de base de datos en la carpeta `database/`:
+
+| Archivo        | Contenido                                                        |
+|----------------|------------------------------------------------------------------|
+| `schema.sql`   | Esquema completo: tabla, secuencia, restricciones e índices      |
+| `seed.sql`     | Datos de ejemplo (turnos) para probar el sistema                 |
+
 **Tabla principal**: `esq_emergencia.reporte_emergencia`
 
 | Columna                         | Tipo          | Descripción                                  |
 |---------------------------------|---------------|----------------------------------------------|
-| `id`                            | integer       | Identificador único (PK)                     |
+| `id`                            | integer       | Identificador único (secuencia `reporte_emergencia_id_seq`) |
 | `numero`                        | integer       | Número secuencial del turno                  |
 | `turno`                         | varchar       | Código del turno (ej: ET1, ET202)            |
-| `paciente`                      | varchar       | Nombre completo del paciente                 |
+| `paciente`                      | varchar       | Nombre o documento del paciente              |
 | `fecha_turno`                   | timestamp     | Fecha y hora de emisión del turno            |
 | `fecha_llamado`                 | timestamp     | Fecha y hora del llamado al paciente         |
 | `fecha_sig_vitales`             | timestamp     | Fecha y hora de toma de signos vitales       |
 | `resp_sig_vitales`              | varchar       | Profesional que tomó signos vitales          |
 | `fecha_triage`                  | timestamp     | Fecha y hora de evaluación de triage         |
 | `resp_triage`                   | varchar       | Médico responsable del triage                |
-| `prioridad`                     | varchar       | Prioridad asignada (ROJO/AMARILLO/VERDE)     |
-| `atendido`                      | boolean       | Estado de atención del turno                 |
-| `tiempo_espera_turno_signos`    | varchar       | Tiempo de espera turno → signos (HH:MM:SS)  |
-| `tiempo_duracion_signos_vitales`| varchar       | Duración de toma de signos (HH:MM:SS)       |
-| `tiempo_espera_signos_triage`   | varchar       | Tiempo de espera signos → triage (HH:MM:SS) |
-| `tiempo_duracion_triage`        | varchar       | Duración del triage (HH:MM:SS)              |
-| `tiempo_total_turno_triage`     | varchar       | Tiempo total turno → fin triage (HH:MM:SS)  |
+| `prioridad`                     | varchar       | Prioridad Manchester (ROJO/NARANJA/AMARILLO/VERDE/AZUL) |
+| `estado`                        | varchar       | Estado del turno (`pendiente`, `llamado`, `en_triage`, `pendiente_medico`, `en_atencion_medica`, `finalizado`, `no_asiste`, `cancelado`) |
+| `atendido`                      | boolean       | Indica si el turno fue atendido              |
+| `medico_responsable`            | varchar       | Médico responsable de la atención médica     |
+| `consultorio`                   | varchar       | Consultorio o especialidad asignada          |
+| `tiempo_*`                      | varchar       | Tiempos por etapa del flujo (HH:MM:SS)       |
+| `fecha_inicio_triage` / `fecha_fin_triage` | timestamp | Inicio y fin del triage              |
+| `fecha_inicio_atencion_medica` / `fecha_fin_atencion_medica` | timestamp | Inicio y fin de la atención médica |
+| `observacion_estado`            | text          | Nota/observación de cambio de estado (causa de cancelación, etc.) |
 
-**Vista**: `esq_emergencia.vw_reporte_atencion` — Vista resumida con paciente, turno, responsables y tiempo total calculado como intervalo.
+> **Nota**: La columna `id` usa la secuencia `esq_emergencia.reporte_emergencia_id_seq`. El esquema incluye un `CHECK` que valida los estados válidos y varios índices para las consultas frecuentes (por fecha, estado y atención).
+
+### 📥 Cómo importar el esquema y los datos
+
+Desde **Supabase** (SQL Editor) o con `psql`:
+
+```bash
+# 1. Crear el esquema y la tabla
+psql "$DATABASE_URL" -f database/schema.sql
+
+# 2. Cargar los datos de ejemplo
+psql "$DATABASE_URL" -f database/seed.sql
+```
+
+> En Supabase: abrir **SQL Editor**, pegar el contenido de `schema.sql` y ejecutar; luego hacer lo mismo con `seed.sql` (o copiarlos en orden dentro de un solo script).
 
 ---
 

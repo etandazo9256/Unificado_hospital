@@ -212,7 +212,15 @@ El proyecto incluye los scripts de base de datos en la carpeta `database/`:
 
 ### 📥 Cómo importar el esquema y los datos
 
-Desde **Supabase** (SQL Editor) o con `psql`:
+El orden siempre es: **1)** ejecutar `schema.sql` (estructura) y **2)** ejecutar `seed.sql` (datos).
+
+#### Opción A — Supabase (SQL Editor)
+
+1. Abrir la consola de Supabase → **SQL Editor** → **New query**.
+2. Copiar el contenido de `database/schema.sql`, pegarlo y ejecutar (▶ Run).
+3. Repetir con `database/seed.sql`.
+
+#### Opción B — Terminal con `psql`
 
 ```bash
 # 1. Crear el esquema y la tabla
@@ -222,7 +230,25 @@ psql "$DATABASE_URL" -f database/schema.sql
 psql "$DATABASE_URL" -f database/seed.sql
 ```
 
-> En Supabase: abrir **SQL Editor**, pegar el contenido de `schema.sql` y ejecutar; luego hacer lo mismo con `seed.sql` (o copiarlos en orden dentro de un solo script).
+#### Opción C — pgAdmin
+
+1. Conectar al servidor y abrir la base de datos donde se importará (ej: `hospital_prueba`).
+2. Abrir **Query Tool** (clic derecho sobre la base → *Query Tool*).
+3. Cargar el archivo: **File → Open** (ícono de carpeta) → seleccionar `database/schema.sql`.
+4. Ejecutar con **F5** (o el botón ▶).
+5. Repetir los pasos 3–4 con `database/seed.sql`.
+
+> Si ya existe el esquema/tabla, `schema.sql` no falla (usa `IF NOT EXISTS`); pero el `seed.sql` duplicará los registros, por lo que solo debes ejecutarlo una vez o sobre una base limpia.
+
+#### Opción D — DBeaver
+
+1. Conectar al servidor y abrir la base de datos destino.
+2. Abrir el **SQL Editor**: clic derecho sobre la base → **SQL Editor → Open SQL Editor** (o tool `Alt+X`).
+3. Abrir el archivo: **File → Open File** → seleccionar `database/schema.sql`.
+4. Ejecutar con **Ctrl+Enter** (o clic en ▶).
+5. Repetir los pasos 3–4 con `database/seed.sql`.
+
+> Si la conexión muestra credenciales, recordar que al importar en pgAdmin/DBeaver solo se necesita apuntar a la misma base y esquema `esq_emergencia`.
 
 ---
 

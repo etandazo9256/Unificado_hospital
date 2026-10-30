@@ -1,92 +1,111 @@
-# 🏥 HEP Dashboard — Hospital de Especialidades Portoviejo
+# 🏥 Sistema Unificado de Gestión de Turnos — Área de Emergencia
 
-**Dashboard de Indicadores Clave de Rendimiento (KPI) para el Área de Emergencia**
+**Hospital de Especialidades Portoviejo (HEP Dashboard Unificado)**
 
-Sistema web para la gestión de turnos y visualización de indicadores hospitalarios del Departamento de Emergencia del Hospital de Especialidades Portoviejo, Ecuador.
+Sistema web para la gestión de turnos y visualización de indicadores del **Departamento de Emergencia** del Hospital de Especialidades Portoviejo, Ecuador. Unifica en una sola aplicación las tres pantallas del sistema, con un **menú central de acceso** y actualización en **tiempo real** vía Socket.IO.
 
 ---
 
-## 📋 Descripción del Proyecto
+## 🖥️ Pantallas del Sistema (Unificado)
 
-Este proyecto consta de **tres pantallas principales**:
+### 0. Menú Central — `frontend/menu.html`
 
-### 1. Sistema de Gestión de Turnos — `frontend/index.html`
-Pantalla operativa para la administración en tiempo real de la cola de atención de pacientes en el área de emergencia.
+Portada del sistema. Acceso directo a las tres pantallas mediante tarjetas con descripción.
 
-- Visualización del turno en atención actual.
-- Lista de próximos turnos pendientes con su prioridad Manchester.
-- Botones de acción: Siguiente turno, Llamar y Reiniciar sistema.
-- Estadísticas en vivo: pendientes, atendidos, total y tiempo de espera promedio.
-- Actualización en tiempo real (estado de la sala) mediante Socket.IO.
-- Reloj en tiempo real y atajos de teclado.
+- **Estado del sistema en vivo**: pendientes, en triage, en consulta, atendidos y tiempo promedio (consume la misma API del backend).
+- Botón de **pantalla completa** para equipar los monitores.
+- Reloj y fecha en tiempo real, indicador de conexión.
 
-### 2. Dashboard de KPIs de Emergencia — `frontend/dashboard/dashboard.html`
-Panel analítico y administrativo para directores, jefes de servicio y analistas de calidad hospitalaria.
+Principales rutas (servidas por el backend en `http://localhost:3000`):
 
-- **Tarjetas de KPI**: Total de pacientes atendidos, pendientes y tiempo promedio total de atención (en minutos).
-- **Gráfico de Demanda por Hora**: Distribución de admisiones por hora del día para identificar horas pico.
-- **Gráfico de Prioridades de Triage**: Distribución por gravedad (Rojo, Naranja, Amarillo, Verde, Azul).
-- **Gráfico de Tiempos por Etapa**: Comparación de tiempos promedio en cada fase del proceso (espera de signos, toma de signos, espera de triage, evaluación de triage y tiempo total).
-- **Gráfico de Evolución Diaria**: Tendencia de admisiones por fecha con correlación de tiempos de respuesta.
-- **Tablas de Productividad**: Top 5 del personal de enfermería (signos vitales) y médicos (triage) con barras de progreso visual.
-- **Filtro por Rango de Fechas**: Permite acotar los indicadores a un período específico.
-- **Exportación a Excel y PDF**: Descarga de reportes con el logo del hospital integrado.
+| Pantalla | URL |
+|---|---|
+| **Menú central (portada)** | `http://localhost:3000/` |
+| **Sala de Espera** | `http://localhost:3000/frontend/index.html` |
+| **Tiempo de Espera Manchester** | `http://localhost:3000/frontend/espera.html` |
+| **Dashboard de Indicadores (KPI)** | `http://localhost:3000/frontend/dashboard/dashboard.html` |
 
-### 3. Pantalla de Espera — `frontend/espera.html`
-Pantalla informativa para los pacientes en espera de su turno.
+### 1. Sala de Espera — `frontend/index.html`
 
-- **Tiempo estimado de espera** por clasificación Manchester (Rojo, Naranja, Amarillo, Verde, Azul), calculado según el último turno en cola de cada prioridad.
-- **Turno en atención actual** y próximos turnos.
-- Panel de video institucional.
-- Reloj en tiempo real.
-- Actualización en tiempo real (Socket.IO) con respaldo cada 15 segundos.
+Pantalla de **TV** para mostrar en la sala de espera del área de emergencia.
+
+- Turno en atención actual (con consultorio, prioridad y hora de llamado).
+- Próximos turnos en cola con su clasificación Manchester.
+- Estadísticas en vivo (pendientes, en triage, en consulta, atendidos, promedio).
+- Objetivos y promedios de espera por prioridad Manchester (Rojo / Naranja / Amarillo / Verde / Azul).
+- Botón *Volver a llamar* y actualización en tiempo real (Socket.IO) con respaldo por sondeo cada 15 s.
+
+### 2. Tiempo de Espera Manchester — `frontend/espera.html`
+
+Pantalla de **TV** informativa para pacientes.
+
+- Tiempo estimado de espera por cada nivel de clasificación Manchester.
+- Panel de video institucional (carrusel de videos).
+- Reloj en tiempo real y actualización en tiempo real (Socket.IO).
+
+### 3. Dashboard de Indicadores (KPI) — `frontend/dashboard/dashboard.html`
+
+Panel analítico y administrativo para dirección, jefes de servicio y calidad hospitalaria.
+
+- **Tarjetas KPI**: atendidos, pendientes y tiempo total promedio de atención.
+- **Gráficos** (Chart.js): demanda por hora, prioridades de triage, tiempos por etapa del flujo y evolución diaria.
+- **Tablas de productividad**: personal destacado en signos vitales y triage.
+- **Filtro por rango de fechas** + filtros rápidos (semana, mes, trimestre, año).
+- **Actualización en tiempo real**: botón *Actualizar*, *Auto-refresh* cada 30 s y **Socket.IO** que refresca automáticamente ante cualquier evento de turnos (llamado, triage, atención, finalización).
+- **Exportación a Excel y PDF** con logo del hospital.
+
+Las pantallas de *Sala de Espera* y *Tiempo de Espera Manchester* están diseñadas en formato **16:9** para montarse en **pantallas/TV independientes** (una pestaña/distinto monitor por pantalla).
 
 ---
 
 ## 🛠️ Tecnologías Utilizadas
 
-| Componente      | Tecnología                                      |
-|-----------------|--------------------------------------------------|
-| **Backend**     | Node.js + Express.js                             |
-| **Base de Datos** | PostgreSQL (esquema `esq_emergencia`)           |
-| **Frontend**    | HTML5, CSS3 (vanilla), JavaScript (vanilla)      |
-| **Gráficos**    | Chart.js (CDN)                                   |
-| **Tipografía**  | Google Fonts — Outfit                            |
-| **Control de Versiones** | Git + GitHub                            |
+| Componente | Tecnología |
+|---|---|
+| **Backend** | Node.js + Express.js + Socket.IO |
+| **Base de Datos** | PostgreSQL (esquema `esq_emergencia`) |
+| **Frontend** | HTML5, CSS3 y JavaScript (vanilla) |
+| **Gráficos** | Chart.js (CDN) |
+| **Exportación** | ExcelJS (Excel) · jsPDF + html2canvas (PDF) |
+| **Tipografía** | Google Fonts — Outfit |
+| **Control de Versiones** | Git + GitHub |
 
 ---
 
 ## 📁 Estructura del Proyecto
 
 ```
-sistema_turno/
+Unificado_hospital/
 ├── backend/
-│   ├── db.js                  # Conexión a PostgreSQL (Supabase) con reconexión automática
-│   ├── server.js              # Servidor Express + Socket.IO (turnos, sala y KPIs)
+│   ├── db.js                    # Conexión a PostgreSQL con reconexión automática
+│   ├── server.js                # Servidor Express + Socket.IO (turnos, sala y KPIs)
 │   ├── package.json
 │   └── package-lock.json
 │
 ├── frontend/
-│   ├── index.html             # Pantalla del sistema de gestión de turnos
-│   ├── app.js                 # Lógica del sistema de turnos
-│   ├── style.css              # Estilos del sistema de turnos
-│   ├── shared.css             # Estilos compartidos
-│   ├── sound.js               # Sonidos de notificación
-│   ├── espera.html            # Pantalla de espera para pacientes
-│   ├── espera.js              # Lógica de la pantalla de espera (Socket.IO)
-│   ├── espera.css             # Estilos de la pantalla de espera
-│   ├── video2.mp4 - video5.mp4# Videos institucionales (panel de espera)
-│   ├── logo-hospital.png      # Logo del hospital
+│   ├── menu.html                # ⭐ Menú central del sistema unificado
+│   ├── menu.css                 # Estilos del menú
+│   ├── menu.js                  # Reloj, estado en vivo y pantalla completa
+│   ├── index.html               # Pantalla de Sala de Espera
+│   ├── app.js                   # Lógica de la sala (Socket.IO)
+│   ├── style.css                # Estilos de la sala
+│   ├── shared.css               # Estilos compartidos (botón Menú, etc.)
+│   ├── espera.html              # Pantalla de Tiempo de Espera Manchester
+│   ├── espera.js                # Lógica de la pantalla Manchester
+│   ├── espera.css               # Estilos de la pantalla Manchester
+│   ├── sound.js                 # Sonidos de notificación
+│   ├── video*.mp4               # Videos institucionales (no versionados)
+│   ├── logo-hospital.png        # Logo del hospital
 │   └── dashboard/
-│       ├── dashboard.html     # Dashboard de indicadores KPI
-│       ├── dashboard.js       # Lógica del dashboard (Chart.js + API)
+│       ├── dashboard.html       # Dashboard de indicadores KPI
+│       ├── dashboard.js         # Lógica del dashboard (Chart.js + Socket.IO)
 │       ├── dashboard-exports.js # Exportación a Excel y PDF
-│       ├── dashboard.css      # Estilos del dashboard
-│       └── logo-hospital.png  # Logo del hospital (dashboard)
+│       ├── dashboard.css        # Estilos del dashboard
+│       └── logo-hospital.png
 │
 ├── database/
-│   ├── schema.sql             # Esquema de la base de datos (tabla, secuencia, índices)
-│   └── seed.sql               # Datos de ejemplo para probar el sistema
+│   ├── schema.sql               # Esquema de la base de datos (tabla, secuencia, índices)
+│   └── seed.sql                 # Datos de ejemplo para probar el sistema
 │
 ├── .gitignore
 └── README.md
@@ -94,170 +113,161 @@ sistema_turno/
 
 ---
 
-## ⚙️ Requisitos Previos
+## 💻 Instalación en otra máquina (paso a paso)
 
-- **Node.js** v18 o superior
-- **PostgreSQL** v14 o superior (el proyecto está configurado para **Supabase** con esquema `esq_emergencia` y tabla `reporte_emergencia`)
+### 1. Requisitos previos
 
----
+- **Node.js** v18 o superior → [https://nodejs.org](https://nodejs.org) (descargar LTS).
+- **Git** → [https://git-scm.com](https://git-scm.com).
+- Acceso a la base de datos (opcional si solo se va a *ver* la interfaz: el sistema funciona con supabase o cualquier PostgreSQL).
 
-## 🚀 Instalación y Ejecución
-
-### 1. Clonar el repositorio
+### 2. Clonar el repositorio
 
 ```bash
-git clone https://github.com/etandazo9256/hep_dashboard.git
-cd hep_dashboard
+git clone https://github.com/etandazo9256/Unificado_hospital.git
+cd Unificado_hospital
 ```
 
-### 2. Instalar dependencias del backend
+### 3. Instalar dependencias del backend
 
 ```bash
 cd backend
 npm install
 ```
 
-### 3. Configurar la conexión a PostgreSQL
+### 4. Configurar la conexión a la base de datos
 
-Crear el archivo `backend/.env` con las credenciales de Supabase:
+Crear el archivo **`backend/.env`** (no viene incluido por seguridad) con estas variables:
 
 ```
-DB_HOST=TU-PROYECTO.pooler.supabase.com
+DB_HOST=<host de PostgreSQL>
 DB_PORT=5432
-DB_USER=postgres.TU-PROYECTO
-DB_PASSWORD=TU_CLAVE
-DB_NAME=postgres
+DB_USER=<usuario>
+DB_PASSWORD=<contraseña>
+DB_NAME=<nombre de la base>
 ```
 
-> Si se usa una base local (`localhost` o `127.0.0.1`), el SSL se desactiva automáticamente.
+> Si el host es local (`localhost` / `127.0.0.1`), el SSL se desactiva automáticamente en `db.js`. Para un host remoto con SSL habilitado, funciona sin configuración extra.
 
-### 4. Iniciar el servidor backend
+### 5. Importar el esquema de la base de datos
+
+Si aún no existe la estructura, ejecutar el script de esquema en la base de datos destino con psql, pgAdmin o DBeaver:
+
+```bash
+psql "$CADENA_DE_CONEXION" -f database/schema.sql
+# Opcional (datos de ejemplo):
+psql "$CADENA_DE_CONEXION" -f database/seed.sql
+```
+
+- `schema.sql` crea el esquema `esq_emergencia`, la tabla `reporte_emergencia`, la secuencia, el `CHECK` de estados y los índices (es idempotente: usa `IF NOT EXISTS`).
+- `seed.sql` carga datos de ejemplo → ejecutar **una sola vez** y preferentemente sobre una base limpia.
+
+### 6. Iniciar el servidor
+
+Desde la carpeta `backend/`:
 
 ```bash
 npm start
 ```
 
-El servidor se ejecutará en `http://localhost:3000`.
+El sistema correrá en **`http://localhost:3000`** y abrirá el **menú central**.
 
-### 5. Abrir las pantallas
+### 7. Abrir las pantallas en los monitores
 
-Abrir en el navegador:
+En cada monitor/TV abierto el navegador en pantalla completa (F11 o el botón ⛶ del menú):
 
-- **Sistema de Turnos**: `http://localhost:3000/frontend/index.html`
-- **Dashboard KPI**: `http://localhost:3000/frontend/dashboard/dashboard.html`
-- **Pantalla de Espera**: `http://localhost:3000/frontend/espera.html`
+| Monitor | URL |
+|---|---|
+| TV 1 — Sala de espera | `http://localhost:3000/frontend/index.html` |
+| TV 2 — Tiempos Manchester | `http://localhost:3000/frontend/espera.html` |
+| PC de dirección | `http://localhost:3000/frontend/dashboard/dashboard.html` |
+
+> **Nota de red:** el resto de máquinas de la red puede acceder al sistema desde la IP del equipo servidor (ej. `http://192.168.1.X:3000`), siempre que el firewall Windows permita el puerto 3000.
 
 ---
 
 ## 📡 Endpoints de la API
 
-### Gestión de Turnos
+### Gestión de turnos
 
-| Método | Endpoint                    | Descripción                          |
-|--------|-----------------------------|--------------------------------------|
-| GET    | `/api/turnos`               | Obtener todos los turnos (últimos 50)|
-| GET    | `/api/turnos/pendientes`    | Obtener turnos pendientes            |
-| GET    | `/api/turnos/actual`        | Obtener turno actual en atención     |
-| POST   | `/api/turnos/siguiente`     | Avanzar al siguiente turno           |
-| POST   | `/api/turnos/reiniciar`     | Reiniciar el sistema de turnos       |
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/turnos/sala` | Estado completo de la sala (turno actual, próximos, stats) |
+| GET | `/api/turnos` | Todos los turnos recientes |
+| GET | `/api/turnos/pendientes` | Turnos pendientes |
+| GET | `/api/turnos/pendientes-triage` | Cola pendiente de triage |
+| GET | `/api/turnos/pendientes-medico` | Cola pendiente de médico |
+| GET | `/api/turnos/en-atencion-medica` | Turnos en atención médica |
+| GET | `/api/turnos/actual` | Turno actual en atención |
+| POST | `/api/turnos/:id/llamar` | Llamar a un turno |
+| POST | `/api/turnos/:id/rellamar` | Volver a llamar |
+| POST | `/api/turnos/:id/iniciar-triage` | Iniciar triage |
+| POST | `/api/turnos/:id/finalizar-triage` | Finalizar triage (asigna prioridad) |
+| POST | `/api/turnos/:id/iniciar-atencion` | Enviar a consulta médica |
+| POST | `/api/turnos/:id/finalizar-atencion` | Finalizar atención |
+| POST | `/api/turnos/:id/no-asiste` | Marcar no asiste |
+| POST | `/api/turnos/:id/cancelar` | Cancelar turno |
+| POST | `/api/turnos/reiniciar` | Reiniciar el sistema de turnos |
 
 ### Dashboard de KPIs
 
-| Método | Endpoint                       | Descripción                                        |
-|--------|--------------------------------|----------------------------------------------------|
-| GET    | `/api/kpis/resumen`            | Métricas generales (totales y promedios)           |
-| GET    | `/api/kpis/prioridad`          | Distribución por prioridad de triage               |
-| GET    | `/api/kpis/productividad`      | Top 5 personal en signos vitales y triage          |
-| GET    | `/api/kpis/tendencia-hora`     | Admisiones agrupadas por hora del día              |
-| GET    | `/api/kpis/tendencia-fecha`    | Tendencia diaria de admisiones y tiempos           |
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/kpis/resumen` | Métricas generales (totales y promedios) |
+| GET | `/api/kpis/prioridad` | Distribución por prioridad Manchester |
+| GET | `/api/kpis/productividad` | Personal destacado (signos vitales y triage) |
+| GET | `/api/kpis/tendencia-hora` | Admisiones por hora del día |
+| GET | `/api/kpis/tendencia-fecha` | Tendencia diaria de admisiones y tiempos |
 
-> **Filtros disponibles**: Todos los endpoints de KPI aceptan los parámetros opcionales `?fechaInicio=YYYY-MM-DD&fechaFin=YYYY-MM-DD` para acotar los resultados a un período específico.
+> **Filtros**: todos los endpoints KPI aceptan `?fechaInicio=YYYY-MM-DD&fechaFin=YYYY-MM-DD` y paginación `?registros=N`.
 
 ---
 
-## 🗄️ Esquema de Base de Datos
-
-El proyecto incluye los scripts de base de datos en la carpeta `database/`:
-
-| Archivo        | Contenido                                                        |
-|----------------|------------------------------------------------------------------|
-| `schema.sql`   | Esquema completo: tabla, secuencia, restricciones e índices      |
-| `seed.sql`     | Datos de ejemplo (turnos) para probar el sistema                 |
+## 🗄️ Esquema de la Base de Datos
 
 **Tabla principal**: `esq_emergencia.reporte_emergencia`
 
-| Columna                         | Tipo          | Descripción                                  |
-|---------------------------------|---------------|----------------------------------------------|
-| `id`                            | integer       | Identificador único (secuencia `reporte_emergencia_id_seq`) |
-| `numero`                        | integer       | Número secuencial del turno                  |
-| `turno`                         | varchar       | Código del turno (ej: ET1, ET202)            |
-| `paciente`                      | varchar       | Nombre o documento del paciente              |
-| `fecha_turno`                   | timestamp     | Fecha y hora de emisión del turno            |
-| `fecha_llamado`                 | timestamp     | Fecha y hora del llamado al paciente         |
-| `fecha_sig_vitales`             | timestamp     | Fecha y hora de toma de signos vitales       |
-| `resp_sig_vitales`              | varchar       | Profesional que tomó signos vitales          |
-| `fecha_triage`                  | timestamp     | Fecha y hora de evaluación de triage         |
-| `resp_triage`                   | varchar       | Médico responsable del triage                |
-| `prioridad`                     | varchar       | Prioridad Manchester (ROJO/NARANJA/AMARILLO/VERDE/AZUL) |
-| `estado`                        | varchar       | Estado del turno (`pendiente`, `llamado`, `en_triage`, `pendiente_medico`, `en_atencion_medica`, `finalizado`, `no_asiste`, `cancelado`) |
-| `atendido`                      | boolean       | Indica si el turno fue atendido              |
-| `medico_responsable`            | varchar       | Médico responsable de la atención médica     |
-| `consultorio`                   | varchar       | Consultorio o especialidad asignada          |
-| `tiempo_*`                      | varchar       | Tiempos por etapa del flujo (HH:MM:SS)       |
-| `fecha_inicio_triage` / `fecha_fin_triage` | timestamp | Inicio y fin del triage              |
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `id` | integer (secuencia) | Identificador único |
+| `numero` | integer | Número secuencial del turno en el día |
+| `turno` | varchar | Código del turno (ej. `ET1`, `ET15`) |
+| `paciente` | varchar | Nombre o documento del paciente |
+| `fecha_turno` | timestamp | Emisión del turno |
+| `fecha_llamado` | timestamp | Llamado al paciente |
+| `fecha_sig_vitales` / `resp_sig_vitales` | timestamp / varchar | Toma de signos vitales |
+| `fecha_triage` / `resp_triage` | timestamp / varchar | Evaluación del triage |
+| `fecha_inicio_triage` / `fecha_fin_triage` | timestamp | Inicio y fin del triage |
 | `fecha_inicio_atencion_medica` / `fecha_fin_atencion_medica` | timestamp | Inicio y fin de la atención médica |
-| `observacion_estado`            | text          | Nota/observación de cambio de estado (causa de cancelación, etc.) |
+| `fecha_soli_hosp` / `fecha_ing_hospitalizacion` | timestamp | Solicitud e ingreso a hospitalización |
+| `prioridad` | varchar | Manchester: `ROJO` / `NARANJA` / `AMARILLO` / `VERDE` / `AZUL` |
+| `estado` | varchar | `pendiente`, `llamado`, `en_triage`, `pendiente_medico`, `en_atencion_medica`, `finalizado`, `no_asiste`, `cancelado` |
+| `atendido` | boolean | Indica si el turno fue atendido |
+| `medico_responsable` / `consultorio` | varchar | Médico y consultorio asignados |
+| `tiempo_*` | varchar | Tiempos por etapa del flujo (`HH:MM:SS`) |
+| `observacion_estado` | text | Observaciones (motivo de cancelación, etc.) |
 
-> **Nota**: La columna `id` usa la secuencia `esq_emergencia.reporte_emergencia_id_seq`. El esquema incluye un `CHECK` que valida los estados válidos y varios índices para las consultas frecuentes (por fecha, estado y atención).
+El flujo de estados es: `pendiente` → `llamado` → `en_triage` → `pendiente_medico` → `en_atencion_medica` → `finalizado` (o `no_asiste` / `cancelado`).
 
-### 📥 Cómo importar el esquema y los datos
+---
 
-El orden siempre es: **1)** ejecutar `schema.sql` (estructura) y **2)** ejecutar `seed.sql` (datos).
+## 🔄 Tiempo Real (Socket.IO)
 
-#### Opción A — Supabase (SQL Editor)
+El backend emite eventos `turno:*` y `sala:*` por Socket.IO en el puerto 3000. Las pantallas:
 
-1. Abrir la consola de Supabase → **SQL Editor** → **New query**.
-2. Copiar el contenido de `database/schema.sql`, pegarlo y ejecutar (▶ Run).
-3. Repetir con `database/seed.sql`.
-
-#### Opción B — Terminal con `psql`
-
-```bash
-# 1. Crear el esquema y la tabla
-psql "$DATABASE_URL" -f database/schema.sql
-
-# 2. Cargar los datos de ejemplo
-psql "$DATABASE_URL" -f database/seed.sql
-```
-
-#### Opción C — pgAdmin
-
-1. Conectar al servidor y abrir la base de datos donde se importará (ej: `hospital_prueba`).
-2. Abrir **Query Tool** (clic derecho sobre la base → *Query Tool*).
-3. Cargar el archivo: **File → Open** (ícono de carpeta) → seleccionar `database/schema.sql`.
-4. Ejecutar con **F5** (o el botón ▶).
-5. Repetir los pasos 3–4 con `database/seed.sql`.
-
-> Si ya existe el esquema/tabla, `schema.sql` no falla (usa `IF NOT EXISTS`); pero el `seed.sql` duplicará los registros, por lo que solo debes ejecutarlo una vez o sobre una base limpia.
-
-#### Opción D — DBeaver
-
-1. Conectar al servidor y abrir la base de datos destino.
-2. Abrir el **SQL Editor**: clic derecho sobre la base → **SQL Editor → Open SQL Editor** (o tool `Alt+X`).
-3. Abrir el archivo: **File → Open File** → seleccionar `database/schema.sql`.
-4. Ejecutar con **Ctrl+Enter** (o clic en ▶).
-5. Repetir los pasos 3–4 con `database/seed.sql`.
-
-> Si la conexión muestra credenciales, recordar que al importar en pgAdmin/DBeaver solo se necesita apuntar a la misma base y esquema `esq_emergencia`.
+- **Sala de Espera** y **Manchester**: se refrescan al instante al llamarse un turno.
+- **Dashboard**: escucha cualquier evento con anti-rebote (refresco automático en ~1 s) y respeta el interruptor manual *Auto-refresh*.
+- Todas tienen respaldo por sondeo HTTP en caso de perder la conexión (indicador visual de estado).
 
 ---
 
 ## 👤 Autor
 
-- **Repositorio**: [etandazo9256/hep_dashboard](https://github.com/etandazo9256/hep_dashboard)
+- **Repositorio**: [etandazo9256/Unificado_hospital](https://github.com/etandazo9256/Unificado_hospital)
+- Equipo de prácticas — Hospital de Especialidades Portoviejo
 
 ---
 
 ## 📄 Licencia
 
-Este proyecto es de uso interno del Hospital de Especialidades Portoviejo.
+Proyecto de uso interno del Hospital de Especialidades Portoviejo.

@@ -33,3 +33,7 @@ frontend/video*.mp4
 
 # Proyecto MCP ajeno al sistema de turnos
 EcuDataMCP/
+
+# Credenciales y datos sensibles (no versionar)
+hospital_datos.txt
+

@@ -991,10 +991,10 @@ app.get('/api/kpis/comparar', async (req, res) => {
     }
 });
 
-// Ruta catch-all: sirve index.html para rutas SPA
+// Ruta catch-all: sirve el menú unificado para rutas raíz
 app.get('/{*path}', (req, res) => {
     if (req.path.startsWith('/api/') || req.path.startsWith('/frontend/')) return;
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'menu.html'));
 });
 
 server.listen(3000, () => {

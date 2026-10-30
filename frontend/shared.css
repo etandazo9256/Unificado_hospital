@@ -183,3 +183,20 @@ body {
     .logo-img { height: 35px; }
     #reloj { font-size: 15px; padding: 4px 12px; }
 }
+
+/* ---- Boton de menu unificado ---- */
+.btn-menu {
+    font-family: inherit;
+    font-weight: 700;
+    font-size: clamp(0.7rem, 1vw, 1rem);
+    color: inherit;
+    text-decoration: none;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    padding: 1vh 1.2vw;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+.btn-menu:hover { background: rgba(255,255,255,0.25); }
+

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú - Hospital de Especialidades Portoviejo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="menu.css">
+</head>
+<body>
+<div class="menu-container">
+
+    <header class="menu-topbar">
+        <div class="logo-corner">
+            <img src="logo-hospital.png" alt="Hospital" class="logo-img">
+        </div>
+        <div class="info-hospital">
+            <h1>Hospital de Especialidades Portoviejo</h1>
+            <span class="subt">Sistema Unificado de Gestión de Turnos — Área de Emergencia</span>
+        </div>
+        <div class="header-actions">
+            <div id="reloj">00:00:00</div>
+            <div class="connection-status"><span class="connection-dot" id="connDot"></span><span id="connText">Conectado</span></div>
+            <button class="btn-fullscreen" id="btnFullscreen" title="Pantalla completa (F11)">⛶ Pantalla completa</button>
+        </div>
+    </header>
+
+    <main class="menu-main">
+
+        <!-- Estado en vivo del sistema -->
+        <section class="estado-panel" id="estadoPanel">
+            <div class="estado-titulo">📊 Estado del sistema en este momento</div>
+            <div class="estado-stats">
+                <div class="estado-stat"><span class="estado-num" id="mPendientes">--</span><span class="estado-etiqueta">Pendientes</span></div>
+                <div class="estado-sep"></div>
+                <div class="estado-stat"><span class="estado-num" id="mTriage">--</span><span class="estado-etiqueta">En Triage</span></div>
+                <div class="estado-sep"></div>
+                <div class="estado-stat"><span class="estado-num" id="mConsulta">--</span><span class="estado-etiqueta">En Consulta</span></div>
+                <div class="estado-sep"></div>
+                <div class="estado-stat"><span class="estado-num" id="mAtendidos">--</span><span class="estado-etiqueta">Atendidos</span></div>
+                <div class="estado-sep"></div>
+                <div class="estado-stat"><span class="estado-num" id="mPromedio">--</span><span class="estado-etiqueta">Promedio (min)</span></div>
+            </div>
+        </section>
+
+        <!-- Pantallas del sistema -->
+        <section class="pantallas-grid">
+
+            <a class="pantalla-card card-sala" href="index.html">
+                <div class="card-icono">🩺</div>
+                <div class="card-cuerpo">
+                    <h2 class="card-titulo">Sala de Espera</h2>
+                    <p class="card-desc">Turno en atención, próximos turnos y estadísticas en tiempo real para pantallas de TV.</p>
+                    <div class="card-etiquetas">
+                        <span class="etiqueta">⚡ Tiempo real</span>
+                        <span class="etiqueta">📺 Pantalla independiente</span>
+                    </div>
+                </div>
+                <div class="card-accion">Abrir <span>→</span></div>
+            </a>
+
+            <a class="pantalla-card card-manchester" href="espera.html">
+                <div class="card-icono">⏱️</div>
+                <div class="card-cuerpo">
+                    <h2 class="card-titulo">Tiempo de Espera Manchester</h2>
+                    <p class="card-desc">Tiempos estimados de espera por clasificación Manchester (Rojo / Naranja / Amarillo / Verde / Azul) con panel de video.</p>
+                    <div class="card-etiquetas">
+                        <span class="etiqueta">⚡ Tiempo real</span>
+                        <span class="etiqueta">📺 Pantalla independiente</span>
+                    </div>
+                </div>
+                <div class="card-accion">Abrir <span>→</span></div>
+            </a>
+
+            <a class="pantalla-card card-dashboard" href="dashboard/dashboard.html">
+                <div class="card-icono">📈</div>
+                <div class="card-cuerpo">
+                    <h2 class="card-titulo">Dashboard de Indicadores (KPI)</h2>
+                    <p class="card-desc">Atendidos, pendientes, tiempos promedio, prioridades, productividad del personal y exportación a Excel/PDF.</p>
+                    <div class="card-etiquetas">
+                        <span class="etiqueta">⏱️ Actualización automática</span>
+                        <span class="etiqueta">💾 Exporta Excel / PDF</span>
+                    </div>
+                </div>
+                <div class="card-accion">Abrir <span>→</span></div>
+            </a>
+
+        </section>
+
+    </main>
+
+    <footer class="menu-footer">
+        <span>Hospital de Especialidades Portoviejo — Departamento de Emergencia</span>
+        <span class="footer-fecha" id="fechaHoy"></span>
+    </footer>
+
+</div>
+
+<script src="menu.js"></script>
+</body>
+</html>

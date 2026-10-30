@@ -39,7 +39,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cargar dashboard inicialmente sin filtros (todas las fechas)
     cargarDashboard();
     startAutoRefresh();
+    iniciarSocket();
 });
+
+// ============================================================
+// Actualización en TIEMPO REAL vía Socket.IO
+// Refresca automáticamente cuando ocurre cualquier evento de
+// turnos (llamado, triage, atencion, finalizado, reinicio...).
+// Respeta el interruptor de auto-refresh del usuario.
+// ============================================================
+let socketTiempoReal = null;
+let socketRefreshTimer = null;
+
+function iniciarSocket() {
+    try {
+        socketTiempoReal = io({ transports: ['websocket', 'polling'] });
+
+        socketTiempoReal.on('connect', () => console.log('[KPI] Socket.IO conectado - tiempo real activo'));
+        socketTiempoReal.on('disconnect', () => console.log('[KPI] Socket.IO desconectado'));
+
+        // Cualquier evento emitido por el backend activa un refresco con anti-rebote
+        socketTiempoReal.onAny(() => {
+            if (!autoRefreshEnabled) return; // respeto al interruptor manual
+            clearTimeout(socketRefreshTimer);
+            socketRefreshTimer = setTimeout(() => {
+                cargarDashboard(filtrosActuales);
+            }, 1200);
+        });
+    } catch (e) {
+        console.log('[KPI] No se pudo activar el tiempo real por Socket.IO:', e.message);
+    }
+}
 
 function toggleAutoRefresh() {
     autoRefreshEnabled = !autoRefreshEnabled;

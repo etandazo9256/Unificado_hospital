@@ -2,7 +2,7 @@
    Menú principal — lógica adaptada al sistema unificado
    - Reloj / fecha del pie
    - KPIs, dona de prioridades, turnos por hora y resumen  -> API real
-   - Turnos recientes y alertas de espera prolongada        -> API real
+   - Tiempo de espera promedio por prioridad Manchester y alertas de espera prolongada -> API real
    - Estado de conexión + Socket.IO (refresco instantáneo)
    ========================================================================== */
 
@@ -52,6 +52,19 @@ const ALIAS_PRIORIDAD = {
 };
 
 const ORDEN_PRIORIDAD = ['ROJO', 'NARANJA', 'AMARILLO', 'VERDE', 'AZUL', 'SIN CLASIFICAR'];
+
+// Objetivo de tiempo máximo (Manchester) en minutos
+const OBJETIVO_PRIORIDAD_MIN = { ROJO: 0, NARANJA: 10, AMARILLO: 60, VERDE: 120, AZUL: 240 };
+
+// Formatea minutos como "25 min" o "1h 5m" (mismo criterio que la sala de espera)
+function formatearMin(min) {
+    const n = Number(min);
+    if (!Number.isFinite(n) || n <= 0) return '0 min';
+    if (n < 60) return `${Math.round(n)} min`;
+    const h = Math.floor(n / 60);
+    const m = Math.round(n % 60);
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
 
 const ESTADOS = {
     pendiente: ['En espera', 'esp'],
@@ -116,6 +129,7 @@ async function cargarSala() {
         $('kpiConsulta').textContent = numero(s.enConsulta);
         $('kpiLlegadas').textContent = numero(s.lambda);
         $('kpiConsultorios').textContent = numero(s.consultorios);
+        pintarEsperaPrioridad(d.esperaPrioridad);
         marcarConexion(true);
     } catch {
         marcarConexion(false);
@@ -186,11 +200,11 @@ function pintarGraficoHoras(filas) {
 
     const total = porHora.reduce((a, b) => a + b, 0);
     if (!total) {
-        svg.innerHTML = '<text x="210" y="85" text-anchor="middle" font-size="12" fill="#5d6c87">Sin turnos registrados</text>';
+        svg.innerHTML = '<text x="210" y="110" text-anchor="middle" font-size="12" fill="#5d6c87">Sin turnos registrados</text>';
         return;
     }
 
-    const X0 = 38, X1 = 408, Y0 = 26, Y1 = 138;
+    const X0 = 38, X1 = 408, Y0 = 26, Y1 = 185;
     const max = Math.max(...porHora);
     const px = h => X0 + (X1 - X0) * h / 23;
     const py = v => Y1 - (Y1 - Y0) * v / max;
@@ -208,7 +222,7 @@ function pintarGraficoHoras(filas) {
     }
 
     const horasMarcadas = [0, 4, 8, 12, 16, 20]
-        .map(h => `<text x="${px(h).toFixed(1)}" y="156" text-anchor="middle" font-size="9" fill="#5d6c87">${String(h).padStart(2, '0')}:00</text>`)
+        .map(h => `<text x="${px(h).toFixed(1)}" y="205" text-anchor="middle" font-size="9" fill="#5d6c87">${String(h).padStart(2, '0')}:00</text>`)
         .join('');
 
     svg.innerHTML = `
@@ -259,52 +273,30 @@ async function cargarPanel() {
 }
 
 // ---------------------------------------------------------------------------
-// 5. Turnos recientes
+// 5. Tiempo de espera promedio por prioridad Manchester
 // ---------------------------------------------------------------------------
-function fechaReferencia(t) {
-    const f = t.fecha_llamado || t.fecha_triage || t.fecha_turno;
-    const ms = f ? new Date(f).getTime() : 0;
-    return Number.isNaN(ms) ? 0 : ms;
-}
+function pintarEsperaPrioridad(filas) {
+    const acumulado = {};
+    (filas || []).forEach(f => {
+        const clave = ALIAS_PRIORIDAD[f.prioridad] || f.prioridad || 'SIN CLASIFICAR';
+        if (!acumulado[clave]) acumulado[clave] = { cantidad: 0, espera: 0, total: 0 };
+        const cant = parseInt(f.cantidad, 10) || 0;
+        const espera = parseFloat(f.esperaPromedioMin);
+        acumulado[clave].cantidad += cant;
+        if (Number.isFinite(espera)) acumulado[clave].espera += espera * cant;
+        acumulado[clave].total += cant;
+    });
 
-function horaCorta(f) {
-    if (!f) return '--:--';
-    const d = new Date(f);
-    if (Number.isNaN(d.getTime())) return '--:--';
-    return d.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', hour12: false });
-}
-
-async function cargarTurnos() {
-    try {
-        const turnos = await getJSON('/api/turnos');
-        const recientes = (turnos || [])
-            .slice()
-            .sort((a, b) => fechaReferencia(b) - fechaReferencia(a))
-            .slice(0, 5);
-
-        const cuerpo = $('tablaTurnos');
-        if (!recientes.length) {
-            cuerpo.innerHTML = '<tr><td colspan="5" class="vacio">Sin turnos registrados</td></tr>';
-            return;
-        }
-
-        cuerpo.innerHTML = recientes.map(t => {
-            const [texto, clase] = ESTADOS[t.estado] || [t.estado || '—', 'no'];
-            const paciente = t.paciente
-                ? (t.paciente.length > 22 ? t.paciente.slice(0, 21) + '…' : t.paciente)
-                : '—';
-            return `<tr>
-                <td><b>${esc(t.turno || '—')}</b></td>
-                <td title="${esc(t.paciente || '')}">${esc(paciente)}</td>
-                <td><span class="prio" style="--c:${colorPrioridad(t.prioridad)}">${esc(nombrePrioridad(t.prioridad))}</span></td>
-                <td><span class="est ${clase}">${esc(texto)}</span></td>
-                <td>${horaCorta(t.fecha_llamado || t.fecha_triage || t.fecha_turno)}</td>
-            </tr>`;
-        }).join('');
-        marcarConexion(true);
-    } catch {
-        marcarConexion(false);
-    }
+    const IDS = { ROJO: 'esperaRojo', NARANJA: 'esperaNaranja', AMARILLO: 'esperaAmarillo', VERDE: 'esperaVerde', AZUL: 'esperaAzul' };
+    ORDEN_PRIORIDAD.forEach(p => {
+        if (p === 'SIN CLASIFICAR' || !IDS[p]) return;
+        const el = $(IDS[p]);
+        if (!el) return;
+        const g = acumulado[p];
+        if (!g || !g.cantidad) return;
+        const promedio = g.espera / g.cantidad;
+        el.textContent = formatearMin(promedio);
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -329,12 +321,12 @@ async function cargarAlertas() {
 // Refresco periódico
 // ---------------------------------------------------------------------------
 async function refrescarTodo() {
-    await Promise.allSettled([cargarSala(), cargarPanel(), cargarTurnos(), cargarAlertas()]);
+    await Promise.allSettled([cargarSala(), cargarPanel(), cargarAlertas()]);
 }
 
 refrescarTodo();
 setInterval(cargarSala, 15000);
-setInterval(() => Promise.allSettled([cargarPanel(), cargarTurnos(), cargarAlertas()]), 60000);
+setInterval(() => Promise.allSettled([cargarPanel(), cargarAlertas()]), 60000);
 
 // ---------------------------------------------------------------------------
 // Socket.IO: refresco instantáneo cuando ocurre un evento de turnos

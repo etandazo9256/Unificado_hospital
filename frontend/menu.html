@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Rutas absolutas: el menú también se sirve en la raíz ("/"), donde las relativas se rompen -->
-<link rel="stylesheet" href="/frontend/menu.css">
+<link rel="stylesheet" href="menu.css">
 </head>
 <body>
 <div class="app">
@@ -22,25 +22,33 @@
     </div>
   </header>
 
+ <!-- botones para dirigirse a las pantallas del sistema   -->
   <div class="cuerpo">
-    <nav class="menu" aria-label="Pantallas del sistema">
-      <a class="op osc" href="/frontend/index.html">
+        <nav class="menu" aria-label="Pantallas del sistema">
+      <!-- 1. Botón Sala de espera -->
+      <a class="op osc" href="/frontend/index.html" target="_blank">
         <div><div class="cab"><div class="ico">🩺</div><h2>Sala de espera</h2></div>
         <p>Turno en atención y próximos turnos para la TV de la sala.</p></div>
-        <span class="btn">Abrir sala de espera →</span>
+        <span class="btn">Ir a la sala de espera →</span>
       </a>
-      <a class="op cla" href="/frontend/espera.html">
+
+      <!-- 2. Botón Tiempo de espera Manchester -->
+      <a class="op cla" href="/frontend/espera.html" target="_blank">
         <div><div class="cab"><div class="ico">⏱️</div><h2>Tiempo de espera Manchester</h2></div>
         <div class="tri" aria-hidden="true"><i style="background:#DC2626"></i><i style="background:#F97316"></i><i style="background:#EAB308"></i><i style="background:#16A34A"></i><i style="background:#2563EB"></i></div>
         <p>Cuánto puede esperar cada paciente según su prioridad de triaje.</p></div>
-        <span class="btn">Abrir Manchester →</span>
+        <span class="btn">Ir a Manchester →</span>
       </a>
-      <a class="op osc" href="/frontend/dashboard/dashboard.html">
+
+      <!-- 3. Botón Dashboard -->
+      <a class="op osc" href="/frontend/dashboard/dashboard.html" target="_blank">
         <div><div class="cab"><div class="ico">📊</div><h2>Dashboard</h2></div>
         <p>Indicadores de atención y tiempos para el personal administrativo.</p></div>
-        <span class="btn">Abrir dashboard →</span>
+        <span class="btn">Ir al dashboard →</span>
       </a>
     </nav>
+
+
 
     <section class="panel" aria-label="Resumen del sistema">
       <div class="ph"><h2>Estado del sistema en tiempo real</h2><span class="chip" id="chipPeriodo">Hoy</span></div>
@@ -76,16 +84,27 @@
         </div>
         <div class="caja">
           <h3>Turnos por hora</h3>
-          <svg class="linea" id="graficoHoras" viewBox="0 0 420 170" role="img" aria-label="Turnos registrados por hora"></svg>
+          <svg class="linea" id="graficoHoras" viewBox="0 0 420 220" role="img" aria-label="Turnos registrados por hora"></svg>
         </div>
       </div>
 
       <div class="fila f3">
         <div class="caja">
-          <h3>Turnos recientes</h3>
-          <table>
-            <thead><tr><th>Turno</th><th>Paciente</th><th>Prioridad</th><th>Estado</th><th>Hora</th></tr></thead>
-            <tbody id="tablaTurnos"><tr><td colspan="5" class="vacio">Cargando…</td></tr></tbody>
+          <h3>Prioridad y Espera estimada</h3>
+          <table class="tabla-manchester">
+            <thead><tr><th>Prioridad</th><th>Espera promedio</th></tr></thead>
+            <tbody>
+              <tr><td><span class="punto rojo"></span>Rojo</td>
+                  <td><span class="tiempo rojo-bg" id="esperaRojo">Inmediato</span></td></tr>
+              <tr><td><span class="punto naranja"></span>Naranja</td>
+                  <td><span class="tiempo naranja-bg" id="esperaNaranja">10 min</span></td></tr>
+              <tr><td><span class="punto amarillo"></span>Amarillo</td>
+                  <td><span class="tiempo amarillo-bg" id="esperaAmarillo">60 min</span></td></tr>
+              <tr><td><span class="punto verde"></span>Verde</td>
+                  <td><span class="tiempo verde-bg" id="esperaVerde">120 min</span></td></tr>
+              <tr><td><span class="punto azul"></span>Azul</td>
+                  <td><span class="tiempo azul-bg" id="esperaAzul">240 min</span></td></tr>
+            </tbody>
           </table>
         </div>
         <div class="caja">
@@ -101,12 +120,12 @@
   </div>
 
   <footer class="pie">
-    <div>📅 <b id="fecha"></b> &nbsp;|&nbsp; <b id="hora"></b></div>
+    <div><b id="fecha"></b> &nbsp;|&nbsp; <b id="hora"></b></div>
     <span>Sistema Unificado — Área de Emergencia · HEP</span>
   </footer>
 </div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script src="/frontend/menu.js"></script>
+<script src="/socket.io/socket.io.js"></script> 
+<script src="menu.js"></script>
 </body>
 </html>

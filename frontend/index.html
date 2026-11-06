@@ -6,13 +6,16 @@
     <title>Sala de Espera - Hospital de Especialidades Portoviejo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="shared.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="tv-container">
     <header class="tv-topbar">
+        <div class="header-actions-left">
+            <a class="btn-menu" href="menu.html" title="Volver al menú">☰</a>
+            <button class="btn-fullscreen" onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()" title="Pantalla completa (F11)">⛶</button>
+        </div>
         <div class="logo-corner">
             <img src="logo-hospital.png" alt="Hospital" class="logo-img">
         </div>
@@ -21,7 +24,6 @@
             <span class="subt">Sala de Espera - Emergencia</span>
         </div>
         <div class="header-actions">
-            <a class="btn-menu" href="menu.html">☰ Menú</a>
             <div id="reloj">00:00:00</div>
             <div class="connection-status"><span class="connection-dot" id="connDot"></span><span id="connText">Conectado</span></div>
         </div>

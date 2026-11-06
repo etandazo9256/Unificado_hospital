@@ -12,6 +12,8 @@ let intervaloEspera = null;
 const VIDEOS = ['video2.mp4', 'video3.mp4', 'video4.mp4', 'video5.mp4'];
 let videoIndex = 0;
 
+
+
 const PRIORIDAD_COLORS = {
     'ROJO': 'pri-rojo',
     'NARANJA': 'pri-naranja',

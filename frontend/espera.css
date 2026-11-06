@@ -30,29 +30,35 @@ body {
     background: #fff;
     border-bottom: 2px solid var(--gris-borde);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    flex-wrap: wrap; gap: 12px;
+    flex-wrap: nowrap; gap: 12px;
 }
 
-.logo-corner { display: flex; align-items: center; gap: 14px; }
+.logo-corner { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 .logo-img {
-    height: 90px; width: auto; object-fit: contain;
+    height: clamp(48px, 5vw, 90px); width: auto; object-fit: contain;
     display: block;
 }
 
-.info-hospital h1 { font-size: 50px; font-weight: 700; color: var(--azul-oscuro); }
+.info-hospital { min-width: 0; text-align: center; }
+.info-hospital h1 {
+    font-size: clamp(24px, 3.4vw, 50px);
+    font-weight: 700; color: var(--azul-oscuro);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .info-hospital .subt { font-size: 13px; opacity: 0.75; font-weight: 500; }
 
-.header-actions { display: flex; align-items: center; gap: 14px; }
+.header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 
 #reloj {
-    font-size: 40px; font-weight: 800;
+    font-size: clamp(20px, 2.2vw, 40px); font-weight: 800;
     font-variant-numeric: tabular-nums;
     background: #fff;
     color: var(--azul-oscuro);
-    padding: 8px 20px; border-radius: 12px;
+    padding: 4px 16px; border-radius: 12px;
     font-family: 'Outfit', 'Segoe UI', sans-serif;
     /* border: 2px solid var(--gris-borde);
     box-shadow: var(--sombra); */
+    flex-shrink: 0;
 }
 
 .connection-status {
@@ -107,7 +113,7 @@ body {
     box-shadow: var(--sombra);
 }
 .titulo-principal {
-    font-size: clamp(30px, 3vw, 25px);
+    font-size: clamp(20px, 3vw, 25px);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -219,3 +225,40 @@ body {
 }
 .btn-menu:hover { background: rgba(255,255,255,0.25); }
 
+
+/* ---- Boton de pantalla completa (TV) ---- */
+.btn-fullscreen {
+    font-family: inherit;
+    font-weight: 700;
+    font-size: clamp(0.7rem, 1vw, 1rem);
+    color: inherit;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    padding: 1vh 1.2vw;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+.btn-fullscreen:hover { background: rgba(255,255,255,0.25); }
+
+/* ---- Botones compactos del header TV (iconos cuadrados) ---- */
+.btn-menu, .btn-fullscreen {
+    width: 60px; height: 60px; padding: 0;
+    font-size: 28px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+/* ---- Ocultar botones en pantalla completa ---- */
+:fullscreen .btn-menu,
+:fullscreen .btn-fullscreen { display: none; }
+
+:-webkit-full-screen .btn-menu,
+:-webkit-full-screen .btn-fullscreen { display: none; }
+
+@media (display-mode: fullscreen) {
+    .btn-menu, .btn-fullscreen { display: none; }
+}
+/* ---- Contenedor de botones a la izquierda (nuevo header) ---- */
+.header-actions-left {
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}

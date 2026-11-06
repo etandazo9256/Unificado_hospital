@@ -1,3 +1,231 @@
+﻿:root {
+    --azul-oscuro: #0B2F5C;
+    --azul-medio: #1a4a7a;
+    --azul-claro: #2E86C1;
+    --gris-fondo: #F5F7FA;
+    --gris-borde: #E8ECF1;
+    --blanco: #FFFFFF;
+    --texto-oscuro: #1A2332;
+    --texto-suave: #6B7A8F;
+    --sombra: 0 4px 20px rgba(11, 47, 92, 0.08);
+    --radio: 16px;
+    --transicion: all 0.3s ease;
+    --rojo: #EF4444;
+    --amarillo: #F59E0B;
+    --verde: #10B981;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Outfit', 'Segoe UI', sans-serif;
+    background: var(--gris-fondo);
+    min-height: 100vh;
+    color: var(--texto-oscuro);
+}
+
+/* Topbar */
+.topbar {
+    background: var(--blanco);
+    padding: 16px 35px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--gris-borde);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.topbar .institucion { display: flex; align-items: center; gap: 16px; }
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.logo-img { height: 40px; width: auto; object-fit: contain; display: block; }
+
+.info-hospital { display: flex; flex-direction: column; gap: 2px; }
+.info-hospital h1 { font-size: 20px; color: var(--azul-oscuro); font-weight: 700; }
+.info-hospital .subt { font-size: 13px; color: var(--texto-suave); font-weight: 500; }
+
+.header-actions { display: flex; align-items: center; gap: 12px; }
+
+.btn-nav {
+    text-decoration: none;
+    background: var(--gris-fondo);
+    color: var(--azul-oscuro);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: var(--transicion);
+}
+.btn-nav:hover { background: var(--azul-claro); color: white; }
+
+#reloj {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--azul-oscuro);
+    font-variant-numeric: tabular-nums;
+    background: var(--gris-fondo);
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+}
+
+.reloj-fecha {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    opacity: 0.7;
+    letter-spacing: 0.3px;
+    text-transform: capitalize;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Connection indicator */
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--texto-suave);
+}
+.connection-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--verde);
+    transition: background 0.3s;
+}
+.connection-dot.disconnected { background: var(--rojo); }
+
+/* Buttons */
+.btn-primary, .btn-secondary, .btn-danger, .btn-success {
+    border: none; border-radius: 10px; font-weight: 700; cursor: pointer;
+    transition: var(--transicion); font-family: 'Outfit', sans-serif;
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+.btn-primary { background: var(--azul-claro); color: white; padding: 10px 18px; font-size: 12px; }
+.btn-primary:hover { background: var(--azul-medio); transform: translateY(-2px); }
+.btn-secondary { background: rgba(255,255,255,0.15); color: white; padding: 12px 20px; font-size: 13px; }
+.btn-secondary:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+.btn-danger { background: var(--rojo); color: white; padding: 12px 20px; font-size: 13px; }
+.btn-danger:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(239,68,68,0.3); }
+.btn-success { background: var(--verde); color: white; padding: 10px 18px; font-size: 13px; }
+.btn-success:hover { transform: translateY(-2px); }
+.btn-small { padding: 8px 14px; font-size: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: var(--transicion); font-family: 'Outfit', sans-serif; }
+
+/* Form elements */
+.form-select, .form-input {
+    padding: 8px 12px; border: 2px solid var(--gris-borde); border-radius: 8px;
+    font-family: 'Outfit', sans-serif; font-size: 13px; background: white; color: var(--texto-oscuro);
+    cursor: pointer;
+}
+.form-select:focus, .form-input:focus { outline: none; border-color: var(--azul-claro); }
+
+/* Badges */
+.badge {
+    background: var(--azul-claro); color: white; padding: 3px 12px;
+    border-radius: 20px; font-size: 13px; font-weight: 700;
+}
+.badge.warning { background: var(--amarillo); }
+.badge.success { background: var(--verde); }
+
+.priority-badge {
+    padding: 3px 10px; border-radius: 12px; color: white;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+}
+
+/* Section */
+.section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px; border-bottom: 2px solid var(--gris-borde);
+}
+.section-header h3 { font-size: 16px; font-weight: 700; color: var(--texto-oscuro); }
+
+/* Table */
+.table-scroll { overflow-x: auto; padding: 0 20px 15px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.data-table th { text-align: left; padding: 10px 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--texto-suave); border-bottom: 2px solid var(--gris-borde); font-weight: 700; }
+.data-table td { padding: 10px 8px; border-bottom: 1px solid var(--gris-fondo); }
+.data-table tr:hover td { background: var(--gris-fondo); }
+.empty-cell { text-align: center; color: var(--texto-suave); padding: 30px !important; }
+.empty-state { text-align: center; padding: 30px 0; color: var(--texto-suave); font-size: 14px; }
+
+/* Notifications */
+.notificacion {
+    position: fixed; top: 25px; right: 25px; padding: 16px 28px;
+    border-radius: 12px; color: white; font-weight: 600; z-index: 1000;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.68,-0.55,0.265,1.55);
+    max-width: 400px; font-size: 15px;
+}
+.notificacion.mostrar { transform: translateX(0); }
+.notificacion-success { background: var(--verde); }
+.notificacion-error { background: var(--rojo); }
+.notificacion-warning { background: var(--amarillo); }
+.notificacion-info { background: var(--azul-claro); }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .topbar { padding: 12px 18px; }
+    .header-actions { flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .info-hospital h1 { font-size: 17px; }
+    .info-hospital .subt { font-size: 12px; }
+    .logo-img { height: 35px; }
+    #reloj { font-size: 15px; padding: 4px 12px; }
+}
+
+/* ---- Boton de menu unificado ---- */
+.btn-menu {
+    font-family: inherit;
+    font-weight: 700;
+    font-size: clamp(0.7rem, 1vw, 1rem);
+    color: inherit;
+    text-decoration: none;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    padding: 1vh 1.2vw;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+.btn-menu:hover { background: rgba(255,255,255,0.25); }
+
+
+/* ---- Boton de pantalla completa (TV) ---- */
+.btn-fullscreen {
+    font-family: inherit;
+    font-weight: 700;
+    font-size: clamp(0.7rem, 1vw, 1rem);
+    color: inherit;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    padding: 1vh 1.2vw;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+.btn-fullscreen:hover { background: rgba(255,255,255,0.25); }
+
+/* ---- Botones compactos del header TV (iconos cuadrados) ---- */
+.btn-menu, .btn-fullscreen {
+    width: 60px; height: 60px; padding: 0;
+    font-size: 28px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+
+
+
 /* TV Sala de Espera */
 html, body { height: 100%; overflow: hidden; }
 
@@ -9,7 +237,7 @@ html, body { height: 100%; overflow: hidden; }
 /* ---- Top Bar ---- */
 .tv-topbar {
     padding: 10px 30px; flex-shrink: 0;
-    display: grid; grid-template-columns: auto 1fr auto;
+    display: grid; grid-template-columns: auto auto 1fr auto;
     align-items: center; gap: 20px;
     border-bottom: none;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -20,6 +248,7 @@ html, body { height: 100%; overflow: hidden; }
 .tv-topbar .info-hospital h1 { font-size: 22px; margin: 0; }
 .tv-topbar .info-hospital .subt { font-size: 13px; }
 .tv-topbar .header-actions { display: flex; align-items: center; gap: 12px; }
+.tv-topbar .header-actions-left { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
 /* ---- Main layout ---- */
 .tv-main {
@@ -257,4 +486,14 @@ html, body { height: 100%; overflow: hidden; }
     .tv-left { flex: none; height: 50vh; }
     .tv-right { flex: 1; }
     .call-turno { font-size: clamp(60px, 12vw, 90px); }
+}
+/* ---- Ocultar botones en pantalla completa ---- */
+:fullscreen .btn-menu,
+:fullscreen .btn-fullscreen { display: none; }
+
+:-webkit-full-screen .btn-menu,
+:-webkit-full-screen .btn-fullscreen { display: none; }
+
+@media (display-mode: fullscreen) {
+    .btn-menu, .btn-fullscreen { display: none; }
 }

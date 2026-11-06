@@ -74,9 +74,10 @@ body.con-foto{
 .k4{background:linear-gradient(135deg,#ece6ff,#d5c8fb)}
 .fila{display:grid;gap:16px;min-width:0}
 .f2{grid-template-columns:1fr 1.3fr}
-.f3{grid-template-columns:1.8fr 1fr}
+.f3{grid-template-columns:1.8fr 1fr;align-items:start}
 .caja{background:#fff;border:1px solid var(--borde);border-radius:16px;padding:16px;min-width:0}
 .caja h3{font-size:1rem;font-weight:700;margin-bottom:12px}
+.f3 > .caja:last-child{padding:10px 14px}
 
 /* Dona de prioridades */
 .dona{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
@@ -117,7 +118,7 @@ td.vacio{text-align:center;color:var(--suave);padding:18px 10px}
 .resumen div{border-right:1px solid var(--borde)}
 .resumen div:last-child{border:0}
 .resumen small{font-size:.8rem;color:var(--suave);display:block}
-.resumen strong{font-size:1.7rem;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
+.resumen strong{font-size:1.4rem;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
 
 /* Pie */
 .pie{background:linear-gradient(100deg,var(--navy),#1b4a92);color:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px;
@@ -150,10 +151,11 @@ td.vacio{text-align:center;color:var(--suave);padding:18px 10px}
   .fila{gap:10px}
   .caja{padding:12px}
   .caja h3{margin-bottom:8px}
+.f3 > .caja:last-child{padding:10px 14px}
   .dona{gap:14px}
   .anillo{width:112px;height:112px}
   .anillo>div{width:74px;height:74px}
-  svg.linea{max-height:175px}
+  svg.linea{max-height:220px}
   table{font-size:.8rem}
   th,td{padding:5px 8px}
   .resumen strong{font-size:1.4rem}
@@ -165,8 +167,7 @@ td.vacio{text-align:center;color:var(--suave);padding:18px 10px}
   .kpi strong{font-size:1.45rem}
   .anillo{width:100px;height:100px}
   .anillo>div{width:66px;height:66px}
-  svg.linea{max-height:150px}
-  tbody tr:nth-child(5){display:none}
+  svg.linea{max-height:195px}
 }
 @media (max-height:740px){
   .top h1{display:none}
@@ -175,8 +176,61 @@ td.vacio{text-align:center;color:var(--suave);padding:18px 10px}
   .op{min-height:110px;padding:14px}
   .caja{padding:10px}
   .caja h3{font-size:.9rem}
+.f3 > .caja:last-child{padding:10px 14px}
   .resumen strong{font-size:1.25rem}
-  svg.linea{max-height:135px}
+  svg.linea{max-height:180px}
 }
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Tabla de prioridades Manchester */
+.tabla-manchester {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .86rem;
+}
+
+.tabla-manchester th {
+    background: #eef2fb;
+    color: var(--suave);
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.tabla-manchester td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #eef1f7;
+}
+
+.tabla-manchester tr:last-child td {
+    border-bottom: 0;
+}
+
+.punto {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.tiempo {
+    display: inline-block;
+    min-width: 105px;
+    padding: 4px 12px;
+    text-align: center;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.rojo { background: #DC2626; }
+.naranja { background: #F97316; }
+.amarillo { background: #EAB308; }
+.verde { background: #16A34A; }
+.azul { background: #2563EB; }
+
+.rojo-bg { background: #FEE2E2; color: #B91C1C; }
+.naranja-bg { background: #FFEDD5; color: #C2410C; }
+.amarillo-bg { background: #FEF3C7; color: #92400E; }
+.verde-bg { background: #DCFCE7; color: #15803D; }
+.azul-bg { background: #DBEAFE; color: #1D4ED8; }

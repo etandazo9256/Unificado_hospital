@@ -100,9 +100,7 @@ async function cargarEspera() {
         const data = await res.json();
         if (!data.success) return;
 
-        // Tiempo estimado por prioridad: el del último paciente de esa prioridad
-        // que está en la cola (el que más tiempo tendrá que esperar), así el
-        // número refleja cuántos turnos hay acumulados y no se queda estático
+       
         const proximos = data.proximos || [];
         Object.keys(IDS_PRIORIDAD).forEach(prio => {
             const deEstaPrio = proximos.filter(x => normalizarPrioridad(x.prioridad) === prio);

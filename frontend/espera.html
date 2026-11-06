@@ -11,14 +11,22 @@
 <div class="tv-container">
 
     <header class="tv-topbar">
+        <!-- NUEVO CONTENEDOR: Botones colocados en el extremo izquierdo -->
+        <div class="header-actions-left">
+            <a class="btn-menu" href="menu.html" title="Volver al menú">☰</a>
+            <button class="btn-fullscreen" onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()" title="Pantalla completa (F11)">⛶</button>
+        </div>
+
         <div class="logo-corner">
             <img src="logo-hospital.png" alt="Hospital" class="logo-img">
         </div>
+        
         <div class="info-hospital">
             <h1>Hospital de Especialidades de Portoviejo</h1>
         </div>
+        
+        <!-- Acciones de la derecha simplificadas solo al reloj y estado -->
         <div class="header-actions">
-            <a class="btn-menu" href="menu.html">☰ Menú</a>
             <div id="reloj">00:00:00</div>
             <div class="connection-status"><span class="connection-dot" id="connDot"></span></div>
         </div>

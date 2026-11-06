@@ -15,10 +15,7 @@ setInterval(actualizarReloj, 1000);
 actualizarReloj();
 
 // ---- Pantalla completa ----
-document.getElementById('btnFullscreen').addEventListener('click', () => {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-    else document.exitFullscreen();
-});
+// (el botón se movió a la Sala de Espera y a la pantalla Manchester)
 
 // ---- Estado en vivo (la misma API que consumen las otras pantallas) ----
 async function actualizarEstado() {

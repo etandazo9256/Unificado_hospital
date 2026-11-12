@@ -2,221 +2,93 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Menú - Hospital de Especialidades Portoviejo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menú principal - Hospital de Especialidades Portoviejo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="menu.css">
+<link rel="stylesheet" href="/frontend/menu.css">
 </head>
 <body>
 <div class="app">
-
-  <!-- ===== Header superior ===== -->
-  <header class="topbar">
-    <div class="logo-area">
-      <img src="/frontend/dashboard/logo-hospital.png" alt="Logo" class="logo-img">
-      <div class="logo-text">
-        <div class="logo-main">Hospital de Especialidades</div>
-        <div class="logo-sub">Portoviejo · Área de Emergencia</div>
-      </div>
-    </div>
-    <div class="top-right">
-      <div class="notificaciones" id="btnNotificaciones" title="Alertas de espera prolongada" aria-label="Notificaciones">🔔<span id="alertasCount" class="badge-alertas">0</span></div>
-      <div class="usuario" id="btnUsuario" title="Usuario" aria-label="Cuenta de usuario">👤</div>
+  <header class="top">
+    <img src="/frontend/dashboard/logo-hospital.png" alt="Logo del hospital">
+    <h1>Hospital de Especialidades Portoviejo</h1>
+    <div class="der">
+      <button id="btnImportarMatriz" title="Importar matriz de turnos (CSV/Excel)" class="btn-matriz">📥 Matriz</button>
+      <input type="file" id="fileMatrizMenu" accept=".csv,.xlsx,.xls" style="display:none">
+      <div id="msgMatriz" class="msg-matriz"></div>
+      <div class="campana" id="campana" aria-label="Alertas de espera prolongada" title="Pacientes con espera prolongada">🔔<b id="alertasCount" class="badge-alertas">0</b></div>
+      <div class="avatar" aria-label="Usuario">👤</div>
     </div>
   </header>
 
-  <!-- ===== Cuerpo principal ===== -->
   <div class="cuerpo">
+    <nav class="menu" aria-label="Pantallas del sistema">
+      <a class="op osc" href="/frontend/index.html">
+        <div><div class="cab"><div class="ico">🩺</div><h2>Sala de espera</h2></div>
+        <p>Turno en atención y próximos turnos para la TV de la sala.</p></div>
+        <span class="btn">Abrir sala de espera →</span>
+      </a>
+      <a class="op cla" href="/frontend/espera.html">
+        <div><div class="cab"><div class="ico">⏱️</div><h2>Tiempo de espera Manchester</h2></div>
+        <div class="tri" aria-hidden="true"><i style="background:#DC2626"></i><i style="background:#F97316"></i><i style="background:#EAB308"></i><i style="background:#16A34A"></i><i style="background:#2563EB"></i></div>
+        <p>Cuánto puede esperar cada paciente según su prioridad de triaje.</p></div>
+        <span class="btn">Abrir Manchester →</span>
+      </a>
+      <a class="op osc" href="/frontend/dashboard/dashboard.html">
+        <div><div class="cab"><div class="ico">📊</div><h2>Dashboard</h2></div>
+        <p>Indicadores de atención y tiempos para el personal administrativo.</p></div>
+        <span class="btn">Abrir dashboard →</span>
+      </a>
+    </nav>
 
-    <!-- Sidebar izquierda (acceso rápido) -->
-    <aside class="sidebar">
-      <div class="sidebar-card">
-        <div class="sidebar-icon">👥</div>
-        <div class="sidebar-info">
-          <div class="sidebar-titulo">Turnos Actuales</div>
-          <div class="sidebar-sub">Gestión de turnos del día</div>
-        </div>
-        <button class="sidebar-btn" onclick="location.href='/frontend/index.html'">Ver Turnos →</button>
-      </div>
-      <div class="sidebar-card">
-        <div class="sidebar-icon">⏱️</div>
-        <div class="sidebar-info">
-          <div class="sidebar-titulo">Tiempo de Espera</div>
-          <div class="sidebar-sub">Clasificación Manchester</div>
-        </div>
-        <button class="sidebar-btn" onclick="location.href='/frontend/espera.html'">Ver Espera →</button>
-      </div>
-      <div class="sidebar-card">
-        <div class="sidebar-icon">📊</div>
-        <div class="sidebar-info">
-          <div class="sidebar-titulo">Reportes</div>
-          <div class="sidebar-sub">Indicadores y exportación</div>
-        </div>
-        <button class="sidebar-btn" onclick="location.href='/frontend/dashboard/dashboard.html'">Ver Reportes →</button>
-      </div>
-      <div class="sidebar-card matriz-card">
-        <div class="sidebar-icon">📥</div>
-        <div class="sidebar-info">
-          <div class="sidebar-titulo">Importar Matriz</div>
-          <div class="sidebar-sub">CSV o Excel con turnos</div>
-        </div>
-        <label class="matriz-label" style="display:flex;align-items:center;gap:8px;width:100%">
-          <span>Seleccionar archivo</span>
-          <input type="file" id="fileMatrizMenu" accept=".csv,.xlsx,.xls" style="display:none">
-        </label>
-        <div id="msgMatriz" class="msg-matriz"></div>
-      </div>
-    </aside>
+    <section class="panel" aria-label="Resumen del sistema">
+      <div class="ph"><h2>Estado del sistema en tiempo real</h2><span class="chip" id="chipPeriodo">Hoy</span></div>
 
-    <!-- Contenido principal con estadísticas y gráficos -->
-    <main class="contenido">
+      <div class="kpis">
+        <div class="kpi k1"><div class="ico">👥</div><div><small>Pacientes atendidos</small><strong id="kpiAtendidos">--</strong><br><em id="kpiTendAtendidos">--</em></div></div>
+        <div class="kpi k2"><div class="ico">🕒</div><div><small>Pacientes en espera</small><strong id="kpiPendientes">--</strong><br><em id="kpiTendPendientes">--</em></div></div>
+        <div class="kpi k3"><div class="ico">📅</div><div><small>Turnos pendientes</small><strong id="kpiTurnosPendientes">--</strong><br><em id="kpiTendTurnos">--</em></div></div>
+        <div class="kpi k4"><div class="ico">⭐</div><div><small>Espera promedio</small><strong id="kpiPromedio">--</strong><br><em id="kpiTendPromedio">--</em></div></div>
+      </div>
 
-      <!-- Barra de título del dashboard -->
-      <div class="dashboard-header">
-        <div class="dashboard-titulo">
-          <span class="icono-titulo">📊</span>
-          <h1>Dashboard en Tiempo Real</h1>
+      <div class="fila f2">
+        <div class="caja"><h3>Turnos por especialidad</h3>
+          <div class="dona">
+            <div class="anillo" id="anilloPrioridad"><div><span><b id="donaValor">--</b><span id="donaEtiqueta">Sin datos</span></span></div></div>
+            <ul class="leyenda" id="leyendaPrioridad"></ul>
+          </div>
         </div>
-        <div class="selector-fecha">
-          <span>📅 Hoy</span>
-          <select id="selFecha">
-            <option value="hoy">Hoy</option>
-            <option value="general">General</option>
-          </select>
+        <div class="caja"><h3>Evolución de turnos</h3>
+          <svg class="linea" id="graficoEvolucion" viewBox="0 0 420 170" role="img" aria-label="Turnos atendidos y pendientes entre 08:00 y 18:00"></svg>
         </div>
       </div>
 
-      <!-- Tarjetas KPI -->
-      <div class="kpis-grid">
-        <div class="kpi-card kpi-atendidos">
-          <div class="kpi-icon">👥</div>
-          <div class="kpi-datos">
-            <div class="kpi-valor" id="kpiAtendidos">--</div>
-            <div class="kpi-etiqueta">Pacientes Atendidos</div>
-            <div class="kpi-tendencia sube" id="kpiTendAtendidos">+12% vs. ayer</div>
-          </div>
+      <div class="fila f3">
+        <div class="caja"><h3>Turnos recientes</h3>
+          <table>
+            <thead><tr><th>Paciente</th><th>Especialidad</th><th>Turno</th><th>Estado</th><th>Hora</th></tr></thead>
+            <tbody id="cuerpoTablaRecientes"><tr><td colspan="5" class="vacío">Cargando…</td></tr></tbody>
+          </table>
         </div>
-        <div class="kpi-card kpi-espera">
-          <div class="kpi-icon">⏱️</div>
-          <div class="kpi-datos">
-            <div class="kpi-valor" id="kpiEspera">--</div>
-            <div class="kpi-etiqueta">Pacientes en Espera</div>
-            <div class="kpi-tendencia sube" id="kpiTendEspera">+5% vs. ayer</div>
-          </div>
-        </div>
-        <div class="kpi-card kpi-pendientes">
-          <div class="kpi-icon">📅</div>
-          <div class="kpi-datos">
-            <div class="kpi-valor" id="kpiPendientes">--</div>
-            <div class="kpi-etiqueta">Turnos Pendientes</div>
-            <div class="kpi-tendencia sube" id="kpiTendPendientes">+8% vs. ayer</div>
-          </div>
-        </div>
-        <div class="kpi-card kpi-promedio">
-          <div class="kpi-icon">⭐</div>
-          <div class="kpi-datos">
-            <div class="kpi-valor" id="kpiPromedio">--</div>
-            <div class="kpi-etiqueta">Tiempo Promedio de Espera</div>
-            <div class="kpi-tendencia baja" id="kpiTendPromedio">-3 min</div>
+        <div class="caja"><h3>Resumen del día</h3>
+          <div class="resumen">
+            <div><small>Turnos totales</small><strong id="resTotales">--</strong></div>
+            <div><small>Atendidos</small><strong id="resAtendidos">--</strong></div>
+            <div><small>Pendientes</small><strong id="resPendientes">--</strong></div>
           </div>
         </div>
       </div>
-
-      <!-- Fila de gráficos y tablas -->
-      <div class="graficos-fila">
-        <!-- Donut: Turnos por Especialidad -->
-        <div class="grafico-card">
-          <div class="grafico-header">
-            <span>📈</span>
-            <h3>Turnos por Especialidad</h3>
-          </div>
-          <div class="donut-container">
-            <svg class="donut" id="donutEspecialidad" viewBox="0 0 140 140"></svg>
-            <div class="donut-centro">
-              <div class="donut-valor" id="donutValor">--</div>
-              <div class="donut-etiqueta" id="donutEtiqueta">Sin datos</div>
-            </div>
-          </div>
-          <ul class="leyenda-especialidad" id="leyendaEspecialidad"></ul>
-        </div>
-
-        <!-- Línea: Evolución de Turnos -->
-        <div class="grafico-card grafico-ancho">
-          <div class="grafico-header">
-            <span>📉</span>
-            <h3>Evolución de Turnos</h3>
-          </div>
-          <svg class="linea" id="graficoEvolucion" viewBox="0 0 560 240"></svg>
-        </div>
-      </div>
-
-      <!-- Fila inferior: tabla recientes + resumen del día -->
-      <div class="inferior-fila">
-        <!-- Tabla Turnos Recientes -->
-        <div class="tabla-card">
-          <div class="tabla-header">
-            <span>📋</span>
-            <h3>Turnos Recientes</h3>
-          </div>
-          <div class="tabla-envoltura">
-            <table>
-              <thead>
-                <tr><th>Paciente</th><th>Especialidad</th><th>Turno</th><th>Estado</th><th>Hora</th></tr>
-              </thead>
-              <tbody id="cuerpoTablaRecientes">
-                <tr><td colspan="5" class="vacío">Cargando…</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Resumen del Día -->
-        <div class="resumen-card">
-          <div class="resumen-header">
-            <span>🗓️</span>
-            <h3>Resumen del Día</h3>
-          </div>
-          <div class="resumen-items">
-            <div class="resumen-item">
-              <div class="resumen-icono">📅</div>
-              <div class="resumen-datos">
-                <div class="resumen-valor" id="resTotales">--</div>
-                <div class="resumen-etiqueta">Turnos Totales</div>
-              </div>
-            </div>
-            <div class="resumen-item">
-              <div class="resumen-icono">✅</div>
-              <div class="resumen-datos">
-                <div class="resumen-valor" id="resAtendidos">--</div>
-                <div class="resumen-etiqueta">Atendidos</div>
-              </div>
-            </div>
-            <div class="resumen-item">
-              <div class="resumen-icono">⏳</div>
-              <div class="resumen-datos">
-                <div class="resumen-valor" id="resPendientes">--</div>
-                <div class="resumen-etiqueta">Pendientes</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </main>
-
+    </section>
   </div>
 
-  <!-- ===== Footer ===== -->
   <footer class="pie">
-    <div id="pieFecha">Sábado, 08 de noviembre de 2025</div>
-    <div id="pieHora">14:27:36</div>
-    <div class="pie-slogan">Tu salud, nuestra prioridad ❤️</div>
+    <div>📅 <b id="fecha"></b> &nbsp;|&nbsp; <b id="hora"></b></div>
+    <span>Sistema Unificado — Área de Emergencia · HEP</span>
   </footer>
-
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="menu.js"></script>
+<script src="/frontend/menu.js"></script>
 </body>
 </html>

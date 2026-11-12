@@ -2,9 +2,9 @@
    Menú principal — lógica adaptada al sistema unificado
    - Reloj / fecha del pie
    - KPIs, dona de prioridades, turnos por hora y resumen  -> API real
-   - Tiempo de espera promedio por prioridad Manchester y alertas de espera prolongada -> API real
+   - Tiempo de espera promedio por prioridad Manchester -> API real
    - Estado de conexión + Socket.IO (refresco instantáneo)
-   -boton para subir nueva matriz al sistema
+   - Botón Importar Matriz (CSV/Excel) como tarjeta separada
    ========================================================================== */
 
 // ---------------------------------------------------------------------------
@@ -33,7 +33,7 @@ function esc(valor) {
     }[c]));
 }
 
-// Colores oficiales de prioridad (coinciden con el resto del sistema)
+// Colores oficiales de prioridad
 const COLOR_PRIORIDAD = {
     ROJO: '#DC2626',
     NARANJA: '#F97316',
@@ -43,7 +43,6 @@ const COLOR_PRIORIDAD = {
     'SIN CLASIFICAR': '#94A3B8'
 };
 
-// Los catálogos antiguos (P1..P5) se muestran como su equivalente Manchester
 const ALIAS_PRIORIDAD = {
     'P1-RESUCITACION': 'ROJO',
     'P2-EMERGENCIA': 'NARANJA',
@@ -54,10 +53,8 @@ const ALIAS_PRIORIDAD = {
 
 const ORDEN_PRIORIDAD = ['ROJO', 'NARANJA', 'AMARILLO', 'VERDE', 'AZUL', 'SIN CLASIFICAR'];
 
-// Objetivo de tiempo máximo (Manchester) en minutos
 const OBJETIVO_PRIORIDAD_MIN = { ROJO: 0, NARANJA: 10, AMARILLO: 60, VERDE: 120, AZUL: 240 };
 
-// Formatea minutos como "25 min" o "1h 5m" (mismo criterio que la sala de espera)
 function formatearMin(min) {
     const n = Number(min);
     if (!Number.isFinite(n) || n <= 0) return '0 min';
@@ -109,11 +106,15 @@ let conectado = true;
 function marcarConexion(ok) {
     if (ok === conectado) return;
     conectado = ok;
-    $('connDot').classList.toggle('off', !ok);
-    $('connText').textContent = ok ? 'Conectado' : 'Desconectado';
-    $('chipConexion').title = ok
-        ? 'Conectado al servidor de turnos'
-        : 'Sin conexión con el servidor de turnos';
+    const dot = $('connDot');
+    const txt = $('connText');
+    if (dot && txt) {
+        dot.classList.toggle('off', !ok);
+        txt.textContent = ok ? 'Conectado' : 'Desconectado';
+        $('chipConexion').title = ok
+            ? 'Conectado al servidor de turnos'
+            : 'Sin conexión con el servidor de turnos';
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -138,7 +139,7 @@ async function cargarSala() {
 }
 
 // ---------------------------------------------------------------------------
-// 2. prioridades Manchester
+// 2. Dona de prioridades Manchester
 // ---------------------------------------------------------------------------
 function pintarDona(filas) {
     const anillo = $('anilloPrioridad');
@@ -166,7 +167,6 @@ function pintarDona(filas) {
         return;
     }
 
-    // Conic-gradient con los porcentajes reales
     let acumuladoPct = 0;
     const paradas = grupos.map(g => {
         const desde = acumuladoPct / total * 100;
@@ -176,7 +176,6 @@ function pintarDona(filas) {
     });
     anillo.style.background = `conic-gradient(${paradas.join(',')})`;
 
-    // Centro: la prioridad con más pacientes
     const principal = grupos.slice().sort((a, b) => b.cantidad - a.cantidad)[0];
     valor.textContent = Math.round(principal.cantidad / total * 100) + '%';
     etiqueta.textContent = nombrePrioridad(principal.nombre);
@@ -213,7 +212,6 @@ function pintarGraficoHoras(filas) {
     const puntos = porHora.map((v, h) => `${px(h).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
     const area = `${X0},${Y1} ${puntos} ${X1},${Y1}`;
 
-    // Rejilla horizontal + escala
     let rejilla = '';
     for (let i = 0; i <= 4; i++) {
         const y = Y0 + (Y1 - Y0) * i / 4;
@@ -301,33 +299,15 @@ function pintarEsperaPrioridad(filas) {
 }
 
 // ---------------------------------------------------------------------------
-// 6. Alertas de espera prolongada (campana)
-// ---------------------------------------------------------------------------
-// async function cargarAlertas() {
-//     try {
-//         const d = await getJSON('/api/kpis/alertas');
-//         const total = parseInt(d.total, 10) || 0;
-//         const badge = $('alertasCount');
-//         badge.textContent = total > 99 ? '99+' : total;
-//         badge.classList.toggle('oculto', total === 0);
-//         $('campana').title = total === 0
-//             ? 'Sin pacientes con espera prolongada'
-//             : `${total} paciente(s) fuera del tiempo objetivo de espera`;
-//     } catch {
-//         $('alertasCount').classList.add('oculto');
-//     }
-// }
-
-// ---------------------------------------------------------------------------
 // Refresco periódico
 // ---------------------------------------------------------------------------
 async function refrescarTodo() {
-    await Promise.allSettled([cargarSala(), cargarPanel(), cargarAlertas()]);
+    await Promise.allSettled([cargarSala(), cargarPanel()]);
 }
 
 refrescarTodo();
 setInterval(cargarSala, 15000);
-setInterval(() => Promise.allSettled([cargarPanel(), cargarAlertas()]), 60000);
+setInterval(cargarPanel, 60000);
 
 // ---------------------------------------------------------------------------
 // Socket.IO: refresco instantáneo cuando ocurre un evento de turnos
@@ -337,7 +317,7 @@ function refrescarPronto() {
     if (temporizadorRefresco) return;
     temporizadorRefresco = setTimeout(() => {
         temporizadorRefresco = null;
-        Promise.allSettled([cargarSala(), cargarAlertas()]);
+        Promise.allSettled([cargarSala(), cargarPanel()]);
     }, 1200);
 }
 
@@ -355,60 +335,38 @@ if (window.io) {
 }
 
 // ---------------------------------------------------------------------------
-// Importar Matriz de Turnos (desde el menú principal)
+// Importar Matriz de Turnos (tarjeta separada en el menú)
 // ---------------------------------------------------------------------------
-const btnSubirDatos = document.getElementById('btnSubirDatos');
 const inputMatrizMenu = document.getElementById('fileMatrizMenu');
 
-let archivoSeleccionadoMenu = null;
-
-// Clic simple: abre el selector de archivo
-btnSubirDatos.addEventListener('click', () => {
-    inputMatrizMenu.click();
-});
-
-// Al elegir un archivo: se sube automáticamente (sin doble clic)
 inputMatrizMenu.addEventListener('change', async (e) => {
     const archivo = e.target.files[0] || null;
     if (!archivo) return;
-    archivoSeleccionadoMenu = archivo;
     await subirMatriz(archivo);
     inputMatrizMenu.value = '';
-    archivoSeleccionadoMenu = null;
-    btnSubirDatos.textContent = '📥 Importar Matriz';
 });
 
 async function subirMatriz(archivo) {
-    btnSubirDatos.textContent = 'Subiendo…';
-    btnSubirDatos.disabled = true;
+    const msg = $('msgMatriz');
+    msg.className = 'msg-matriz';
+    msg.textContent = 'Subiendo…';
+    msg.style.display = 'block';
     try {
         const formData = new FormData();
         formData.append('archivo', archivo);
         const r = await fetch('/api/matriz/importar', { method: 'POST', body: formData });
         const d = await r.json();
         if (d.success) {
-            btnSubirDatos.textContent = '✅ Subido';
-            btnSubirDatos.style.background = '#22c55e';
-            setTimeout(() => {
-                btnSubirDatos.textContent = '📥 Importar Matriz';
-                btnSubirDatos.style.background = '';
-            }, 2500);
+            msg.className = 'msg-matriz ok';
+            msg.textContent = d.mensaje;
         } else {
-            btnSubirDatos.textContent = '❌ Error';
-            btnSubirDatos.style.background = '#ef4444';
-            setTimeout(() => {
-                btnSubirDatos.textContent = '📥 Importar Matriz';
-                btnSubirDatos.style.background = '';
-            }, 2500);
+            msg.className = 'msg-matriz error';
+            msg.textContent = d.error || 'Error al importar';
         }
     } catch (err) {
-        btnSubirDatos.textContent = '❌ Conexión';
-        btnSubirDatos.style.background = '#ef4444';
-        setTimeout(() => {
-            btnSubirDatos.textContent = '📥 Importar Matriz';
-            btnSubirDatos.style.background = '';
-        }, 2500);
+        msg.className = 'msg-matriz error';
+        msg.textContent = 'Error de conexión al subir la matriz.';
     } finally {
-        btnSubirDatos.disabled = false;
+        setTimeout(() => { msg.style.display = 'none'; }, 4000);
     }
 }

@@ -362,23 +362,20 @@ const inputMatrizMenu = document.getElementById('fileMatrizMenu');
 
 let archivoSeleccionadoMenu = null;
 
+// Clic simple: abre el selector de archivo
 btnSubirDatos.addEventListener('click', () => {
     inputMatrizMenu.click();
 });
 
-inputMatrizMenu.addEventListener('change', (e) => {
-    archivoSeleccionadoMenu = e.target.files[0] || null;
-    btnSubirDatos.textContent = archivoSeleccionadoMenu
-        ? `Subir: ${archivoSeleccionadoMenu.name}`
-        : 'Subir Matriz ▼';
-});
-
-btnSubirDatos.addEventListener('dblclick', async () => {
-    if (!archivoSeleccionadoMenu) {
-        inputMatrizMenu.click();
-        return;
-    }
-    await subirMatriz(archivoSeleccionadoMenu);
+// Al elegir un archivo: se sube automáticamente (sin doble clic)
+inputMatrizMenu.addEventListener('change', async (e) => {
+    const archivo = e.target.files[0] || null;
+    if (!archivo) return;
+    archivoSeleccionadoMenu = archivo;
+    await subirMatriz(archivo);
+    inputMatrizMenu.value = '';
+    archivoSeleccionadoMenu = null;
+    btnSubirDatos.textContent = '📥 Importar Matriz';
 });
 
 async function subirMatriz(archivo) {
@@ -390,33 +387,27 @@ async function subirMatriz(archivo) {
         const r = await fetch('/api/matriz/importar', { method: 'POST', body: formData });
         const d = await r.json();
         if (d.success) {
-            btnSubirDatos.textContent = '✅ ' + d.mensaje;
+            btnSubirDatos.textContent = '✅ Subido';
             btnSubirDatos.style.background = '#22c55e';
             setTimeout(() => {
-                btnSubirDatos.textContent = 'Subir Matriz ▼';
+                btnSubirDatos.textContent = '📥 Importar Matriz';
                 btnSubirDatos.style.background = '';
-                inputMatrizMenu.value = '';
-                archivoSeleccionadoMenu = null;
-            }, 3000);
+            }, 2500);
         } else {
             btnSubirDatos.textContent = '❌ Error';
             btnSubirDatos.style.background = '#ef4444';
             setTimeout(() => {
-                btnSubirDatos.textContent = 'Subir Matriz ▼';
+                btnSubirDatos.textContent = '📥 Importar Matriz';
                 btnSubirDatos.style.background = '';
-                inputMatrizMenu.value = '';
-                archivoSeleccionadoMenu = null;
-            }, 3000);
+            }, 2500);
         }
     } catch (err) {
-        btnSubirDatos.textContent = '❌ Error de conexión';
+        btnSubirDatos.textContent = '❌ Conexión';
         btnSubirDatos.style.background = '#ef4444';
         setTimeout(() => {
-            btnSubirDatos.textContent = 'Subir Matriz ▼';
+            btnSubirDatos.textContent = '📥 Importar Matriz';
             btnSubirDatos.style.background = '';
-            inputMatrizMenu.value = '';
-            archivoSeleccionadoMenu = null;
-        }, 3000);
+        }, 2500);
     } finally {
         btnSubirDatos.disabled = false;
     }

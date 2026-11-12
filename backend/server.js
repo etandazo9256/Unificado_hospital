@@ -4,6 +4,9 @@ const path = require('path');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const pool = require('./db');
+const multer = require('multer');
+const XLSX = require('xlsx');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -13,6 +16,23 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
+
+// ---- Subida de matriz (CSV / Excel) ----
+const uploadDir = path.join(__dirname, '..', 'temp_uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+});
+const upload = multer({
+    storage,
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (['.csv', '.xlsx', '.xls'].includes(ext)) return cb(null, true);
+        cb(new Error('Solo se permiten archivos .csv, .xlsx o .xls'));
+    }
+});
 
 // Servir archivos estáticos del frontend
 app.use('/frontend', express.static(path.join(__dirname, '..', 'frontend')));
@@ -988,6 +1008,235 @@ app.get('/api/kpis/comparar', async (req, res) => {
     } catch (error) {
         console.error('Error al obtener comparación de KPIs:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// ============================================================================
+// IMPORTACIÓN DE MATRIZ (CSV / Excel) → esq_emergencia.reporte_emergencia
+// ============================================================================
+
+const MAPA_COLUMNAS = {
+    // excel → bd
+    numero: 'numero',
+    turno: 'turno',
+    paciente: 'paciente',
+    color_letras: 'prioridad',
+    fecha_turno: 'fecha_turno',
+    fecha_llamado: 'fecha_llamado',
+    fecha_signos_vitales: 'fecha_sig_vitales',
+    responsable_sig_vitales: 'resp_sig_vitales',
+    fecha_triage: 'fecha_triage',
+    responsable_atencion_triage: 'resp_triage',
+    tiempo_espera_turnos_a_signos: 'tiempo_espera_turno_signos',
+    tiempo_duracion_signos_vitales: 'tiempo_duracion_signos_vitales',
+    tiempo_espera_signos_a_llamado_triage: 'tiempo_espera_signos_triage',
+    tiempo_duracion_triage: 'tiempo_duracion_triage',
+    tiempo_total_turno_a_triage: 'tiempo_total_turno_triage',
+    estado_registro: 'estado',
+    hubo_toma_signos_vitales: 'hubo_toma_signos_vitales',
+    hubo_atencion_medica: 'hubo_atencion_medica',
+    fecha_ingreso_observacion: 'fecha_ing_observacion',
+    fecha_solicitud_hospitalizacion: 'fecha_soli_hosp',
+    resultado_observacion: 'observacion_estado'
+};
+
+const COLUMNAS_BD = [
+    'numero', 'turno', 'paciente', 'prioridad', 'fecha_turno', 'fecha_llamado',
+    'fecha_sig_vitales', 'resp_sig_vitales', 'fecha_triage', 'resp_triage',
+    'tiempo_espera_turno_signos', 'tiempo_duracion_signos_vitales',
+    'tiempo_espera_signos_triage', 'tiempo_duracion_triage', 'tiempo_total_turno_triage',
+    'estado', 'atendido', 'fecha_ing_observacion', 'fecha_soli_hosp', 'observacion_estado'
+];
+
+function normalizarTexto(v) {
+    if (v === null || v === undefined) return '';
+    return String(v).trim();
+}
+
+function mapearPrioridad(v) {
+    if (!v) return null;
+    const s = String(v).trim().toUpperCase();
+    const tabla = {
+        'ROJO': 'ROJO', 'NARANJA': 'NARANJA', 'AMARILLO': 'AMARILLO', 'AMARRILLO': 'AMARILLO',
+        'VERDE': 'VERDE', 'AZUL': 'AZUL', 'SIN CLASIFICAR': 'SIN CLASIFICAR'
+    };
+    return tabla[s] || s;
+}
+
+function mapearEstado(v, huboSignos, huboMedico) {
+    if (!v) return 'pendiente';
+    const s = String(v).trim().toUpperCase();
+    if (s.includes('ATENCION MEDICA REGISTRADOS') || s.includes('ATENCIÓN MÉDICA REGISTRADOS')) return 'finalizado';
+    if (s.includes('SIN ATENCION MEDICA') || s.includes('SIN ATENCIÓN MÉDICA')) return 'en_triage';
+    if (s.includes('SIGNOS') && huboSignos === 'SI') return 'en_triage';
+    return 'pendiente';
+}
+
+function mapearAtendido(huboSignos, huboMedico) {
+    return (huboMedico === 'SI' || huboMedico === 'true') ? true : false;
+}
+
+function limpiarFecha(v) {
+    if (!v) return null;
+    const s = String(v).trim();
+    if (!s || s.toLowerCase() === 'nan' || s === 'NaT') return null;
+    return s; // PostgreSQL acepta ISO string directamente
+}
+
+function leerArchivo(ruta) {
+    const ext = path.extname(ruta).toLowerCase();
+    if (ext === '.csv') {
+        const texto = fs.readFileSync(ruta, 'utf8');
+        const lineas = texto.split(/\r?\n/).filter(l => l.trim().length > 0);
+        if (lineas.length === 0) return { columnas: [], filas: [] };
+        const cabecera = lineas[0].split(',').map(c => c.replace(/"/g, '').trim());
+        const filas = lineas.slice(1).map(l => {
+            const vals = l.split(',');
+            const obj = {};
+            cabecera.forEach((c, i) => { obj[c] = vals[i] !== undefined ? vals[i] : ''; });
+            return obj;
+        });
+        return { columnas: cabecera, filas };
+    }
+    // .xlsx / .xls
+    const libro = XLSX.readFile(ruta);
+    const hoja = libro.Sheets[libro.SheetNames[0]];
+    const datos = XLSX.utils.sheet_to_json(hoja, { defval: '', raw: false });
+    const columnas = Object.keys(datos[0] || {});
+    return { columnas, filas: datos };
+}
+
+app.post('/api/matriz/importar', upload.single('archivo'), async (req, res) => {
+    let rutaArchivo = null;
+    try {
+        if (!req.file) return res.status(400).json({ success: false, error: 'No se envió ningún archivo' });
+        rutaArchivo = req.file.path;
+
+        const { columnas, filas } = leerArchivo(rutaArchivo);
+        if (filas.length === 0) {
+            return res.status(400).json({ success: false, error: 'El archivo no contiene filas de datos' });
+        }
+
+        // Normalizar nombres de columnas del archivo (quitar espacios, lower case)
+        const columnasNorm = columnas.map(c => normalizarTexto(c).toLowerCase().replace(/\s+/g, '_'));
+
+        // Construir filas mapeadas a BD
+        const filasBD = [];
+        filas.forEach(filaRaw => {
+            const obtener = (nombreExcel) => {
+                const clave = normalizarTexto(nombreExcel).toLowerCase().replace(/\s+/g, '_');
+                return clave in filaRaw ? filaRaw[clave] : '';
+            };
+
+            const numero = normalizarTexto(obtener('numero'));
+            const turno = normalizarTexto(obtener('turno'));
+            const paciente = normalizarTexto(obtener('paciente'));
+            const fechaTurno = limpiarFecha(obtener('fecha_turno'));
+            const fechaLlamado = limpiarFecha(obtener('fecha_llamado'));
+
+            // Clave natural para detectar duplicados: numero + turno + fecha_turno
+            if (!numero && !turno && !fechaTurno) return; // fila vacía
+
+            const huboSignos = normalizarTexto(obtener('hubo_toma_signos_vitales'));
+            const huboMedico = normalizarTexto(obtener('hubo_atencion_medica'));
+
+            const fila = {
+                numero: numero || null,
+                turno: turno || null,
+                paciente: paciente || null,
+                prioridad: mapearPrioridad(obtener('color_letras')),
+                fecha_turno: fechaTurno,
+                fecha_llamado: fechaLlamado,
+                fecha_sig_vitales: limpiarFecha(obtener('fecha_signos_vitales')),
+                resp_sig_vitales: normalizarTexto(obtener('responsable_sig_vitales')) || null,
+                fecha_triage: limpiarFecha(obtener('fecha_triage')),
+                resp_triage: normalizarTexto(obtener('responsable_atencion_triage')) || null,
+                tiempo_espera_turno_signos: normalizarTexto(obtener('tiempo_espera_turnos_a_signos')) || null,
+                tiempo_duracion_signos_vitales: normalizarTexto(obtener('tiempo_duracion_signos_vitales')) || null,
+                tiempo_espera_signos_triage: normalizarTexto(obtener('tiempo_espera_signos_a_llamado_triage')) || null,
+                tiempo_duracion_triage: normalizarTexto(obtener('tiempo_duracion_triage')) || null,
+                tiempo_total_turno_triage: normalizarTexto(obtener('tiempo_total_turno_a_triage')) || null,
+                estado: mapearEstado(obtener('estado_registro'), huboSignos, huboMedico),
+                atendido: mapearAtendido(huboSignos, huboMedico),
+                fecha_ing_observacion: limpiarFecha(obtener('fecha_ingreso_observacion')),
+                fecha_soli_hosp: limpiarFecha(obtener('fecha_solicitud_hospitalizacion')),
+                observacion_estado: normalizarTexto(obtener('resultado_observacion')) || null
+            };
+            filasBD.push(fila);
+        });
+
+        // Detectar duplicados contra la BD (clave: numero, turno, fecha_turno)
+        // Traigo todas las claves existentes de un solo golpe para comparar en memoria
+        const existentesRows = await pool.query(
+            `SELECT COALESCE(numero, 0) as numero, COALESCE(turno, '') as turno,
+                    COALESCE(fecha_turno, '1970-01-01') as fecha_turno
+             FROM esq_emergencia.reporte_emergencia`
+        );
+        const clavesExistentes = new Set();
+        existentesRows.rows.forEach(r => {
+            clavesExistentes.add(`${r.numero}|${r.turno}|${new Date(r.fecha_turno).toISOString().slice(0, 10)}`);
+        });
+
+        const nuevos = [];
+        const duplicados = [];
+        for (const f of filasBD) {
+            const clave = `${f.numero ?? 0}|${f.turno ?? ''}|${f.fecha_turno ? new Date(f.fecha_turno).toISOString().slice(0, 10) : '1970-01-01'}`;
+            if (clavesExistentes.has(clave)) {
+                duplicados.push(f);
+            } else {
+                nuevos.push(f);
+                clavesExistentes.add(clave); // evitar duplicados dentro del mismo archivo
+            }
+        }
+
+        // Asignar IDs secuenciales (la tabla no aplica el default de la secuencia en este entorno)
+        const maxIdRow = await pool.query(`SELECT COALESCE(MAX(id), 0) as max_id FROM esq_emergencia.reporte_emergencia`);
+        let siguienteId = parseInt(maxIdRow.rows[0].max_id, 10) || 0;
+        nuevos.forEach(f => { siguienteId++; f.id = siguienteId; });
+
+        // Insertar nuevos en lotes (para no exceder límite de parámetros de PostgreSQL)
+        let insertados = 0;
+        const LOTE = 100;
+        const COLS_CON_ID = 'id, ' + COLUMNAS_BD.join(', ');
+        const NCOLS_MAS_ID = COLUMNAS_BD.length + 1;
+        for (let i = 0; i < nuevos.length; i += LOTE) {
+            const lote = nuevos.slice(i, i + LOTE);
+            const placeholders = lote.map((_, k) =>
+                '(' + ['id', ...COLUMNAS_BD].map((_, j) => `$${k * NCOLS_MAS_ID + j + 1}`).join(',') + ')'
+            ).join(', ');
+            const params = [];
+            lote.forEach(f => {
+                params.push(f.id);
+                COLUMNAS_BD.forEach(c => params.push(f[c]));
+            });
+            await pool.query(`INSERT INTO esq_emergencia.reporte_emergencia (${COLS_CON_ID}) VALUES ${placeholders}`, params);
+            insertados += lote.length;
+        }
+
+        // Notificar a todas las pantallas que la matriz se actualizó
+        emitirEvento('matriz:actualizada', {
+            insertados,
+            duplicados: duplicados.length,
+            totalArchivo: filasBD.length,
+            archivo: req.file.originalname,
+            fecha: new Date().toISOString()
+        });
+
+        res.json({
+            success: true,
+            mensaje: `Se cargaron ${insertados} dato(s) nuevo(s). ${duplicados.length} registro(s) ya existían y no se duplicaron.`,
+            insertados,
+            duplicados: duplicados.length,
+            totalArchivo: filasBD.length
+        });
+
+    } catch (error) {
+        console.error('Error importando matriz:', error);
+        res.status(500).json({ success: false, error: error.message });
+    } finally {
+        if (rutaArchivo && fs.existsSync(rutaArchivo)) {
+            try { fs.unlinkSync(rutaArchivo); } catch { /* ignorar */ }
+        }
     }
 });
 

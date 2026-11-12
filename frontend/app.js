@@ -451,6 +451,7 @@ document.addEventListener('DOMContentLoaded', function () {
     socket.on('turno:no_asiste',        () => cargarSala());
     socket.on('turno:cancelado',        () => cargarSala());
     socket.on('turno:reiniciado',       () => cargarSala());
+    socket.on('matriz:actualizada',     () => cargarSala());
 
     // Refresco automático periódico: cualquier cambio en la BD
     // (incluido un UPDATE hecho directamente con SQL) se refleja

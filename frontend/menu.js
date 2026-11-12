@@ -4,6 +4,7 @@
    - KPIs, dona de prioridades, turnos por hora y resumen  -> API real
    - Tiempo de espera promedio por prioridad Manchester y alertas de espera prolongada -> API real
    - Estado de conexión + Socket.IO (refresco instantáneo)
+   -boton para subir nueva matriz al sistema
    ========================================================================== */
 
 // ---------------------------------------------------------------------------
@@ -137,7 +138,7 @@ async function cargarSala() {
 }
 
 // ---------------------------------------------------------------------------
-// 2. Dona de prioridades Manchester
+// 2. prioridades Manchester
 // ---------------------------------------------------------------------------
 function pintarDona(filas) {
     const anillo = $('anilloPrioridad');
@@ -302,20 +303,20 @@ function pintarEsperaPrioridad(filas) {
 // ---------------------------------------------------------------------------
 // 6. Alertas de espera prolongada (campana)
 // ---------------------------------------------------------------------------
-async function cargarAlertas() {
-    try {
-        const d = await getJSON('/api/kpis/alertas');
-        const total = parseInt(d.total, 10) || 0;
-        const badge = $('alertasCount');
-        badge.textContent = total > 99 ? '99+' : total;
-        badge.classList.toggle('oculto', total === 0);
-        $('campana').title = total === 0
-            ? 'Sin pacientes con espera prolongada'
-            : `${total} paciente(s) fuera del tiempo objetivo de espera`;
-    } catch {
-        $('alertasCount').classList.add('oculto');
-    }
-}
+// async function cargarAlertas() {
+//     try {
+//         const d = await getJSON('/api/kpis/alertas');
+//         const total = parseInt(d.total, 10) || 0;
+//         const badge = $('alertasCount');
+//         badge.textContent = total > 99 ? '99+' : total;
+//         badge.classList.toggle('oculto', total === 0);
+//         $('campana').title = total === 0
+//             ? 'Sin pacientes con espera prolongada'
+//             : `${total} paciente(s) fuera del tiempo objetivo de espera`;
+//     } catch {
+//         $('alertasCount').classList.add('oculto');
+//     }
+// }
 
 // ---------------------------------------------------------------------------
 // Refresco periódico
@@ -347,7 +348,7 @@ if (window.io) {
         socket.on('disconnect', () => marcarConexion(false));
         ['turno:llamado', 'turno:en_triage', 'turno:en_atencion',
          'turno:finalizado', 'turno:no_asiste', 'turno:cancelado',
-         'turno:reiniciado'].forEach(evento => socket.on(evento, refrescarPronto));
+         'turno:reiniciado', 'matriz:actualizada'].forEach(evento => socket.on(evento, refrescarPronto));
     } catch {
         /* Sin Socket.IO el menú sigue funcionando con el sondeo periódico */
     }

@@ -6,32 +6,45 @@
 <title>Menú principal - Hospital de Especialidades Portoviejo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Rutas absolutas: el menú también se sirve en la raíz ("/"), donde las relativas se rompen -->
 <link rel="stylesheet" href="menu.css">
 </head>
 <body>
 <div class="app">
+
+  <!-- Encabezado del hospital -->
   <header class="top">
-    <img src="/frontend/dashboard/logo-hospital.png" alt="Logo del hospital">
-    <h1>Hospital de Especialidades Portoviejo</h1>
-    <div class="der">
-      <button id="btnSubirDatos" title="Subir nueva matriz (CSV/Excel) al sistema" aria-label="Subir nuevos datos al sistema">📥 Importar Matriz</button>
-      <input type="file" id="fileMatrizMenu" accept=".csv,.xlsx,.xls" style="display:none">
-      <div class="chip-conexion" id="chipConexion" title="Estado de la conexión con el servidor">
-        <span class="dot" id="connDot"></span><span id="connText">Conectado</span>
-      </div>
+    <div class="institucion">
+      <img src="/frontend/dashboard/logo-hospital.png" alt="Logo del hospital">
+      <h1>Hospital de Especialidades Portoviejo</h1>
     </div>
   </header>
 
+  <!-- Cuerpo con la tarjeta de importar matriz y las 3 pantallas -->
   <div class="cuerpo">
-      <!-- 2. Botón Sala de espera -->
+
+    <!-- Tarjeta: Importar matriz (separada, al inicio) -->
+    <section class="matriz-card" aria-label="Importar matriz de turnos">
+      <div class="matriz-icon">📥</div>
+      <h2>importar matriz</h2>
+      <p>Sube un archivo CSV o Excel con los turnos de pacientes para actualizar el sistema.</p>
+      <label class="matriz-btn">
+        Seleccionar archivo
+        <input type="file" id="fileMatrizMenu" accept=".csv,.xlsx,.xls" style="display:none">
+      </label>
+      <div id="msgMatriz" class="msg-matriz"></div>
+    </section>
+
+    <!-- Tarjetas de las 3 pantallas -->
+    <nav class="menu" aria-label="Pantallas del sistema">
+
+      <!-- 1. Sala de espera -->
       <a class="op osc" href="/frontend/index.html" target="_blank">
         <div><div class="cab"><div class="ico">🩺</div><h2>Sala de espera</h2></div>
         <p>Turno en atención y próximos turnos para la TV de la sala.</p></div>
         <span class="btn">Ir a la sala de espera →</span>
       </a>
 
-      <!-- 3. Botón Tiempo de espera Manchester -->
+      <!-- 2. Tiempo de espera Manchester -->
       <a class="op cla" href="/frontend/espera.html" target="_blank">
         <div><div class="cab"><div class="ico">⏱️</div><h2>Tiempo de espera Manchester</h2></div>
         <div class="tri" aria-hidden="true"><i style="background:#DC2626"></i><i style="background:#F97316"></i><i style="background:#EAB308"></i><i style="background:#16A34A"></i><i style="background:#2563EB"></i></div>
@@ -39,93 +52,89 @@
         <span class="btn">Ir a Manchester →</span>
       </a>
 
-      <!-- 4. Botón Dashboard -->
+      <!-- 3. Dashboard -->
       <a class="op osc" href="/frontend/dashboard/dashboard.html" target="_blank">
         <div><div class="cab"><div class="ico">📊</div><h2>Dashboard</h2></div>
         <p>Indicadores de atención y tiempos para el personal administrativo.</p></div>
         <span class="btn">Ir al dashboard →</span>
       </a>
+
     </nav>
+
   </div>
 
+  <!-- Panel de estado en tiempo real (abajo, opcional) -->
+  <section class="panel" aria-label="Estado del sistema en tiempo real">
+    <div class="ph"><h2>Estado del sistema</h2><span class="chip" id="chipPeriodo">Hoy</span></div>
 
-
-    <section class="panel" aria-label="Resumen del sistema">
-      <div class="ph"><h2>Estado del sistema en tiempo real</h2><span class="chip" id="chipPeriodo">Hoy</span></div>
-
-      <div class="kpis">
-        <div class="kpi k1">
-          <div class="ico">👥</div>
-          <div><small>Pacientes atendidos</small><strong id="kpiAtendidos">--</strong><br><em>En consulta: <span id="kpiConsulta">--</span></em></div>
-        </div>
-        <div class="kpi k2">
-          <div class="ico">🕒</div>
-          <div><small>Pacientes en espera</small><strong id="kpiPendientes">--</strong><br><em>Llegadas última hora: <span id="kpiLlegadas">--</span></em></div>
-        </div>
-        <div class="kpi k3">
-          <div class="ico">🩺</div>
-          <div><small>En triage</small><strong id="kpiTriage">--</strong><br><em>Consultorios activos: <span id="kpiConsultorios">--</span></em></div>
-        </div>
-        <div class="kpi k4">
-          <div class="ico">⭐</div>
-          <div><small>Promedio de atención</small><strong id="kpiPromedio">--</strong><br><em>minutos</em></div>
-        </div>
+    <div class="kpis">
+      <div class="kpi k1">
+        <div class="ico">👥</div>
+        <div><small>Pacientes atendidos</small><strong id="kpiAtendidos">--</strong><br><em>En consulta: <span id="kpiConsulta">--</span></em></div>
       </div>
+      <div class="kpi k2">
+        <div class="ico">🕒</div>
+        <div><small>Pacientes en espera</small><strong id="kpiPendientes">--</strong><br><em>Llegadas última hora: <span id="kpiLlegadas">--</span></em></div>
+      </div>
+      <div class="kpi k3">
+        <div class="ico">🩺</div>
+        <div><small>En triage</small><strong id="kpiTriage">--</strong><br><em>Consultorios activos: <span id="kpiConsultorios">--</span></em></div>
+      </div>
+      <div class="kpi k4">
+        <div class="ico">⭐</div>
+        <div><small>Promedio de atención</small><strong id="kpiPromedio">--</strong><br><em>minutos</em></div>
+      </div>
+    </div>
 
-      <div class="fila f2">
-        <div class="caja">
-          <h3>Distribución por prioridad Manchester</h3>
-          <div class="dona">
-            <div class="anillo" id="anilloPrioridad">
-              <div><b id="donaValor">--</b><span id="donaEtiqueta">Sin datos</span></div>
-            </div>
-            <ul class="leyenda" id="leyendaPrioridad"></ul>
+    <div class="fila f2">
+      <div class="caja">
+        <h3>Distribución por prioridad Manchester</h3>
+        <div class="dona">
+          <div class="anillo" id="anilloPrioridad">
+            <div><b id="donaValor">--</b><span id="donaEtiqueta">Sin datos</span></div>
           </div>
-        </div>
-        <div class="caja">
-          <h3>Turnos por hora</h3>
-          <svg class="linea" id="graficoHoras" viewBox="0 0 420 220" role="img" aria-label="Turnos registrados por hora"></svg>
+          <ul class="leyenda" id="leyendaPrioridad"></ul>
         </div>
       </div>
+      <div class="caja">
+        <h3>Turnos por hora</h3>
+        <svg class="linea" id="graficoHoras" viewBox="0 0 420 220" role="img" aria-label="Turnos registrados por hora"></svg>
+      </div>
+    </div>
 
-      <div class="fila f3">
-        <div class="caja">
-          <h3>Prioridad y Espera estimada</h3>
-          <table class="tabla-manchester">
-            <thead><tr><th>Prioridad</th><th>Espera promedio</th></tr></thead>
-            <tbody>
-              <tr><td><span class="punto rojo"></span>Rojo</td>
-                  <td><span class="tiempo rojo-bg" id="esperaRojo">Inmediato</span></td></tr>
-              <tr><td><span class="punto naranja"></span>Naranja</td>
-                  <td><span class="tiempo naranja-bg" id="esperaNaranja">10 min</span></td></tr>
-              <tr><td><span class="punto amarillo"></span>Amarillo</td>
-                  <td><span class="tiempo amarillo-bg" id="esperaAmarillo">60 min</span></td></tr>
-              <tr><td><span class="punto verde"></span>Verde</td>
-                  <td><span class="tiempo verde-bg" id="esperaVerde">120 min</span></td></tr>
-              <tr><td><span class="punto azul"></span>Azul</td>
-                  <td><span class="tiempo azul-bg" id="esperaAzul">240 min</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="caja">
-          <h3 id="resumenTitulo">Resumen del día</h3>
-          <div class="resumen">
-            <div><small>Turnos totales</small><strong id="resTotal">--</strong></div>
-            <div><small>Atendidos</small><strong id="resAtendidos">--</strong></div>
-            <div><small>Pendientes</small><strong id="resPendientes">--</strong></div>
-          </div>
+    <div class="fila f3">
+      <div class="caja">
+        <h3>Prioridad y Espera estimada</h3>
+        <table class="tabla-manchester">
+          <thead><tr><th>Prioridad</th><th>Espera promedio</th></tr></thead>
+          <tbody>
+            <tr><td><span class="punto rojo"></span>Rojo</td><td><span class="tiempo rojo-bg" id="esperaRojo">Inmediato</span></td></tr>
+            <tr><td><span class="punto naranja"></span>Naranja</td><td><span class="tiempo naranja-bg" id="esperaNaranja">10 min</span></td></tr>
+            <tr><td><span class="punto amarillo"></span>Amarillo</td><td><span class="tiempo amarillo-bg" id="esperaAmarillo">60 min</span></td></tr>
+            <tr><td><span class="punto verde"></span>Verde</td><td><span class="tiempo verde-bg" id="esperaVerde">120 min</span></td></tr>
+            <tr><td><span class="punto azul"></span>Azul</td><td><span class="tiempo azul-bg" id="esperaAzul">240 min</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="caja">
+        <h3 id="resumenTitulo">Resumen del día</h3>
+        <div class="resumen">
+          <div><small>Turnos totales</small><strong id="resTotal">--</strong></div>
+          <div><small>Atendidos</small><strong id="resAtendidos">--</strong></div>
+          <div><small>Pendientes</small><strong id="resPendientes">--</strong></div>
         </div>
       </div>
-    </section>
-  </div>
+    </div>
+  </section>
 
   <footer class="pie">
     <div><b id="fecha"></b> &nbsp;|&nbsp; <b id="hora"></b></div>
     <span>Sistema Unificado — Área de Emergencia · HEP</span>
   </footer>
+
 </div>
 
-<script src="/socket.io/socket.io.js"></script> 
+<script src="/socket.io/socket.io.js"></script>
 <script src="menu.js"></script>
 </body>
 </html>

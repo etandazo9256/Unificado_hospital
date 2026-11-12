@@ -2,135 +2,115 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Menú principal - Hospital de Especialidades Portoviejo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menú - Hospital de Especialidades Portoviejo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="menu.css">
 </head>
 <body>
-<div class="app">
+<div class="menu-container">
 
-  <!-- Encabezado del hospital -->
-  <header class="top">
-    <div class="institucion">
-      <img src="/frontend/dashboard/logo-hospital.png" alt="Logo del hospital">
-      <h1>Hospital de Especialidades Portoviejo</h1>
-    </div>
-  </header>
-
-  <!-- Cuerpo con la tarjeta de importar matriz y las 3 pantallas -->
-  <div class="cuerpo">
-
-    <!-- Tarjeta: Importar matriz (separada, al inicio) -->
-    <section class="matriz-card" aria-label="Importar matriz de turnos">
-      <div class="matriz-icon">📥</div>
-      <h2>importar matriz</h2>
-      <p>Sube un archivo CSV o Excel con los turnos de pacientes para actualizar el sistema.</p>
-      <label class="matriz-btn">
-        Seleccionar archivo
-        <input type="file" id="fileMatrizMenu" accept=".csv,.xlsx,.xls" style="display:none">
-      </label>
-      <div id="msgMatriz" class="msg-matriz"></div>
-    </section>
-
-    <!-- Tarjetas de las 3 pantallas -->
-    <nav class="menu" aria-label="Pantallas del sistema">
-
-      <!-- 1. Sala de espera -->
-      <a class="op osc" href="/frontend/index.html" target="_blank">
-        <div><div class="cab"><div class="ico">🩺</div><h2>Sala de espera</h2></div>
-        <p>Turno en atención y próximos turnos para la TV de la sala.</p></div>
-        <span class="btn">Ir a la sala de espera →</span>
-      </a>
-
-      <!-- 2. Tiempo de espera Manchester -->
-      <a class="op cla" href="/frontend/espera.html" target="_blank">
-        <div><div class="cab"><div class="ico">⏱️</div><h2>Tiempo de espera Manchester</h2></div>
-        <div class="tri" aria-hidden="true"><i style="background:#DC2626"></i><i style="background:#F97316"></i><i style="background:#EAB308"></i><i style="background:#16A34A"></i><i style="background:#2563EB"></i></div>
-        <p>Cuánto puede esperar cada paciente según su prioridad de triaje.</p></div>
-        <span class="btn">Ir a Manchester →</span>
-      </a>
-
-      <!-- 3. Dashboard -->
-      <a class="op osc" href="/frontend/dashboard/dashboard.html" target="_blank">
-        <div><div class="cab"><div class="ico">📊</div><h2>Dashboard</h2></div>
-        <p>Indicadores de atención y tiempos para el personal administrativo.</p></div>
-        <span class="btn">Ir al dashboard →</span>
-      </a>
-
-    </nav>
-
-  </div>
-
-  <!-- Panel de estado en tiempo real (abajo, opcional) -->
-  <section class="panel" aria-label="Estado del sistema en tiempo real">
-    <div class="ph"><h2>Estado del sistema</h2><span class="chip" id="chipPeriodo">Hoy</span></div>
-
-    <div class="kpis">
-      <div class="kpi k1">
-        <div class="ico">👥</div>
-        <div><small>Pacientes atendidos</small><strong id="kpiAtendidos">--</strong><br><em>En consulta: <span id="kpiConsulta">--</span></em></div>
-      </div>
-      <div class="kpi k2">
-        <div class="ico">🕒</div>
-        <div><small>Pacientes en espera</small><strong id="kpiPendientes">--</strong><br><em>Llegadas última hora: <span id="kpiLlegadas">--</span></em></div>
-      </div>
-      <div class="kpi k3">
-        <div class="ico">🩺</div>
-        <div><small>En triage</small><strong id="kpiTriage">--</strong><br><em>Consultorios activos: <span id="kpiConsultorios">--</span></em></div>
-      </div>
-      <div class="kpi k4">
-        <div class="ico">⭐</div>
-        <div><small>Promedio de atención</small><strong id="kpiPromedio">--</strong><br><em>minutos</em></div>
-      </div>
-    </div>
-
-    <div class="fila f2">
-      <div class="caja">
-        <h3>Distribución por prioridad Manchester</h3>
-        <div class="dona">
-          <div class="anillo" id="anilloPrioridad">
-            <div><b id="donaValor">--</b><span id="donaEtiqueta">Sin datos</span></div>
-          </div>
-          <ul class="leyenda" id="leyendaPrioridad"></ul>
+    <!-- Encabezado: logo/título a la izquierda, conectado a la derecha -->
+    <header class="menu-topbar">
+        <div class="logo-corner">
+            <img src="/frontend/dashboard/logo-hospital.png" alt="Hospital" class="logo-img">
         </div>
-      </div>
-      <div class="caja">
-        <h3>Turnos por hora</h3>
-        <svg class="linea" id="graficoHoras" viewBox="0 0 420 220" role="img" aria-label="Turnos registrados por hora"></svg>
-      </div>
-    </div>
-
-    <div class="fila f3">
-      <div class="caja">
-        <h3>Prioridad y Espera estimada</h3>
-        <table class="tabla-manchester">
-          <thead><tr><th>Prioridad</th><th>Espera promedio</th></tr></thead>
-          <tbody>
-            <tr><td><span class="punto rojo"></span>Rojo</td><td><span class="tiempo rojo-bg" id="esperaRojo">Inmediato</span></td></tr>
-            <tr><td><span class="punto naranja"></span>Naranja</td><td><span class="tiempo naranja-bg" id="esperaNaranja">10 min</span></td></tr>
-            <tr><td><span class="punto amarillo"></span>Amarillo</td><td><span class="tiempo amarillo-bg" id="esperaAmarillo">60 min</span></td></tr>
-            <tr><td><span class="punto verde"></span>Verde</td><td><span class="tiempo verde-bg" id="esperaVerde">120 min</span></td></tr>
-            <tr><td><span class="punto azul"></span>Azul</td><td><span class="tiempo azul-bg" id="esperaAzul">240 min</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="caja">
-        <h3 id="resumenTitulo">Resumen del día</h3>
-        <div class="resumen">
-          <div><small>Turnos totales</small><strong id="resTotal">--</strong></div>
-          <div><small>Atendidos</small><strong id="resAtendidos">--</strong></div>
-          <div><small>Pendientes</small><strong id="resPendientes">--</strong></div>
+        <div class="info-hospital">
+            <h1>Hospital de Especialidades Portoviejo</h1>
+            <span class="subt">Sistema Unificado — Área de Emergencia</span>
         </div>
-      </div>
-    </div>
-  </section>
+        <div class="header-actions">
+            <div id="reloj">00:00:00</div>
+            <div class="connection-status"><span class="connection-dot" id="connDot"></span><span id="connText">Conectado</span></div>
+        </div>
+    </header>
 
-  <footer class="pie">
-    <div><b id="fecha"></b> &nbsp;|&nbsp; <b id="hora"></b></div>
-    <span>Sistema Unificado — Área de Emergencia · HEP</span>
-  </footer>
+    <main class="menu-main">
+
+        <!-- Estado en vivo del sistema -->
+        <section class="estado-panel" id="estadoPanel">
+            <div class="estado-titulo">Estado del sistema en este momento</div>
+            <div class="estado-stats">
+                <div class="estado-stat"><span class="estado-num" id="mPendientes">--</span><span class="estado-etiqueta">Pendientes</span></div>
+                <div class="estado-sep"></div>
+                <div class="estado-stat"><span class="estado-num" id="mTriage">--</span><span class="estado-etiqueta">En Triage</span></div>
+                <div class="estado-sep"></div>
+                <div class="estado-stat"><span class="estado-num" id="mConsulta">--</span><span class="estado-etiqueta">En Consulta</span></div>
+                <div class="estado-sep"></div>
+                <div class="estado-stat"><span class="estado-num" id="mAtendidos">--</span><span class="estado-etiqueta">Atendidos</span></div>
+                <div class="estado-sep"></div>
+                <div class="estado-stat"><span class="estado-num" id="mPromedio">--</span><span class="estado-etiqueta">Promedio (min)</span></div>
+            </div>
+        </section>
+
+        <!-- Pantallas del sistema (apiladas a la izquierda) -->
+        <section class="pantallas-grid">
+
+            <!-- Tarjeta Importar Matriz -->
+            <div class="pantalla-card card-matriz">
+                <div class="card-icono">📥</div>
+                <div class="card-cuerpo">
+                    <h2 class="card-titulo">Importar Matriz</h2>
+                    <p class="card-desc">Sube un archivo CSV o Excel con los turnos de pacientes para actualizar el sistema.</p>
+                </div>
+                <label class="matriz-btn">
+                    Seleccionar archivo
+                    <input type="file" id="fileMatrizMenu" accept=".csv,.xlsx,.xls" style="display:none">
+                </label>
+                <div id="msgMatriz" class="msg-matriz"></div>
+            </div>
+
+            <!-- 1. Sala de Espera -->
+            <a class="pantalla-card card-sala" href="/frontend/index.html">
+                <div class="card-icono">🩺</div>
+                <div class="card-cuerpo">
+                    <h2 class="card-titulo">Sala de Espera</h2>
+                    <p class="card-desc">Turno en atención, próximos turnos y estadísticas en tiempo real para pantallas de TV.</p>
+                    <div class="card-etiquetas">
+                        <span class="etiqueta">Tiempo real</span>
+                        <span class="etiqueta">Pantalla independiente</span>
+                    </div>
+                </div>
+                <div class="card-accion">Abrir <span>→</span></div>
+            </a>
+
+            <!-- 2. Tiempo de Espera Manchester -->
+            <a class="pantalla-card card-manchester" href="/frontend/espera.html">
+                <div class="card-icono">⏱️</div>
+                <div class="card-cuerpo">
+                    <h2 class="card-titulo">Tiempo de Espera Manchester</h2>
+                    <p class="card-desc">Tiempos estimados de espera por clasificación Manchester (Rojo / Naranja / Amarillo / Verde / Azul) con panel de video.</p>
+                    <div class="card-etiquetas">
+                        <span class="etiqueta">Tiempo real</span>
+                        <span class="etiqueta">Pantalla independiente</span>
+                    </div>
+                </div>
+                <div class="card-accion">Abrir <span>→</span></div>
+            </a>
+
+            <!-- 3. Dashboard de Indicadores (KPI) -->
+            <a class="pantalla-card card-dashboard" href="/frontend/dashboard/dashboard.html">
+                <div class="card-icono">📈</div>
+                <div class="card-cuerpo">
+                    <h2 class="card-titulo">Dashboard de Indicadores (KPI)</h2>
+                    <p class="card-desc">Atendidos, pendientes, tiempos promedio, prioridades, productividad del personal y exportación a Excel/PDF.</p>
+                    <div class="card-etiquetas">
+                        <span class="etiqueta">Actualización automática</span>
+                        <span class="etiqueta">Exporta Excel / PDF</span>
+                    </div>
+                </div>
+                <div class="card-accion">Abrir <span>→</span></div>
+            </a>
+
+        </section>
+
+    </main>
+
+    <footer class="menu-footer">
+        <span>Hospital de Especialidades Portoviejo — Departamento de Emergencia</span>
+        <span class="footer-fecha" id="fechaHoy"></span>
+    </footer>
 
 </div>
 

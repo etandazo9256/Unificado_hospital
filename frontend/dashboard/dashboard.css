@@ -857,3 +857,41 @@ tr:hover td {
         text-align: center;
     }
 }
+/* ---- SecciÃ³n: Importar Matriz ---- */
+.import-section { margin: 30px 20px; }
+.import-card {
+    background: #fff; border: 1px solid var(--gris-borde); border-radius: 16px;
+    padding: 24px; box-shadow: var(--sombra);
+}
+.import-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.import-title { font-size: 1.15rem; font-weight: 700; color: var(--texto-oscuro); margin: 0; }
+.import-badge {
+    background: var(--azul-claro); color: #fff; font-size: .8rem; font-weight: 600;
+    padding: 4px 10px; border-radius: 12px; white-space: nowrap;
+}
+.import-desc { font-size: .9rem; color: var(--texto-suave); margin: 0 0 16px 0; line-height: 1.5; }
+.import-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.btn-import {
+    background: var(--azul-oscuro); color: #fff; border: none; border-radius: 10px;
+    padding: 10px 20px; font-weight: 600; font-size: .95rem; cursor: pointer;
+}
+.btn-import:hover { background: var(--azul-medio); }
+.btn-import:disabled { opacity: .5; cursor: not-allowed; }
+.btn-import-subir {
+    background: var(--azul-claro); color: var(--texto-oscuro); border: none; border-radius: 10px;
+    padding: 10px 20px; font-weight: 600; font-size: .95rem; cursor: pointer;
+}
+.btn-import-subir:disabled { opacity: .5; cursor: not-allowed; }
+.btn-import-subir:not(:disabled):hover { background: #5dade2; }
+.msg-matriz {
+    margin-top: 12px; padding: 12px 16px; border-radius: 10px;
+    font-size: .9rem; font-weight: 600; display: none;
+}
+.msg-matriz.ok { background: #d9f5e6; color: #15803d; border: 1px solid #a7f3d0; display: block; }
+.msg-matriz.warn { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; display: block; }
+.msg-matriz.error { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; display: block; }
+
+@media (max-width: 768px) {
+    .import-controls { flex-direction: column; align-items: stretch; }
+    .btn-import, .btn-import-subir { width: 100%; }
+}

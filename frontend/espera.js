@@ -29,6 +29,7 @@ function conectarSocket() {
     socket.on('turno:no_asiste',        cargarEspera);
     socket.on('turno:cancelado',        cargarEspera);
     socket.on('turno:reiniciado',       cargarEspera);
+    socket.on('matriz:actualizada',     cargarEspera);
 }
 
 // ---- Normalización y tiempos ----

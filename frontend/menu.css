@@ -234,3 +234,16 @@ td.vacio{text-align:center;color:var(--suave);padding:18px 10px}
 .amarillo-bg { background: #FEF3C7; color: #92400E; }
 .verde-bg { background: #DCFCE7; color: #15803D; }
 .azul-bg { background: #DBEAFE; color: #1D4ED8; }
+
+/* Botón para subir nueva matriz */
+.btnSubirDatos {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: var(--azul);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}

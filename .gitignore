@@ -37,3 +37,7 @@ EcuDataMCP/
 # Credenciales y datos sensibles (no versionar)
 hospital_datos.txt
 
+
+# Subidas temporales de matriz (CSV/Excel)
+temp_uploads/
+

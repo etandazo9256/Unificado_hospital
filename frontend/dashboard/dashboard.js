@@ -36,54 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
         exportarPDF(fi, ff);
     });
 
-    // ---- Importar matriz ----
-    const inputMatriz = document.getElementById('fileMatriz');
-    const btnSeleccionar = document.getElementById('btnSeleccionarMatriz');
-    const btnSubir = document.getElementById('btnSubirMatriz');
-    const msgMatriz = document.getElementById('msgMatriz');
-    let archivoSeleccionado = null;
-
-    btnSeleccionar.addEventListener('click', () => inputMatriz.click());
-
-    inputMatriz.addEventListener('change', (e) => {
-        archivoSeleccionado = e.target.files[0] || null;
-        btnSubir.disabled = !archivoSeleccionado;
-        msgMatriz.style.display = 'none';
-    });
-
-    btnSubir.addEventListener('click', async () => {
-        if (!archivoSeleccionado) return;
-        btnSubir.disabled = true;
-        btnSubir.textContent = 'Subiendo…';
-        msgMatriz.style.display = 'none';
-        try {
-            const formData = new FormData();
-            formData.append('archivo', archivoSeleccionado);
-            const r = await fetch('/api/matriz/importar', { method: 'POST', body: formData });
-            const d = await r.json();
-            if (d.success) {
-                msgMatriz.className = 'msg-matriz ok';
-                msgMatriz.textContent = d.mensaje;
-                msgMatriz.style.display = 'block';
-                // Refrescar dashboard tras la importación
-                cargarDashboard(filtrosActuales);
-            } else {
-                msgMatriz.className = 'msg-matriz error';
-                msgMatriz.textContent = d.error || 'Error al importar';
-                msgMatriz.style.display = 'block';
-            }
-        } catch (err) {
-            msgMatriz.className = 'msg-matriz error';
-            msgMatriz.textContent = 'Error de conexión al subir la matriz.';
-            msgMatriz.style.display = 'block';
-        } finally {
-            btnSubir.disabled = false;
-            btnSubir.textContent = 'Subir matriz';
-            inputMatriz.value = '';
-            archivoSeleccionado = null;
-        }
-    });
-
     // Cargar dashboard inicialmente sin filtros (todas las fechas)
     cargarDashboard();
     startAutoRefresh();

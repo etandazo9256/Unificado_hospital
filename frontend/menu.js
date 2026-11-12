@@ -353,3 +353,71 @@ if (window.io) {
         /* Sin Socket.IO el menú sigue funcionando con el sondeo periódico */
     }
 }
+
+// ---------------------------------------------------------------------------
+// Importar Matriz de Turnos (desde el menú principal)
+// ---------------------------------------------------------------------------
+const btnSubirDatos = document.getElementById('btnSubirDatos');
+const inputMatrizMenu = document.getElementById('fileMatrizMenu');
+
+let archivoSeleccionadoMenu = null;
+
+btnSubirDatos.addEventListener('click', () => {
+    inputMatrizMenu.click();
+});
+
+inputMatrizMenu.addEventListener('change', (e) => {
+    archivoSeleccionadoMenu = e.target.files[0] || null;
+    btnSubirDatos.textContent = archivoSeleccionadoMenu
+        ? `Subir: ${archivoSeleccionadoMenu.name}`
+        : 'Subir Matriz ▼';
+});
+
+btnSubirDatos.addEventListener('dblclick', async () => {
+    if (!archivoSeleccionadoMenu) {
+        inputMatrizMenu.click();
+        return;
+    }
+    await subirMatriz(archivoSeleccionadoMenu);
+});
+
+async function subirMatriz(archivo) {
+    btnSubirDatos.textContent = 'Subiendo…';
+    btnSubirDatos.disabled = true;
+    try {
+        const formData = new FormData();
+        formData.append('archivo', archivo);
+        const r = await fetch('/api/matriz/importar', { method: 'POST', body: formData });
+        const d = await r.json();
+        if (d.success) {
+            btnSubirDatos.textContent = '✅ ' + d.mensaje;
+            btnSubirDatos.style.background = '#22c55e';
+            setTimeout(() => {
+                btnSubirDatos.textContent = 'Subir Matriz ▼';
+                btnSubirDatos.style.background = '';
+                inputMatrizMenu.value = '';
+                archivoSeleccionadoMenu = null;
+            }, 3000);
+        } else {
+            btnSubirDatos.textContent = '❌ Error';
+            btnSubirDatos.style.background = '#ef4444';
+            setTimeout(() => {
+                btnSubirDatos.textContent = 'Subir Matriz ▼';
+                btnSubirDatos.style.background = '';
+                inputMatrizMenu.value = '';
+                archivoSeleccionadoMenu = null;
+            }, 3000);
+        }
+    } catch (err) {
+        btnSubirDatos.textContent = '❌ Error de conexión';
+        btnSubirDatos.style.background = '#ef4444';
+        setTimeout(() => {
+            btnSubirDatos.textContent = 'Subir Matriz ▼';
+            btnSubirDatos.style.background = '';
+            inputMatrizMenu.value = '';
+            archivoSeleccionadoMenu = null;
+        }, 3000);
+    } finally {
+        btnSubirDatos.disabled = false;
+    }
+}

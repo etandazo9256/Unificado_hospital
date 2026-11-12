@@ -247,3 +247,26 @@ td.vacio{text-align:center;color:var(--suave);padding:18px 10px}
     cursor: pointer;
     transition: background-color 0.2s;
 }
+/* Estilos corregidos para el botÃ³n Subir Matriz del menÃº (por ID) */
+#btnSubirDatos {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: var(--azul);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    font-size: 0.95rem;
+    margin-left: 8px;
+}
+#btnSubirDatos:hover { background-color: #2a5cb0; }
+#btnSubirDatos:disabled { opacity: 0.7; cursor: not-allowed; }
+
+/* Input de archivo oculto */
+#fileMatrizMenu { display: none !important; }
+
+@media (max-width: 768px) {
+    #btnSubirDatos { font-size: 0.85rem; padding: 8px 14px; margin-left: 4px; }
+}

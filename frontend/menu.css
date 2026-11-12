@@ -236,7 +236,7 @@ td.vacio{text-align:center;color:var(--suave);padding:18px 10px}
 .azul-bg { background: #DBEAFE; color: #1D4ED8; }
 
 /* Botón para subir nueva matriz */
-.btnSubirDatos {
+/* .btnSubirDatos {
     display: inline-block;
     padding: 10px 20px;
     background-color: var(--azul);
@@ -246,20 +246,23 @@ td.vacio{text-align:center;color:var(--suave);padding:18px 10px}
     border-radius: 999px;
     cursor: pointer;
     transition: background-color 0.2s;
-}
-/* Estilos corregidos para el botÃ³n Subir Matriz del menÃº (por ID) */
+} */
+/* Estilos corregidos para el boton Subir Matriz del menu (por ID) */
 #btnSubirDatos {
-    display: inline-block;
-    padding: 10px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
     background-color: var(--azul);
     color: #fff;
     font-weight: 600;
     border: none;
-    border-radius: 999px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
-    font-size: 0.95rem;
-    margin-left: 8px;
+    transition: background-color 0.2s;
+    font-size: 0.9rem;
+    margin-left: 10px;
+    white-space: nowrap;
 }
 #btnSubirDatos:hover { background-color: #2a5cb0; }
 #btnSubirDatos:disabled { opacity: 0.7; cursor: not-allowed; }

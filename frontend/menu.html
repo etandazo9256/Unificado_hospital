@@ -12,30 +12,27 @@
 <div class="app">
   <header class="top">
     <img src="/frontend/dashboard/logo-hospital.png" alt="Logo del hospital">
-    <h1>Hospital de Especialidades Portoviejo</h1>
-    <div class="der">
-      <button id="btnImportarMatriz" title="Importar matriz de turnos (CSV/Excel)" class="btn-matriz">📥 Matriz</button>
-      <input type="file" id="fileMatrizMenu" accept=".csv,.xlsx,.xls" style="display:none">
-      <div id="msgMatriz" class="msg-matriz"></div>
-      <div class="campana" id="campana" aria-label="Alertas de espera prolongada" title="Pacientes con espera prolongada">🔔<b id="alertasCount" class="badge-alertas">0</b></div>
-      <div class="avatar" aria-label="Usuario">👤</div>
-    </div>
-  </header>
+    <h1>Hospital de Especialidades Portoviejo</h1>  </header>
 
   <div class="cuerpo">
     <nav class="menu" aria-label="Pantallas del sistema">
-      <a class="op osc" href="/frontend/index.html">
+      <a class="op cla" href="#" id="btnImportarMatriz" role="button" title="Importar matriz de turnos (CSV o Excel)">
+        <div><div class="cab"><div class="ico">📥</div><h2>Subir matriz</h2></div>
+        <p>Sube la matriz de turnos del día (CSV o Excel).</p></div>
+        <span class="btn" id="textoBtnMatriz">Subir matriz ↑</span>
+      </a>
+      <a class="op osc" href="/frontend/index.html" target="_blank">
         <div><div class="cab"><div class="ico">🩺</div><h2>Sala de espera</h2></div>
         <p>Turno en atención y próximos turnos para la TV de la sala.</p></div>
         <span class="btn">Abrir sala de espera →</span>
       </a>
-      <a class="op cla" href="/frontend/espera.html">
+      <a class="op cla" href="/frontend/espera.html" target="_blank">
         <div><div class="cab"><div class="ico">⏱️</div><h2>Tiempo de espera Manchester</h2></div>
         <div class="tri" aria-hidden="true"><i style="background:#DC2626"></i><i style="background:#F97316"></i><i style="background:#EAB308"></i><i style="background:#16A34A"></i><i style="background:#2563EB"></i></div>
         <p>Cuánto puede esperar cada paciente según su prioridad de triaje.</p></div>
         <span class="btn">Abrir Manchester →</span>
       </a>
-      <a class="op osc" href="/frontend/dashboard/dashboard.html">
+      <a class="op osc" href="/frontend/dashboard/dashboard.html" target="_blank">
         <div><div class="cab"><div class="ico">📊</div><h2>Dashboard</h2></div>
         <p>Indicadores de atención y tiempos para el personal administrativo.</p></div>
         <span class="btn">Abrir dashboard →</span>
@@ -65,12 +62,18 @@
       </div>
 
       <div class="fila f3">
-        <div class="caja"><h3>Turnos recientes</h3>
-          <table>
-            <thead><tr><th>Paciente</th><th>Especialidad</th><th>Turno</th><th>Estado</th><th>Hora</th></tr></thead>
-            <tbody id="cuerpoTablaRecientes"><tr><td colspan="5" class="vacío">Cargando…</td></tr></tbody>
-          </table>
-        </div>
+        <div class="caja"><h3>Prioridad y espera estimada</h3>
+  <table>
+    <thead><tr><th>Prioridad</th><th>Espera estimada</th></tr></thead>
+    <tbody>
+      <tr><td><span class="punto" style="--c:#DC2626"></span>Rojo</td><td><span class="est p-rojo">Inmediato</span></td></tr>
+      <tr><td><span class="punto" style="--c:#F97316"></span>Naranja</td><td><span class="est p-naranja">10 min</span></td></tr>
+      <tr><td><span class="punto" style="--c:#EAB308"></span>Amarillo</td><td><span class="est p-amarillo">60 min</span></td></tr>
+      <tr><td><span class="punto" style="--c:#16A34A"></span>Verde</td><td><span class="est p-verde">120 min</span></td></tr>
+      <tr><td><span class="punto" style="--c:#2563EB"></span>Azul</td><td><span class="est p-azul">240 min</span></td></tr>
+    </tbody>
+  </table>
+</div>
         <div class="caja"><h3>Resumen del día</h3>
           <div class="resumen">
             <div><small>Turnos totales</small><strong id="resTotales">--</strong></div>
@@ -87,6 +90,9 @@
     <span>Sistema Unificado — Área de Emergencia · HEP</span>
   </footer>
 </div>
+
+<input type="file" id="fileMatrizMenu" accept=".csv,.xlsx,.xls" hidden>
+<div id="msgMatriz" class="msg-matriz" role="status" aria-live="polite"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/frontend/menu.js"></script>

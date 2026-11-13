@@ -94,7 +94,7 @@ async function cargarKPIs() {
         $('kpiTurnosPendientes').textContent = numero(s.pendientes);
         $('kpiTendTurnos').textContent = '--';
         $('kpiPromedio').textContent = numero(s.tiempoPromedio);
-        $('kpiTendPromedio').textContent = 'min promedio';
+        $('kpiTendPromedio').textContent = 'minutos';
         marcarConexion(true);
     } catch {
         marcarConexion(false);
@@ -255,11 +255,9 @@ async function cargarAlertas() {
         const d = await getJSON('/api/kpis/alertas');
         const total = parseInt(d.total, 10) || 0;
         const badge = $('alertasCount');
+        if (!badge) return;
         badge.textContent = total > 99 ? '99+' : total;
         badge.classList.toggle('oculto', total === 0);
-        $('campana').title = total === 0
-            ? 'Sin pacientes con espera prolongada'
-            : `${total} paciente(s) fuera del tiempo objetivo de espera`;
     } catch {}
 }
 
@@ -306,8 +304,8 @@ if (window.io) {
         socket.on('connect', () => marcarConexion(true));
         socket.on('disconnect', () => marcarConexion(false));
         ['turno:llamado', 'turno:en_triage', 'turno:en_atencion',
-         'turno:finalizado', 'turno:no_asiste', 'turno:cancelado',
-         'turno:reiniciado', 'matriz:actualizada'].forEach(evento => socket.on(evento, refrescarPronto));
+        'turno:finalizado', 'turno:no_asiste', 'turno:cancelado',
+        'turno:reiniciado', 'matriz:actualizada'].forEach(evento => socket.on(evento, refrescarPronto));
     } catch {}
 }
 
@@ -317,8 +315,12 @@ if (window.io) {
 const btnImportarMatriz = $('btnImportarMatriz');
 const inputMatrizMenu = $('fileMatrizMenu');
 const msgMatriz = $('msgMatriz');
+const textoBtnMatriz = $('textoBtnMatriz');
+let temporizadorMsg = null;
 
-btnImportarMatriz.addEventListener('click', () => {
+btnImportarMatriz.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (btnImportarMatriz.classList.contains('ocupado')) return;
     inputMatrizMenu.click();
 });
 
@@ -329,33 +331,35 @@ inputMatrizMenu.addEventListener('change', async (e) => {
     inputMatrizMenu.value = '';
 });
 
+function mostrarMensajeMatriz(clase, texto, ms) {
+    clearTimeout(temporizadorMsg);
+    msgMatriz.className = 'msg-matriz ' + clase;
+    msgMatriz.textContent = texto;
+    if (ms) temporizadorMsg = setTimeout(() => { msgMatriz.className = 'msg-matriz'; }, ms);
+}
+
 async function subirMatriz(archivo) {
-    msgMatriz.className = 'msg-matriz';
-    msgMatriz.textContent = 'Subiendo…';
-    msgMatriz.style.display = 'block';
-    btnImportarMatriz.disabled = true;
+    mostrarMensajeMatriz('cargando', 'Subiendo ' + archivo.name + '…');
+    btnImportarMatriz.classList.add('ocupado');
+    textoBtnMatriz.textContent = 'Subiendo…';
     try {
         const formData = new FormData();
         formData.append('archivo', archivo);
         const r = await fetch('/api/matriz/importar', { method: 'POST', body: formData });
         const d = await r.json();
         if (d.success) {
-            msgMatriz.className = 'msg-matriz ok';
-            msgMatriz.textContent = d.mensaje;
+            mostrarMensajeMatriz('ok', d.mensaje, 5000);
             await Promise.allSettled([cargarKPIs(), cargarResumen(), cargarAlertas(), cargarRecientes(), cargarGraficos()]);
         } else {
-            msgMatriz.className = 'msg-matriz error';
-            msgMatriz.textContent = d.error || 'Error al importar';
+            mostrarMensajeMatriz('error', d.error || 'Error al importar', 6000);
         }
     } catch (err) {
-        msgMatriz.className = 'msg-matriz error';
-        msgMatriz.textContent = 'Error de conexión al subir la matriz.';
+        mostrarMensajeMatriz('error', 'Error de conexión al subir la matriz.', 6000);
     } finally {
-        btnImportarMatriz.disabled = false;
-        setTimeout(() => { msgMatriz.style.display = 'none'; }, 4000);
+        btnImportarMatriz.classList.remove('ocupado');
+        textoBtnMatriz.textContent = 'Subir matriz ↑';
     }
 }
 
 function marcarConexion() {
-    // El diseño original no tiene chip de conexión visible; se mantiene para compatibilidad
-}
+    }

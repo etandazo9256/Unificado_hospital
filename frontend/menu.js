@@ -317,20 +317,8 @@ const btnImportarMatriz = $('btnImportarMatriz');
 const inputMatrizMenu = $('fileMatrizMenu');
 const msgMatriz = $('msgMatriz');
 const textoBtnMatriz = $('textoBtnMatriz');
-let temporizadorMsg = null;
-
-btnImportarMatriz.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (btnImportarMatriz.classList.contains('ocupado')) return;
-    inputMatrizMenu.click();
-});
-
-inputMatrizMenu.addEventListener('change', async (e) => {
-    const archivo = e.target.files[0] || null;
-    if (!archivo) return;
-    await subirMatriz(archivo);
-    inputMatrizMenu.value = '';
-});
+const modalMatriz = $('modalMatriz');
+let temporizadorMsg = null, archivoMatriz = null, analisisMatriz = null;
 
 function mostrarMensajeMatriz(clase, texto, ms) {
     clearTimeout(temporizadorMsg);
@@ -339,43 +327,162 @@ function mostrarMensajeMatriz(clase, texto, ms) {
     if (ms) temporizadorMsg = setTimeout(() => { msgMatriz.className = 'msg-matriz'; }, ms);
 }
 
-async function subirMatriz(archivo) {
-    mostrarMensajeMatriz('cargando', 'Subiendo ' + archivo.name + '…');
-    btnImportarMatriz.classList.add('ocupado');
-    textoBtnMatriz.textContent = 'Subiendo…';
+// ---- Ventana emergente ----
+function reiniciarModal() {
+    archivoMatriz = null; analisisMatriz = null;
+    $('pasoArchivo').hidden = false; $('pasoMapeo').hidden = true;
+    $('btnOtroArchivo').hidden = true; $('btnConfirmarMatriz').disabled = true;
+    $('errorModal').textContent = ''; $('cuerpoMapeo').innerHTML = '';
+    inputMatrizMenu.value = '';
+}
+function abrirModal() {
+    if (btnImportarMatriz.classList.contains('ocupado')) return;
+    reiniciarModal();
+    modalMatriz.hidden = false;
+    document.body.classList.add('modal-abierto');
+    $('btnElegirArchivo').focus();
+}
+function cerrarModal() {
+    modalMatriz.hidden = true;
+    document.body.classList.remove('modal-abierto');
+    btnImportarMatriz.focus();
+}
+
+btnImportarMatriz.addEventListener('click', (e) => { e.preventDefault(); abrirModal(); });
+modalMatriz.addEventListener('click', (e) => {
+    if (e.target === modalMatriz || e.target.closest('[data-cerrar]')) cerrarModal();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modalMatriz.hidden) cerrarModal(); });
+
+$('btnElegirArchivo').addEventListener('click', () => inputMatrizMenu.click());
+$('btnOtroArchivo').addEventListener('click', reiniciarModal);
+inputMatrizMenu.addEventListener('change', (e) => {
+    const archivo = e.target.files[0];
+    if (archivo) analizarArchivo(archivo);
+});
+const zona = $('zonaArchivo');
+['dragenter', 'dragover'].forEach(ev => zona.addEventListener(ev, (e) => { e.preventDefault(); zona.classList.add('arrastrando'); }));
+['dragleave', 'drop'].forEach(ev => zona.addEventListener(ev, (e) => { e.preventDefault(); zona.classList.remove('arrastrando'); }));
+zona.addEventListener('drop', (e) => {
+    const archivo = e.dataTransfer.files[0];
+    if (archivo) analizarArchivo(archivo);
+});
+
+// ---- Paso 1: leer el archivo y pedir sugerencias de emparejamiento ----
+async function analizarArchivo(archivo) {
+    const aviso = $('errorModal');
+    aviso.className = 'error-modal info';
+    aviso.textContent = 'Leyendo ' + archivo.name + '…';
     try {
         const formData = new FormData();
         formData.append('archivo', archivo);
-        const r = await fetch('/api/matriz/importar', { method: 'POST', body: formData });
-        const d = await r.json();
-        if (d.success) {
-            mostrarMensajeMatriz('ok', d.mensaje, 5000);
-            await Promise.allSettled([cargarKPIs(), cargarResumen(), cargarAlertas(), cargarRecientes(), cargarGraficos()]);
-        } else {
-            mostrarMensajeMatriz('error', d.error || 'Error al importar', 6000);
-        }
+        const r = await fetch('/api/matriz/analizar', { method: 'POST', body: formData });
+        let d = null;
+        try { d = await r.json(); } catch { d = null; }
+        if (!d && r.status === 404) throw new Error('El servidor no reconoce la ruta de análisis (404). Reemplaza backend/server.js por el nuevo y reinicia el servidor.');
+        if (!d || !d.success) throw new Error((d && d.error) || `No se pudo leer el archivo (el servidor respondió ${r.status}).`);
+        archivoMatriz = archivo; analisisMatriz = d;
+        pintarMapeo(d);
     } catch (err) {
-        mostrarMensajeMatriz('error', 'Error de conexión al subir la matriz.', 6000);
-    } finally {
-        btnImportarMatriz.classList.remove('ocupado');
-        textoBtnMatriz.textContent = 'Subir matriz ↑';
+        aviso.className = 'error-modal';
+        aviso.textContent = err.message;
+        inputMatrizMenu.value = '';
     }
 }
 
-function pintarTiemposPrioridad(filas) {
-    const map = {};
-    (filas || []).forEach(f => {
-        const clave = ALIAS_PRIORIDAD[f.prioridad] || f.prioridad || 'SIN CLASIFICAR';
-        map[clave] = f.esperaPromedioMin;
+// ---- Paso 2: tabla de emparejamiento ----
+function pintarMapeo(d) {
+    $('pasoArchivo').hidden = true; $('pasoMapeo').hidden = false; $('btnOtroArchivo').hidden = false;
+    $('resumenArchivo').textContent = `${d.archivo} · ${d.totalFilas} filas · ${d.columnas.length} columnas`;
+    const cuerpo = $('cuerpoMapeo');
+    cuerpo.innerHTML = '';
+    d.campos.forEach(c => {
+        const tr = document.createElement('tr');
+        const tdCampo = document.createElement('td');
+        tdCampo.textContent = c.etiqueta;
+        if (c.requerido) { const m = document.createElement('span'); m.className = 'req-m'; m.textContent = ' *'; tdCampo.appendChild(m); }
+        const tdSel = document.createElement('td');
+        const sel = document.createElement('select');
+        sel.dataset.campo = c.campo;
+        sel.setAttribute('aria-label', 'Columna del archivo para ' + c.etiqueta);
+        const vacio = document.createElement('option');
+        vacio.value = ''; vacio.textContent = '— No importar —';
+        sel.appendChild(vacio);
+        d.columnas.forEach(col => {
+            const o = document.createElement('option');
+            o.value = col; o.textContent = col;
+            sel.appendChild(o);
+        });
+        sel.value = c.sugerida || '';
+        sel.addEventListener('change', actualizarMapeo);
+        tdSel.appendChild(sel);
+        const tdEj = document.createElement('td');
+        tdEj.className = 'ej';
+        tr.append(tdCampo, tdSel, tdEj);
+        cuerpo.appendChild(tr);
     });
-    const ids = { ROJO: 'promRojo', NARANJA: 'promNaranja', AMARILLO: 'promAmarillo', VERDE: 'promVerde', AZUL: 'promAzul' };
-    ORDEN_PRIORIDAD.forEach(p => {
-        if (p === 'SIN CLASIFICAR' || !ids[p]) return;
-        const el = $(ids[p]);
-        if (!el) return;
-        const min = map[p];
-        el.textContent = (min === null || min === undefined || Number.isNaN(Number(min))) ? '--' : formatearMin(Number(min));
+    actualizarMapeo();
+}
+
+function leerMapeo() {
+    const m = {};
+    document.querySelectorAll('#cuerpoMapeo select').forEach(s => { m[s.dataset.campo] = s.value; });
+    return m;
+}
+
+function actualizarMapeo() {
+    const d = analisisMatriz, m = leerMapeo();
+    document.querySelectorAll('#cuerpoMapeo select').forEach(s => {
+        const campo = d.campos.find(c => c.campo === s.dataset.campo);
+        s.classList.toggle('falta', campo.requerido && !s.value);
+        const celda = s.closest('tr').querySelector('.ej');
+        celda.textContent = s.value ? (d.muestra[s.value] || '') : '';
     });
+    const faltan = d.campos.filter(c => c.requerido && !m[c.campo]);
+    $('avisoMapeo').textContent = faltan.length ? 'Falta asignar: ' + faltan.map(c => c.etiqueta).join(', ') : '';
+    $('btnConfirmarMatriz').disabled = faltan.length > 0;
+}
+
+$('btnConfirmarMatriz').addEventListener('click', async () => {
+    if (!archivoMatriz) return;
+    const archivo = archivoMatriz, mapeo = leerMapeo();
+    cerrarModal();
+    await subirMatriz(archivo, mapeo);
+});
+
+// ---- Paso 3: importar con el emparejamiento elegido ----
+async function subirMatriz(archivo, mapeo) {
+    mostrarMensajeMatriz('cargando', 'Subiendo ' + archivo.name + '…');
+    btnImportarMatriz.classList.add('ocupado');
+    if (textoBtnMatriz) textoBtnMatriz.textContent = 'Subiendo…';
+    const ctrl = new AbortController();
+    const corte = setTimeout(() => ctrl.abort(), 60000);
+    try {
+        const formData = new FormData();
+        formData.append('archivo', archivo);
+        formData.append('mapeo', JSON.stringify(mapeo));
+        const r = await fetch('/api/matriz/importar', { method: 'POST', body: formData, signal: ctrl.signal });
+        let d = null;
+        try { d = await r.json(); } catch { d = null; }
+        console.log('Importar matriz -> HTTP', r.status, d);
+        if (!d) {
+            mostrarMensajeMatriz('error', `El servidor respondió ${r.status} sin un mensaje válido.`, 8000);
+        } else if (d.success) {
+            mostrarMensajeMatriz('ok', d.mensaje || 'Matriz importada.', 6000);
+            await Promise.allSettled([cargarKPIs(), cargarResumen(), cargarAlertas(), cargarRecientes(), cargarGraficos()]);
+        } else {
+            mostrarMensajeMatriz('error', d.error || d.mensaje || 'Error al importar', 8000);
+        }
+    } catch (err) {
+        console.error('Importar matriz falló:', err);
+        mostrarMensajeMatriz('error', err.name === 'AbortError'
+            ? 'El servidor tardó demasiado en responder. Intenta de nuevo.'
+            : 'Error de conexión al subir la matriz.', 8000);
+    } finally {
+        clearTimeout(corte);
+        btnImportarMatriz.classList.remove('ocupado');
+        if (textoBtnMatriz) textoBtnMatriz.textContent = 'Subir matriz ↑';
+    }
 }
 
 function marcarConexion() {

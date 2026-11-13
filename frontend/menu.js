@@ -88,13 +88,14 @@ async function cargarKPIs() {
         const d = await getJSON('/api/turnos/sala');
         const s = d.stats || {};
         $('kpiAtendidos').textContent = numero(s.atendidos);
-        $('kpiTendAtendidos').textContent = s.enConsulta > 0 ? `+${s.enConsulta} en consulta` : '--';
+        $('kpiTendAtendidos').textContent = s.enConsulta > 0 ? `+${s.enConsulta} en consulta` : '';
         $('kpiPendientes').textContent = numero(s.pendientes);
-        $('kpiTendPendientes').textContent = s.lambda > 0 ? `+${s.lambda} última hora` : '--';
+        $('kpiTendPendientes').textContent = s.lambda > 0 ? `+${s.lambda} última hora` : '';
         $('kpiTurnosPendientes').textContent = numero(s.pendientes);
-        $('kpiTendTurnos').textContent = '--';
+        $('kpiTendTurnos').textContent = '';
         $('kpiPromedio').textContent = numero(s.tiempoPromedio);
         $('kpiTendPromedio').textContent = 'minutos';
+        pintarTiemposPrioridad(d.esperaPrioridad);
         marcarConexion(true);
     } catch {
         marcarConexion(false);
@@ -359,6 +360,22 @@ async function subirMatriz(archivo) {
         btnImportarMatriz.classList.remove('ocupado');
         textoBtnMatriz.textContent = 'Subir matriz ↑';
     }
+}
+
+function pintarTiemposPrioridad(filas) {
+    const map = {};
+    (filas || []).forEach(f => {
+        const clave = ALIAS_PRIORIDAD[f.prioridad] || f.prioridad || 'SIN CLASIFICAR';
+        map[clave] = f.esperaPromedioMin;
+    });
+    const ids = { ROJO: 'promRojo', NARANJA: 'promNaranja', AMARILLO: 'promAmarillo', VERDE: 'promVerde', AZUL: 'promAzul' };
+    ORDEN_PRIORIDAD.forEach(p => {
+        if (p === 'SIN CLASIFICAR' || !ids[p]) return;
+        const el = $(ids[p]);
+        if (!el) return;
+        const min = map[p];
+        el.textContent = (min === null || min === undefined || Number.isNaN(Number(min))) ? '--' : formatearMin(Number(min));
+    });
 }
 
 function marcarConexion() {

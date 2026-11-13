@@ -1015,57 +1015,69 @@ app.get('/api/kpis/comparar', async (req, res) => {
 // IMPORTACIÓN DE MATRIZ (CSV / Excel) → esq_emergencia.reporte_emergencia
 // ============================================================================
 
-const MAPA_COLUMNAS = {
-    // excel → bd
-    numero: 'numero',
-    turno: 'turno',
-    paciente: 'paciente',
-    color_letras: 'prioridad',
-    fecha_turno: 'fecha_turno',
-    fecha_llamado: 'fecha_llamado',
-    fecha_signos_vitales: 'fecha_sig_vitales',
-    responsable_sig_vitales: 'resp_sig_vitales',
-    fecha_triage: 'fecha_triage',
-    responsable_atencion_triage: 'resp_triage',
-    tiempo_espera_turnos_a_signos: 'tiempo_espera_turno_signos',
-    tiempo_duracion_signos_vitales: 'tiempo_duracion_signos_vitales',
-    tiempo_espera_signos_a_llamado_triage: 'tiempo_espera_signos_triage',
-    tiempo_duracion_triage: 'tiempo_duracion_triage',
-    tiempo_total_turno_a_triage: 'tiempo_total_turno_triage',
-    estado_registro: 'estado',
-    hubo_toma_signos_vitales: 'hubo_toma_signos_vitales',
-    hubo_atencion_medica: 'hubo_atencion_medica',
-    fecha_ingreso_observacion: 'fecha_ing_observacion',
-    fecha_solicitud_hospitalizacion: 'fecha_soli_hosp',
-    resultado_observacion: 'observacion_estado'
-};
+// Valores que significan "vacío". Un CSV exportado de la base de datos trae "NULL" como texto.
+const VALORES_NULOS = new Set(['', 'null', 'nan', 'nat', 'none', 'undefined']);
 
-const COLUMNAS_BD = [
-    'numero', 'turno', 'paciente', 'prioridad', 'fecha_turno', 'fecha_llamado',
-    'fecha_sig_vitales', 'resp_sig_vitales', 'fecha_triage', 'resp_triage',
-    'tiempo_espera_turno_signos', 'tiempo_duracion_signos_vitales',
-    'tiempo_espera_signos_triage', 'tiempo_duracion_triage', 'tiempo_total_turno_triage',
-    'estado', 'atendido', 'fecha_ing_observacion', 'fecha_soli_hosp', 'observacion_estado'
-];
-
-function normalizarTexto(v) {
-    if (v === null || v === undefined) return '';
-    return String(v).trim();
+function esNulo(v) {
+    return v === null || v === undefined || VALORES_NULOS.has(String(v).trim().toLowerCase());
 }
 
+function normalizarTexto(v) {
+    return esNulo(v) ? '' : String(v).trim();
+}
+
+function normalizarClave(c) {
+    return String(c ?? '').replace(/^\uFEFF/, '').trim().toLowerCase().replace(/\s+/g, '_');
+}
+
+// Nombres de columna aceptados en el archivo para cada columna de la tabla.
+// Sirve tanto el Excel del hospital (1.er nombre) como un CSV exportado de la BD (2.º nombre).
+const COLUMNAS_ARCHIVO = {
+    numero: ['numero'],
+    prioridad: ['color_letras', 'prioridad'],
+    estado: ['estado_registro', 'estado'],
+    atendido: ['atendido'],
+    turno: ['turno'],
+    paciente: ['paciente'],
+    fecha_turno: ['fecha_turno'],
+    fecha_llamado: ['fecha_llamado'],
+    fecha_sig_vitales: ['fecha_signos_vitales', 'fecha_sig_vitales'],
+    fecha_triage: ['fecha_triage'],
+    fecha_ing_observacion: ['fecha_ingreso_observacion', 'fecha_ing_observacion'],
+    fecha_soli_hosp: ['fecha_solicitud_hospitalizacion', 'fecha_soli_hosp'],
+    fecha_ing_hospitalizacion: ['fecha_ing_hospitalizacion'],
+    fecha_inicio_triage: ['fecha_inicio_triage'],
+    fecha_fin_triage: ['fecha_fin_triage'],
+    fecha_inicio_atencion_medica: ['fecha_inicio_atencion_medica'],
+    fecha_fin_atencion_medica: ['fecha_fin_atencion_medica'],
+    resp_sig_vitales: ['responsable_sig_vitales', 'resp_sig_vitales'],
+    resp_triage: ['responsable_atencion_triage', 'resp_triage'],
+    tiempo_espera_turno_signos: ['tiempo_espera_turnos_a_signos', 'tiempo_espera_turno_signos'],
+    tiempo_duracion_signos_vitales: ['tiempo_duracion_signos_vitales'],
+    tiempo_espera_signos_triage: ['tiempo_espera_signos_a_llamado_triage', 'tiempo_espera_signos_triage'],
+    tiempo_duracion_triage: ['tiempo_duracion_triage'],
+    tiempo_total_turno_triage: ['tiempo_total_turno_a_triage', 'tiempo_total_turno_triage'],
+    medico_responsable: ['medico_responsable'],
+    consultorio: ['consultorio'],
+    observacion_estado: ['resultado_observacion', 'observacion_estado']
+};
+const COLUMNAS_BD = Object.keys(COLUMNAS_ARCHIVO);
+const COLS_FECHA = COLUMNAS_BD.filter(c => c.startsWith('fecha_'));
+const COLS_TEXTO = COLUMNAS_BD.filter(c => !COLS_FECHA.includes(c) && !['numero', 'prioridad', 'estado', 'atendido'].includes(c));
+
+const ESTADOS_VALIDOS = new Set(['pendiente', 'llamado', 'en_triage', 'pendiente_medico', 'en_atencion_medica', 'finalizado', 'no_asiste', 'cancelado']);
+
 function mapearPrioridad(v) {
-    if (!v) return null;
-    const s = String(v).trim().toUpperCase();
-    const tabla = {
-        'ROJO': 'ROJO', 'NARANJA': 'NARANJA', 'AMARILLO': 'AMARILLO', 'AMARRILLO': 'AMARILLO',
-        'VERDE': 'VERDE', 'AZUL': 'AZUL', 'SIN CLASIFICAR': 'SIN CLASIFICAR'
-    };
+    const s = normalizarTexto(v).toUpperCase();
+    if (!s) return null;
+    const tabla = { 'AMARRILLO': 'AMARILLO' };
     return tabla[s] || s;
 }
 
 function mapearEstado(v, huboSignos, huboMedico) {
-    if (!v) return 'pendiente';
-    const s = String(v).trim().toUpperCase();
+    const s = normalizarTexto(v).toUpperCase();
+    if (!s) return 'pendiente';
+    if (ESTADOS_VALIDOS.has(s.toLowerCase())) return s.toLowerCase(); // CSV exportado de la BD
     if (s.includes('ATENCION MEDICA REGISTRADOS') || s.includes('ATENCIÓN MÉDICA REGISTRADOS')) return 'finalizado';
     if (s.includes('SIN ATENCION MEDICA') || s.includes('SIN ATENCIÓN MÉDICA')) return 'en_triage';
     if (s.includes('SIGNOS') && huboSignos === 'SI') return 'en_triage';
@@ -1073,171 +1085,268 @@ function mapearEstado(v, huboSignos, huboMedico) {
 }
 
 function mapearAtendido(huboSignos, huboMedico) {
-    return (huboMedico === 'SI' || huboMedico === 'true') ? true : false;
+    return huboMedico === 'SI' || huboMedico === 'TRUE';
 }
 
+const dos = (n) => String(n).padStart(2, '0');
+
 function limpiarFecha(v) {
-    if (!v) return null;
+    if (esNulo(v)) return null;
+    if (v instanceof Date) return Number.isNaN(v.getTime()) ? null : v.toISOString().replace('T', ' ').replace('Z', '');
     const s = String(v).trim();
-    if (!s || s.toLowerCase() === 'nan' || s === 'NaT') return null;
-    return s; // PostgreSQL acepta ISO string directamente
+    // d/m/aaaa [h:mm[:ss]] -> así guarda las fechas Excel en Ecuador (día primero)
+    const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (m) {
+        const [, d, mo, y, h = '0', mi = '0', se = '0'] = m;
+        if (+mo < 1 || +mo > 12 || +d < 1 || +d > 31) return null;
+        return `${y}-${dos(mo)}-${dos(d)} ${dos(h)}:${dos(mi)}:${dos(se)}`;
+    }
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.replace('T', ' ');
+    return s; // ISO u otro formato que PostgreSQL entienda
+}
+
+// CSV con soporte de comillas, BOM y delimitador ; , o tabulador
+function parsearCSV(texto) {
+    texto = texto.replace(/^\uFEFF/, '');
+    const primera = texto.split(/\r?\n/, 1)[0];
+    const delimitador = [';', ',', '\t'].map(d => [d, primera.split(d).length]).sort((a, b) => b[1] - a[1])[0][0];
+    const filas = [];
+    let fila = [], campo = '', comillas = false;
+    const cerrarFila = () => {
+        fila.push(campo); campo = '';
+        if (fila.some(x => x.trim() !== '')) filas.push(fila);
+        fila = [];
+    };
+    for (let i = 0; i < texto.length; i++) {
+        const c = texto[i];
+        if (comillas) {
+            if (c === '"') { if (texto[i + 1] === '"') { campo += '"'; i++; } else comillas = false; }
+            else campo += c;
+        } else if (c === '"') comillas = true;
+        else if (c === delimitador) { fila.push(campo); campo = ''; }
+        else if (c === '\n' || c === '\r') { if (c === '\r' && texto[i + 1] === '\n') i++; cerrarFila(); }
+        else campo += c;
+    }
+    cerrarFila();
+    return filas;
 }
 
 function leerArchivo(ruta) {
     const ext = path.extname(ruta).toLowerCase();
+    let objetos;
     if (ext === '.csv') {
-        const texto = fs.readFileSync(ruta, 'utf8');
-        const lineas = texto.split(/\r?\n/).filter(l => l.trim().length > 0);
-        if (lineas.length === 0) return { columnas: [], filas: [] };
-        const cabecera = lineas[0].split(',').map(c => c.replace(/"/g, '').trim());
-        const filas = lineas.slice(1).map(l => {
-            const vals = l.split(',');
+        const matriz = parsearCSV(fs.readFileSync(ruta, 'utf8'));
+        if (matriz.length === 0) return { filas: [] };
+        const cabecera = matriz[0].map(normalizarClave);
+        objetos = matriz.slice(1).map(vals => {
             const obj = {};
             cabecera.forEach((c, i) => { obj[c] = vals[i] !== undefined ? vals[i] : ''; });
             return obj;
         });
-        return { columnas: cabecera, filas };
+    } else { // .xlsx / .xls
+        const libro = XLSX.readFile(ruta);
+        const hoja = libro.Sheets[libro.SheetNames[0]];
+        objetos = XLSX.utils.sheet_to_json(hoja, { defval: '', raw: false }).map(o => {
+            const obj = {};
+            Object.keys(o).forEach(k => { obj[normalizarClave(k)] = o[k]; });
+            return obj;
+        });
     }
-    // .xlsx / .xls
-    const libro = XLSX.readFile(ruta);
-    const hoja = libro.Sheets[libro.SheetNames[0]];
-    const datos = XLSX.utils.sheet_to_json(hoja, { defval: '', raw: false });
-    const columnas = Object.keys(datos[0] || {});
-    return { columnas, filas: datos };
+    return { filas: objetos };
+}
+
+function construirFilasBD(filas, mapeo) {
+    const salida = [];
+    filas.forEach(filaRaw => {
+        const obtener = (...nombres) => {
+            for (const n of nombres) if (Object.prototype.hasOwnProperty.call(filaRaw, n) && !esNulo(filaRaw[n])) return filaRaw[n];
+            return '';
+        };
+        // Con emparejamiento manual solo se usa la columna elegida; sin él, los nombres conocidos
+        const nombresDe = (col) => (mapeo ? (mapeo[col] ? [mapeo[col]] : []) : COLUMNAS_ARCHIVO[col]);
+        const ver = (col) => obtener(...nombresDe(col));
+
+        const numeroTxt = normalizarTexto(ver('numero'));
+        const turno = normalizarTexto(ver('turno'));
+        const fechaTurno = limpiarFecha(ver('fecha_turno'));
+        if (!numeroTxt && !turno && !fechaTurno) return; // fila vacía
+
+        const huboSignos = normalizarTexto(obtener('hubo_toma_signos_vitales')).toUpperCase();
+        const huboMedico = normalizarTexto(obtener('hubo_atencion_medica')).toUpperCase();
+        const atendidoTxt = normalizarTexto(ver('atendido')).toLowerCase();
+        const n = parseInt(numeroTxt, 10);
+
+        const fila = {
+            numero: Number.isNaN(n) ? null : n,
+            prioridad: mapearPrioridad(ver('prioridad')),
+            estado: mapearEstado(ver('estado'), huboSignos, huboMedico),
+            atendido: atendidoTxt !== '' ? ['true', 't', '1', 'si'].includes(atendidoTxt) : mapearAtendido(huboSignos, huboMedico)
+        };
+        COLS_FECHA.forEach(c => { fila[c] = limpiarFecha(ver(c)); });
+        COLS_TEXTO.forEach(c => { fila[c] = normalizarTexto(ver(c)) || null; });
+        salida.push(fila);
+    });
+    return salida;
+}
+
+// Clave natural para detectar duplicados: numero + turno + fecha_turno (al minuto,
+// porque un CSV pasado por Excel pierde los segundos)
+function claveFila(numero, turno, fecha) {
+    return `${numero ?? ''}|${turno ?? ''}|${fecha ? String(fecha).slice(0, 16) : ''}`;
+}
+
+// Compara el archivo contra lo que ya hay en la base. Cuenta repeticiones: si el archivo trae
+// 7 filas con la misma clave y la base ya tiene 7, son las mismas; si la base tiene menos, entra el resto.
+function separarNuevos(filasBD, existentes) {
+    const enBase = new Map();
+    existentes.forEach(r => {
+        const k = claveFila(r.numero, r.turno, r.ft);
+        enBase.set(k, (enBase.get(k) || 0) + 1);
+    });
+    const nuevos = [];
+    let duplicados = 0;
+    filasBD.forEach(f => {
+        const k = claveFila(f.numero, f.turno, f.fecha_turno);
+        const quedan = enBase.get(k) || 0;
+        if (quedan > 0) { enBase.set(k, quedan - 1); duplicados++; return; }
+        nuevos.push(f);
+    });
+    return { nuevos, duplicados };
 }
 
 app.post('/api/matriz/importar', upload.single('archivo'), async (req, res) => {
     let rutaArchivo = null;
+    let client = null;
     try {
         if (!req.file) return res.status(400).json({ success: false, error: 'No se envió ningún archivo' });
         rutaArchivo = req.file.path;
 
-        const { columnas, filas } = leerArchivo(rutaArchivo);
-        if (filas.length === 0) {
-            return res.status(400).json({ success: false, error: 'El archivo no contiene filas de datos' });
-        }
-
-        // Normalizar nombres de columnas del archivo (quitar espacios, lower case)
-        const columnasNorm = columnas.map(c => normalizarTexto(c).toLowerCase().replace(/\s+/g, '_'));
-
-        // Construir filas mapeadas a BD
-        const filasBD = [];
-        filas.forEach(filaRaw => {
-            const obtener = (nombreExcel) => {
-                const clave = normalizarTexto(nombreExcel).toLowerCase().replace(/\s+/g, '_');
-                return clave in filaRaw ? filaRaw[clave] : '';
-            };
-
-            const numero = normalizarTexto(obtener('numero'));
-            const turno = normalizarTexto(obtener('turno'));
-            const paciente = normalizarTexto(obtener('paciente'));
-            const fechaTurno = limpiarFecha(obtener('fecha_turno'));
-            const fechaLlamado = limpiarFecha(obtener('fecha_llamado'));
-
-            // Clave natural para detectar duplicados: numero + turno + fecha_turno
-            if (!numero && !turno && !fechaTurno) return; // fila vacía
-
-            const huboSignos = normalizarTexto(obtener('hubo_toma_signos_vitales'));
-            const huboMedico = normalizarTexto(obtener('hubo_atencion_medica'));
-
-            const fila = {
-                numero: numero || null,
-                turno: turno || null,
-                paciente: paciente || null,
-                prioridad: mapearPrioridad(obtener('color_letras')),
-                fecha_turno: fechaTurno,
-                fecha_llamado: fechaLlamado,
-                fecha_sig_vitales: limpiarFecha(obtener('fecha_signos_vitales')),
-                resp_sig_vitales: normalizarTexto(obtener('responsable_sig_vitales')) || null,
-                fecha_triage: limpiarFecha(obtener('fecha_triage')),
-                resp_triage: normalizarTexto(obtener('responsable_atencion_triage')) || null,
-                tiempo_espera_turno_signos: normalizarTexto(obtener('tiempo_espera_turnos_a_signos')) || null,
-                tiempo_duracion_signos_vitales: normalizarTexto(obtener('tiempo_duracion_signos_vitales')) || null,
-                tiempo_espera_signos_triage: normalizarTexto(obtener('tiempo_espera_signos_a_llamado_triage')) || null,
-                tiempo_duracion_triage: normalizarTexto(obtener('tiempo_duracion_triage')) || null,
-                tiempo_total_turno_triage: normalizarTexto(obtener('tiempo_total_turno_a_triage')) || null,
-                estado: mapearEstado(obtener('estado_registro'), huboSignos, huboMedico),
-                atendido: mapearAtendido(huboSignos, huboMedico),
-                fecha_ing_observacion: limpiarFecha(obtener('fecha_ingreso_observacion')),
-                fecha_soli_hosp: limpiarFecha(obtener('fecha_solicitud_hospitalizacion')),
-                observacion_estado: normalizarTexto(obtener('resultado_observacion')) || null
-            };
-            filasBD.push(fila);
-        });
-
-        // Detectar duplicados contra la BD (clave: numero, turno, fecha_turno)
-        // Traigo todas las claves existentes de un solo golpe para comparar en memoria
-        const existentesRows = await pool.query(
-            `SELECT COALESCE(numero, 0) as numero, COALESCE(turno, '') as turno,
-                    COALESCE(fecha_turno, '1970-01-01') as fecha_turno
-             FROM esq_emergencia.reporte_emergencia`
-        );
-        const clavesExistentes = new Set();
-        existentesRows.rows.forEach(r => {
-            clavesExistentes.add(`${r.numero}|${r.turno}|${new Date(r.fecha_turno).toISOString().slice(0, 10)}`);
-        });
-
-        const nuevos = [];
-        const duplicados = [];
-        for (const f of filasBD) {
-            const clave = `${f.numero ?? 0}|${f.turno ?? ''}|${f.fecha_turno ? new Date(f.fecha_turno).toISOString().slice(0, 10) : '1970-01-01'}`;
-            if (clavesExistentes.has(clave)) {
-                duplicados.push(f);
-            } else {
-                nuevos.push(f);
-                clavesExistentes.add(clave); // evitar duplicados dentro del mismo archivo
+        // Emparejamiento columnas del archivo -> campos de la BD (lo elige el usuario en la ventana)
+        let mapeo = null;
+        if (req.body && req.body.mapeo) {
+            try { mapeo = JSON.parse(req.body.mapeo); } catch { mapeo = undefined; }
+            if (!mapeo || typeof mapeo !== 'object' || Array.isArray(mapeo)) {
+                return res.status(400).json({ success: false, error: 'El emparejamiento de columnas no es válido' });
+            }
+            const faltan = CAMPOS_REQUERIDOS.filter(c => !mapeo[c]);
+            if (faltan.length) {
+                return res.status(400).json({ success: false, error: 'Falta asignar: ' + faltan.map(c => ETIQUETAS_CAMPOS[c] || c).join(', ') });
             }
         }
 
-        // Asignar IDs secuenciales (la tabla no aplica el default de la secuencia en este entorno)
-        const maxIdRow = await pool.query(`SELECT COALESCE(MAX(id), 0) as max_id FROM esq_emergencia.reporte_emergencia`);
-        let siguienteId = parseInt(maxIdRow.rows[0].max_id, 10) || 0;
-        nuevos.forEach(f => { siguienteId++; f.id = siguienteId; });
+        const { filas } = leerArchivo(rutaArchivo);
+        if (filas.length === 0) {
+            return res.status(400).json({ success: false, error: 'El archivo no contiene filas de datos' });
+        }
+        const filasBD = construirFilasBD(filas, mapeo);
+        if (filasBD.length === 0) {
+            return res.status(400).json({ success: false, error: 'No se reconoció ninguna fila válida. Revisa los nombres de las columnas.' });
+        }
 
-        // Insertar nuevos en lotes (para no exceder límite de parámetros de PostgreSQL)
-        let insertados = 0;
+        client = await pool.connect();
+        await client.query('BEGIN');
+
+        // Registros que ya existen en la base
+        const { rows: existentes } = await client.query(`
+            SELECT numero, turno, to_char(fecha_turno, 'YYYY-MM-DD HH24:MI') AS ft
+            FROM esq_emergencia.reporte_emergencia`);
+        const { nuevos, duplicados } = separarNuevos(filasBD, existentes);
+
+        // Los ids continúan desde el mayor existente
+        const { rows: [{ max }] } = await client.query(`SELECT COALESCE(MAX(id), 0) AS max FROM esq_emergencia.reporte_emergencia`);
+        let siguienteId = Number(max);
+        nuevos.forEach(f => { f.id = ++siguienteId; });
+
+        // Insertar en lotes (para no exceder el límite de parámetros de PostgreSQL)
         const LOTE = 100;
-        const COLS_CON_ID = 'id, ' + COLUMNAS_BD.join(', ');
-        const NCOLS_MAS_ID = COLUMNAS_BD.length + 1;
+        const COLS_CON_ID = ['id', ...COLUMNAS_BD];
         for (let i = 0; i < nuevos.length; i += LOTE) {
             const lote = nuevos.slice(i, i + LOTE);
             const placeholders = lote.map((_, k) =>
-                '(' + ['id', ...COLUMNAS_BD].map((_, j) => `$${k * NCOLS_MAS_ID + j + 1}`).join(',') + ')'
+                '(' + COLS_CON_ID.map((_, j) => `$${k * COLS_CON_ID.length + j + 1}`).join(',') + ')'
             ).join(', ');
             const params = [];
-            lote.forEach(f => {
-                params.push(f.id);
-                COLUMNAS_BD.forEach(c => params.push(f[c]));
+            lote.forEach(f => COLS_CON_ID.forEach(c => params.push(f[c])));
+            await client.query(`INSERT INTO esq_emergencia.reporte_emergencia (${COLS_CON_ID.join(', ')}) VALUES ${placeholders}`, params);
+        }
+        await client.query('COMMIT');
+
+        const insertados = nuevos.length;
+        if (insertados > 0) {
+            // Notificar a todas las pantallas que la matriz se actualizó
+            emitirEvento('matriz:actualizada', {
+                insertados, duplicados,
+                totalArchivo: filasBD.length,
+                archivo: req.file.originalname,
+                fecha: new Date().toISOString()
             });
-            await pool.query(`INSERT INTO esq_emergencia.reporte_emergencia (${COLS_CON_ID}) VALUES ${placeholders}`, params);
-            insertados += lote.length;
         }
 
-        // Notificar a todas las pantallas que la matriz se actualizó
-        emitirEvento('matriz:actualizada', {
-            insertados,
-            duplicados: duplicados.length,
-            totalArchivo: filasBD.length,
-            archivo: req.file.originalname,
-            fecha: new Date().toISOString()
-        });
-
-        res.json({
-            success: true,
-            mensaje: `Se cargaron ${insertados} dato(s) nuevo(s). ${duplicados.length} registro(s) ya existían y no se duplicaron.`,
-            insertados,
-            duplicados: duplicados.length,
-            totalArchivo: filasBD.length
-        });
+        let mensaje;
+        if (insertados === 0) {
+            mensaje = `Se subieron 0 datos nuevos: los ${duplicados} registro(s) del archivo ya existían.`;
+        } else {
+            mensaje = `Se cargaron ${insertados} dato(s) nuevo(s).` +
+                (duplicados > 0 ? ` ${duplicados} registro(s) ya existían y se omitieron.` : '');
+        }
+        res.json({ success: true, mensaje, insertados, duplicados, totalArchivo: filasBD.length });
 
     } catch (error) {
+        if (client) { try { await client.query('ROLLBACK'); } catch { /* ignorar */ } }
         console.error('Error importando matriz:', error);
         res.status(500).json({ success: false, error: error.message });
     } finally {
+        if (client) client.release();
         if (rutaArchivo && fs.existsSync(rutaArchivo)) {
             try { fs.unlinkSync(rutaArchivo); } catch { /* ignorar */ }
         }
     }
+});
+
+// ---- Paso previo a importar: lee las columnas del archivo y sugiere el emparejamiento ----
+const ETIQUETAS_CAMPOS = {
+    numero: 'Número', turno: 'Turno', paciente: 'Paciente', prioridad: 'Prioridad (color Manchester)',
+    estado: 'Estado', atendido: 'Atendido', fecha_turno: 'Fecha del turno', fecha_llamado: 'Fecha de llamado',
+    fecha_sig_vitales: 'Fecha de signos vitales', fecha_triage: 'Fecha de triage',
+    resp_sig_vitales: 'Responsable de signos vitales', resp_triage: 'Responsable de triage',
+    medico_responsable: 'Médico responsable', consultorio: 'Consultorio', observacion_estado: 'Observación del estado'
+};
+const CAMPOS_REQUERIDOS = ['turno', 'fecha_turno', 'prioridad'];
+
+app.post('/api/matriz/analizar', upload.single('archivo'), (req, res) => {
+    const ruta = req.file ? req.file.path : null;
+    try {
+        if (!req.file) return res.status(400).json({ success: false, error: 'No se envió ningún archivo' });
+        const { filas } = leerArchivo(ruta);
+        if (filas.length === 0) {
+            return res.status(400).json({ success: false, error: 'El archivo no contiene filas de datos' });
+        }
+        const columnas = Object.keys(filas[0]);
+        const muestra = {};
+        columnas.forEach(c => {
+            const fila = filas.find(r => !esNulo(r[c]));
+            muestra[c] = fila ? String(fila[c]).slice(0, 40) : '';
+        });
+        const campos = COLUMNAS_BD.map(campo => ({
+            campo,
+            etiqueta: ETIQUETAS_CAMPOS[campo] || campo.replace(/_/g, ' '),
+            requerido: CAMPOS_REQUERIDOS.includes(campo),
+            sugerida: COLUMNAS_ARCHIVO[campo].find(n => columnas.includes(n)) || ''
+        })).sort((a, b) => Number(b.requerido) - Number(a.requerido));
+        res.json({ success: true, archivo: req.file.originalname, totalFilas: filas.length, columnas, muestra, campos });
+    } catch (error) {
+        console.error('Error analizando matriz:', error);
+        res.status(500).json({ success: false, error: 'No se pudo leer el archivo: ' + error.message });
+    } finally {
+        if (ruta && fs.existsSync(ruta)) { try { fs.unlinkSync(ruta); } catch { /* ignorar */ } }
+    }
+});
+
+// Errores de subida (extensión no permitida, archivo demasiado grande...) siempre en JSON
+app.use((err, req, res, next) => {
+    if (res.headersSent || !req.path.startsWith('/api/')) return next(err);
+    const mensaje = err.code === 'LIMIT_FILE_SIZE' ? 'El archivo supera los 50 MB' : err.message;
+    res.status(400).json({ success: false, error: mensaje });
 });
 
 // Ruta catch-all: sirve el menú unificado para rutas raíz

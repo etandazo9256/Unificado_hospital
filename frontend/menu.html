@@ -91,6 +91,43 @@
   </footer>
 </div>
 
+<!-- Ventana emergente: subir matriz y emparejar columnas con la base de datos -->
+<div id="modalMatriz" class="modal" hidden>
+  <div class="modal-caja" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <header class="modal-cab">
+      <h2 id="modalTitulo">Subir matriz de turnos</h2>
+      <button type="button" class="modal-x" data-cerrar aria-label="Cerrar">✕</button>
+    </header>
+
+    <div id="pasoArchivo" class="modal-cuerpo">
+      <div id="zonaArchivo" class="zona">
+        <p>Arrastra aquí el archivo de la matriz o</p>
+        <button type="button" class="btn-modal" id="btnElegirArchivo">Seleccionar archivo</button>
+        <small>Formatos: CSV, XLSX o XLS</small>
+      </div>
+      <p id="errorModal" class="error-modal" role="alert"></p>
+    </div>
+
+    <div id="pasoMapeo" class="modal-cuerpo" hidden>
+      <p id="resumenArchivo" class="resumen-arch"></p>
+      <p class="ayuda">Indica qué columna del archivo corresponde a cada campo de la base de datos. Ya se asignaron las que coinciden; revisa el resto. Los campos con <span class="req-m">*</span> son obligatorios.</p>
+      <div class="tabla-mapeo">
+        <table>
+          <thead><tr><th>Campo de la base de datos</th><th>Columna del archivo</th><th>Ejemplo</th></tr></thead>
+          <tbody id="cuerpoMapeo"></tbody>
+        </table>
+      </div>
+      <p id="avisoMapeo" class="aviso-mapeo"></p>
+    </div>
+
+    <footer class="modal-pie">
+      <button type="button" class="btn-sec" id="btnOtroArchivo" hidden>Cambiar archivo</button>
+      <button type="button" class="btn-sec" data-cerrar>Cancelar</button>
+      <button type="button" class="btn-modal" id="btnConfirmarMatriz" disabled>Importar matriz</button>
+    </footer>
+  </div>
+</div>
+
 <input type="file" id="fileMatrizMenu" accept=".csv,.xlsx,.xls" hidden>
 <div id="msgMatriz" class="msg-matriz" role="status" aria-live="polite"></div>
 

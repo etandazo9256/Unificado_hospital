@@ -102,3 +102,33 @@ td{padding:8px 10px;border-bottom:1px solid #eef1f7}
 @media (max-width:1100px){.cuerpo{grid-template-columns:1fr}.menu{flex-direction:row;flex-wrap:wrap}.op{flex:1 1 260px}.kpis{grid-template-columns:repeat(2,1fr)}.f2,.f3{grid-template-columns:1fr}}
 @media (max-width:560px){.top h1{display:none}.kpis{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- Ventana emergente: subir matriz ---------- */
+body.modal-abierto{overflow:hidden}
+.modal{position:fixed;inset:0;z-index:100;background:rgba(11,47,92,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal[hidden]{display:none}
+.modal-caja{background:#fff;border-radius:20px;width:min(760px,100%);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.modal-cab,.modal-pie{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 22px}
+.modal-cab{border-bottom:1px solid var(--borde)}
+.modal-pie{border-top:1px solid var(--borde);justify-content:flex-end}
+.modal-cab h2{font-size:1.2rem;color:var(--navy)}
+.modal-x{border:0;background:none;font-size:1.2rem;cursor:pointer;color:var(--suave);padding:6px}
+.modal-cuerpo{padding:18px 22px;overflow:auto}
+.zona{border:2px dashed #b9c6e0;border-radius:16px;padding:36px 16px;text-align:center;display:grid;gap:10px;justify-items:center;color:var(--suave)}
+.zona.arrastrando{border-color:var(--azul);background:#eef4ff}
+.btn-modal,.btn-sec{font:inherit;font-weight:600;border-radius:10px;padding:9px 20px;cursor:pointer;border:1.5px solid var(--navy)}
+.btn-modal{background:var(--navy);color:#fff}
+.btn-modal:disabled{opacity:.45;cursor:not-allowed}
+.btn-sec{background:#fff;color:var(--navy)}
+.btn-sec[hidden]{display:none}
+.error-modal{color:#b91c1c;font-weight:600;margin-top:10px;min-height:1.2em}
+.error-modal.info{color:var(--suave)}
+.resumen-arch{font-weight:700;color:var(--navy)}
+.ayuda{color:var(--suave);font-size:.88rem;margin:4px 0 12px}
+.tabla-mapeo{border:1px solid var(--borde);border-radius:12px;overflow:auto;max-height:46vh}
+.tabla-mapeo th{position:sticky;top:0}
+.tabla-mapeo select{font:inherit;font-size:.85rem;width:100%;padding:5px 8px;border:1px solid #cfd8e8;border-radius:8px;background:#fff}
+.tabla-mapeo select.falta{border-color:#ef4444;background:#fff5f5}
+.req-m{color:#ef4444;font-weight:700}
+.ej{color:var(--suave);font-size:.82rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aviso-mapeo{color:#b91c1c;font-weight:600;font-size:.88rem;margin-top:10px;min-height:1.2em}

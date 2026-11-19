@@ -8,6 +8,7 @@ let ultimoTiempoPromedio = 8;
 let ultimoLambda = 0;
 let ultimosConsultorios = 1;
 let intervaloEspera = null;
+let fallosConsecutivosSala = 0;
 
 const VIDEOS = ['video2.mp4', 'video3.mp4', 'video4.mp4', 'video5.mp4'];
 let videoIndex = 0;
@@ -173,6 +174,7 @@ async function cargarSala() {
         const res = await fetch(`${API_URL}/api/turnos/sala`);
         const data = await res.json();
         if (!data.success) return;
+        fallosConsecutivosSala = 0;
 
         currentCall = data.turnoActual;
         proximos = data.proximos;
@@ -185,6 +187,13 @@ async function cargarSala() {
         actualizarEsperaPrioridad(data.esperaPrioridad);
     } catch (e) {
         console.error('Error al cargar sala:', e);
+        fallosConsecutivosSala++;
+        if (fallosConsecutivosSala >= 3) {
+            // Después de varios fallos, asumir que el turno actual ya no es válido
+            // y limpiar el banner para evitar turnos fantasmas.
+            limpiarLlamado();
+            fallosConsecutivosSala = 0;
+        }
     }
 }
 
@@ -242,6 +251,28 @@ function maskCedula(val) {
     return nums;
 }
 
+// ---- Limpiar banner de turno actual ----
+function limpiarLlamado() {
+    clearTimeout(videoTimeout);
+    const panel = document.getElementById('callPanel');
+    const content = document.getElementById('callContent');
+    const video = document.getElementById('videoContainer');
+    const btnRellamar = document.getElementById('btnRellamar');
+    const videoEl = document.getElementById('tvVideo');
+    panel.classList.add('sin-turno');
+    panel.style.background = '';
+    btnRellamar.style.display = 'none';
+    document.getElementById('callTurno').textContent = '---';
+    document.getElementById('callPaciente').textContent = '';
+    document.getElementById('callDetalles').style.display = 'none';
+    document.getElementById('callHora').style.display = 'none';
+    currentTurnoId = null;
+    currentCall = null;
+    video.style.display = 'none';
+    if (videoEl) videoEl.pause();
+    content.style.display = 'block';
+}
+
 // ---- Mostrar paciente llamado ----
 function mostrarLlamado(turno) {
     const panel = document.getElementById('callPanel');
@@ -267,22 +298,18 @@ function mostrarLlamado(turno) {
     }
 
     if (!turno) {
-        clearTimeout(videoTimeout);
-        panel.classList.add('sin-turno');
-        panel.style.background = '';
-        btnRellamar.style.display = 'none';
-        document.getElementById('callTurno').textContent = '---';
-        document.getElementById('callPaciente').textContent = '';
-        document.getElementById('callDetalles').style.display = 'none';
-        document.getElementById('callHora').style.display = 'none';
-        currentTurnoId = null;
-        currentCall = null;
-        video.style.display = 'none';
-        content.style.display = 'block';
+        limpiarLlamado();
         return;
     }
 
     const prioNorm = normalizarPrioridad(turno.prioridad);
+
+    // Si el turno ya no está en estado activo (llamado/en_triage), es un
+    // turno "fantasma" (cambiado desde otra pantalla). Limpiar el banner.
+    if (turno.estado && !['llamado', 'en_triage'].includes(turno.estado)) {
+        limpiarLlamado();
+        return;
+    }
 
     // FIX: antes, si era el mismo turno (p. ej. un rellamado) solo se
     // actualizaba el color de fondo y no se restauraba la vista del
@@ -425,11 +452,18 @@ async function rellamar() {
     try {
         const res = await fetch(`${API_URL}/api/turnos/${currentTurnoId}/rellamar`, { method: 'POST' });
         const data = await res.json();
-        if (data.success && typeof reproducirVozLlamada === 'function') {
+        if (!data.success) {
+            // El turno ya no está en estado válido (cambiado desde otra pantalla).
+            // Limpiar el banner para eliminar el turno fantasma.
+            limpiarLlamado();
+            return;
+        }
+        if (typeof reproducirVozLlamada === 'function') {
             reproducirVozLlamada(data.turno.turno, data.turno.paciente);
         }
     } catch (e) {
         console.error('Error al rellamar:', e);
+        limpiarLlamado();
     }
 }
 

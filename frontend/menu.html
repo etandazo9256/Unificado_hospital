@@ -105,6 +105,17 @@
         <button type="button" class="btn-modal" id="btnElegirArchivo">Seleccionar archivo</button>
         <small>Formatos: CSV, XLSX o XLS</small>
       </div>
+      <div id="alertaPlantilla" class="alerta-plantilla" role="alert" hidden>
+        <strong id="alertaTitulo"></strong>
+        <p id="alertaTexto"></p>
+        <p id="alertaDetalle" class="alerta-detalle"></p>
+        <p class="plantilla">Descarga la plantilla:
+          <a href="/api/matriz/plantilla?formato=xlsx" download>Excel</a> ·
+          <a href="/api/matriz/plantilla?formato=csv" download>CSV</a></p>
+      </div>
+      <p class="plantilla">¿Aún no tienes la matriz? Descarga la plantilla con las columnas que acepta la base de datos:
+        <a href="/api/matriz/plantilla?formato=xlsx" download>Plantilla Excel</a> ·
+        <a href="/api/matriz/plantilla?formato=csv" download>Plantilla CSV</a></p>
       <p id="errorModal" class="error-modal" role="alert"></p>
     </div>
 

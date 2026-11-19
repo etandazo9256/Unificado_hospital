@@ -73,7 +73,7 @@ app.get('/api/turnos/sala', async (req, res) => {
                         ELSE 6
                     END ASC,
                     id ASC
-            LIMIT 20
+            LIMIT 200
             `),
             pool.query(`
                 SELECT
@@ -1152,7 +1152,7 @@ function leerArchivo(ruta) {
             return obj;
         });
     }
-    return { filas: objetos };
+    return { filas: objetos.filter(o => Object.values(o).some(v => !esNulo(v))) };
 }
 
 function construirFilasBD(filas, mapeo) {
@@ -1187,6 +1187,15 @@ function construirFilasBD(filas, mapeo) {
         salida.push(fila);
     });
     return salida;
+}
+
+// Solo se acepta la plantilla del sistema: exactamente sus columnas (se toleran "id" y columnas vacías sin nombre)
+const MENSAJE_PLANTILLA = 'Matriz diferente. Este archivo no usa la plantilla del sistema: descarga la plantilla, llena los datos ahí y vuelve a subirla.';
+function validarPlantilla(columnas) {
+    const propias = columnas.filter(c => c !== 'id' && !c.startsWith('__empty'));
+    const faltantes = COLUMNAS_BD.filter(c => !propias.includes(c));
+    const sobrantes = propias.filter(c => !COLUMNAS_BD.includes(c));
+    return { ok: faltantes.length === 0 && sobrantes.length === 0, faltantes, sobrantes };
 }
 
 // Clave natural para detectar duplicados: numero + turno + fecha_turno (al minuto,
@@ -1237,6 +1246,11 @@ app.post('/api/matriz/importar', upload.single('archivo'), async (req, res) => {
         const { filas } = leerArchivo(rutaArchivo);
         if (filas.length === 0) {
             return res.status(400).json({ success: false, error: 'El archivo no contiene filas de datos' });
+        }
+        const plantilla = validarPlantilla(Object.keys(filas[0]));
+        if (!plantilla.ok) {
+            return res.status(400).json({ success: false, plantillaInvalida: true, error: MENSAJE_PLANTILLA,
+                faltantes: plantilla.faltantes, sobrantes: plantilla.sobrantes });
         }
         const filasBD = construirFilasBD(filas, mapeo);
         if (filasBD.length === 0) {
@@ -1322,6 +1336,11 @@ app.post('/api/matriz/analizar', upload.single('archivo'), (req, res) => {
             return res.status(400).json({ success: false, error: 'El archivo no contiene filas de datos' });
         }
         const columnas = Object.keys(filas[0]);
+        const plantilla = validarPlantilla(columnas);
+        if (!plantilla.ok) {
+            return res.status(400).json({ success: false, plantillaInvalida: true, error: MENSAJE_PLANTILLA,
+                faltantes: plantilla.faltantes, sobrantes: plantilla.sobrantes });
+        }
         const muestra = {};
         columnas.forEach(c => {
             const fila = filas.find(r => !esNulo(r[c]));
@@ -1339,6 +1358,65 @@ app.post('/api/matriz/analizar', upload.single('archivo'), (req, res) => {
         res.status(500).json({ success: false, error: 'No se pudo leer el archivo: ' + error.message });
     } finally {
         if (ruta && fs.existsSync(ruta)) { try { fs.unlinkSync(ruta); } catch { /* ignorar */ } }
+    }
+});
+
+// ---- Plantilla descargable con las columnas que acepta la importación ----
+// Se genera desde COLUMNAS_BD, así nunca queda distinta de lo que el importador entiende.
+const AYUDA_CAMPOS = {
+    numero: 'Número del turno (entero)',
+    turno: 'Código del turno',
+    paciente: 'Nombre del paciente',
+    prioridad: 'Color Manchester: ROJO, NARANJA, AMARILLO, VERDE o AZUL',
+    estado: 'pendiente, llamado, en_triage, pendiente_medico, en_atencion_medica, finalizado, no_asiste o cancelado (vacío = pendiente)',
+    atendido: 'true o false',
+    resp_sig_vitales: 'Nombre de quien tomó los signos vitales',
+    resp_triage: 'Nombre de quien hizo el triage',
+    medico_responsable: 'Nombre del médico que atendió',
+    consultorio: 'Consultorio de atención',
+    observacion_estado: 'Observación o resultado del estado'
+};
+function textoAyuda(campo) {
+    if (AYUDA_CAMPOS[campo]) return AYUDA_CAMPOS[campo];
+    if (campo.startsWith('fecha_')) return 'Fecha y hora: AAAA-MM-DD HH:MM:SS (también se acepta día/mes/año h:mm)';
+    if (campo.startsWith('tiempo_')) return 'Duración en formato H:MM:SS (ejemplo: 0:03:55)';
+    return 'Texto';
+}
+
+app.get('/api/matriz/plantilla', (req, res) => {
+    try {
+        const formato = String(req.query.formato || 'xlsx').toLowerCase();
+        if (formato === 'csv') {
+            res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+            res.setHeader('Content-Disposition', 'attachment; filename="plantilla_matriz_turnos.csv"');
+            return res.send('\uFEFF' + COLUMNAS_BD.join(';') + '\r\n');
+        }
+        const FILAS = 1000;
+        const hoja = XLSX.utils.aoa_to_sheet([COLUMNAS_BD]);
+        // Fechas y tiempos en formato texto, para que Excel no los reinterprete (p. ej. cambiar día/mes)
+        COLUMNAS_BD.forEach((c, i) => {
+            if (c.startsWith('fecha_') || c.startsWith('tiempo_')) {
+                for (let r = 1; r <= FILAS; r++) hoja[XLSX.utils.encode_cell({ r, c: i })] = { t: 's', v: '', z: '@' };
+            }
+        });
+        hoja['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: FILAS, c: COLUMNAS_BD.length - 1 } });
+        hoja['!cols'] = COLUMNAS_BD.map(c => ({ wch: Math.max(c.length + 2, 16) }));
+
+        const ayuda = [['Campo', 'Obligatorio', 'Qué debe contener']]
+            .concat(COLUMNAS_BD.map(c => [c, CAMPOS_REQUERIDOS.includes(c) ? 'Sí' : 'No', textoAyuda(c)]));
+        const hojaAyuda = XLSX.utils.aoa_to_sheet(ayuda);
+        hojaAyuda['!cols'] = [{ wch: 32 }, { wch: 12 }, { wch: 95 }];
+
+        const libro = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(libro, hoja, 'Matriz');
+        XLSX.utils.book_append_sheet(libro, hojaAyuda, 'Instrucciones');
+        const buffer = XLSX.write(libro, { type: 'buffer', bookType: 'xlsx' });
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="plantilla_matriz_turnos.xlsx"');
+        res.send(buffer);
+    } catch (error) {
+        console.error('Error generando plantilla:', error);
+        res.status(500).json({ success: false, error: 'No se pudo generar la plantilla: ' + error.message });
     }
 });
 

@@ -132,3 +132,12 @@ body.modal-abierto{overflow:hidden}
 .req-m{color:#ef4444;font-weight:700}
 .ej{color:var(--suave);font-size:.82rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .aviso-mapeo{color:#b91c1c;font-weight:600;font-size:.88rem;margin-top:10px;min-height:1.2em}
+.plantilla{margin-top:14px;font-size:.9rem;color:var(--suave)}
+.plantilla a{color:var(--azul);font-weight:600}
+.alerta-plantilla{margin-top:14px;padding:14px 16px;border-radius:12px;background:#fef3c7;border:1px solid #f59e0b;color:#78350f}
+.alerta-plantilla[hidden]{display:none}
+.alerta-plantilla strong{display:block;font-size:1rem;margin-bottom:4px}
+.alerta-plantilla p{font-size:.9rem;margin-top:4px}
+.alerta-plantilla .alerta-detalle{font-size:.8rem;opacity:.85}
+.alerta-plantilla .plantilla{color:#78350f}
+.alerta-plantilla .plantilla a{color:#92400e;text-decoration:underline}

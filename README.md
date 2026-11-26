@@ -1,4 +1,4 @@
-# 🏥 Sistema Unificado de Gestión de Turnos — Área de Emergencia
+# Sistema Unificado de Gestión de Turnos — Área de Emergencia
 
 **Hospital de Especialidades Portoviejo (HEP Dashboard Unificado)**
 
@@ -6,7 +6,7 @@ Sistema web para la gestión de turnos y visualización de indicadores del **Dep
 
 ---
 
-## 🖥️ Pantallas del Sistema (Unificado)
+## Pantallas del Sistema (Unificado)
 
 ### 0. Menú Central — `frontend/menu.html`
 
@@ -58,7 +58,7 @@ Las pantallas de *Sala de Espera* y *Tiempo de Espera Manchester* están diseña
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 | Componente | Tecnología |
 |---|---|
@@ -72,7 +72,7 @@ Las pantallas de *Sala de Espera* y *Tiempo de Espera Manchester* están diseña
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 Unificado_hospital/
@@ -113,7 +113,7 @@ Unificado_hospital/
 
 ---
 
-## 💻 Instalación en otra máquina (paso a paso)
+## Instalación en otra máquina (paso a paso)
 
 ### 1. Requisitos previos
 
@@ -186,7 +186,7 @@ En cada monitor/TV abierto el navegador en pantalla completa (F11 o el botón �
 
 ---
 
-## 📡 Endpoints de la API
+## Endpoints de la API
 
 ### Gestión de turnos
 
@@ -223,7 +223,7 @@ En cada monitor/TV abierto el navegador en pantalla completa (F11 o el botón �
 
 ---
 
-## 🗄️ Esquema de la Base de Datos
+## Esquema de la Base de Datos
 
 **Tabla principal**: `esq_emergencia.reporte_emergencia`
 
@@ -251,7 +251,7 @@ El flujo de estados es: `pendiente` → `llamado` → `en_triage` → `pendiente
 
 ---
 
-## 🔄 Tiempo Real (Socket.IO)
+## Tiempo Real (Socket.IO)
 
 El backend emite eventos `turno:*` y `sala:*` por Socket.IO en el puerto 3000. Las pantallas:
 
@@ -261,14 +261,14 @@ El backend emite eventos `turno:*` y `sala:*` por Socket.IO en el puerto 3000. L
 
 ---
 
-## 👤 Autor
+## Autor
 
 - **Repositorio**: [etandazo9256/Unificado_hospital](https://github.com/etandazo9256/Unificado_hospital)
 - Equipo de prácticas — Hospital de Especialidades Portoviejo
 
 ---
 
-## ?? Funcionalidad: Importación de Matriz (CSV / Excel)
+## Funcionalidad: Importación de Matriz (CSV / Excel)
 
 El sistema permite cargar matrices de datos (CSV o Excel `.xlsx` / `.xls`) al esquema `esq_emergencia.reporte_emergencia` mediante el endpoint `POST /api/matriz/importar`.
 
@@ -309,7 +309,7 @@ El sistema permite cargar matrices de datos (CSV o Excel `.xlsx` / `.xls`) al es
 
 ---
 
-## ?? Menú Central (Actualización Última)
+## Menú Central (Actualización Última)
 
 El **Menú Central** (`frontend/menu.html`) es la portada del sistema, accesible en `http://localhost:3000/`. Entre sus características más recientes:
 
@@ -326,6 +326,6 @@ Al hacer clic en cualquiera de las 3 tarjetas, el sistema navega a la pantalla c
 
 ---
 
-## ?? 📄 Licencia
+## 📄 Licencia
 
 Proyecto de uso interno del Hospital de Especialidades Portoviejo.

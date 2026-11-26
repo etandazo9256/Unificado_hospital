@@ -268,6 +268,64 @@ El backend emite eventos `turno:*` y `sala:*` por Socket.IO en el puerto 3000. L
 
 ---
 
-## 📄 Licencia
+## ?? Funcionalidad: Importación de Matriz (CSV / Excel)
+
+El sistema permite cargar matrices de datos (CSV o Excel `.xlsx` / `.xls`) al esquema `esq_emergencia.reporte_emergencia` mediante el endpoint `POST /api/matriz/importar`.
+
+### ¿Cómo subir una matriz?
+
+1. En el **Menú Central** (`http://localhost:3000/`), haz clic en la tarjeta **"Importar Matriz"**.
+2. Se abrirá un modal con tres pasos:
+   - **Paso 1: Leer archivo** — Se detecta automáticamente el delimitador (`;` o `,`) y se muestran las columnas encontradas.
+   - **Paso 2: Mapeo de columnas** — Se muestra una tabla donde emparejar cada columna del archivo con el campo correspondiente de la base de datos. Los campos obligatorios están marcados con `*` y deben asignarse para poder continuar.
+   - **Paso 3: Confirmar e importar** — Se sube la matriz. **Antes de insertar, se hace TRUNCATE TABLE reporte_emergencia RESTART IDENTITY CASCADE**, por lo que cada subida reemplaza completamente los datos anteriores.
+3. Al completar el proceso, se emite un evento `matriz:actualizada` por Socket.IO, que refresca automáticamente todas las pantallas (Menú, Sala de Espera, Manchester y Dashboard).
+
+### Formatos admitidos
+
+- `.csv` (comas o punto y coma: el sistema detecta el delimitador automáticamente)
+- `.xlsx` / `.xls` (archivos de Excel)
+
+### Campos mapeables (ejemplo)
+
+| Campo del archivo | Campo de la BD (ejemplo) |
+|-------------------|--------------------------|
+| `numero` | `numero` |
+| `prioridad` | `prioridad` (o `color_letras`) |
+| `turno` | `turno` |
+| `paciente` | `paciente` |
+| `fecha_turno` | `fecha_turno` |
+| `fecha_llamado` | `fecha_llamado` |
+| `atendido` | `atendido` |
+| `estado_registro` / `estado` | `estado` |
+| `medico_responsable` | `medico_responsable` |
+| `consultorio` | `consultorio` |
+| `resultado_observacion` / `observacion_estado` | `observacion_estado` |
+| ...y más (total 26+ columnas compatibles) |
+
+### Eventos Socket.IO
+
+- `matriz:actualizada` — Se emite después de cada importación exitosa. Todas las pantallas (menú, sala de espera, Manchester, dashboard) reciben la señal y refrescan sus KPIs, gráficos y tablas con los nuevos datos.
+
+---
+
+## ?? Menú Central (Actualización Última)
+
+El **Menú Central** (`frontend/menu.html`) es la portada del sistema, accesible en `http://localhost:3000/`. Entre sus características más recientes:
+
+- **3 tarjetas de acceso** a las pantallas del sistema (Sala de Espera, Tiempo de Espera Manchester, Dashboard KPI).
+- **KPIs en tiempo real** con datos del backend (pendientes, en triage, en consulta, atendidos).
+- **Gráfico de dona** y **gráfico de líneas** con distribuciones de prioridad Manchester.
+- **Tabla de turnos recientes** y **tabla de prioridad/tiempo de espera**.
+- **Botón ⛶** (pantalla completa) que activa el modo TV en la Sala de Espera y en la pantalla Manchester (ya no aparece en el menú, solo en las pantallas TV).
+- **Tarjeta "Importar Matriz"** — Abre un modal con mapeo de columnas (ver sección anterior) en lugar de un simple input de archivo.
+- Reloj y fecha en tiempo real en la esquina inferior.
+- Indicador de conexión Socket.IO (conectado/desconectado).
+
+Al hacer clic en cualquiera de las 3 tarjetas, el sistema navega a la pantalla correspondiente servida estáticamente por Express desde el directorio `/frontend`.
+
+---
+
+## ?? 📄 Licencia
 
 Proyecto de uso interno del Hospital de Especialidades Portoviejo.
